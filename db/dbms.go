@@ -1,8 +1,8 @@
 package db
 
 import (
-	iorw "../iorw"
-	active "../iorw/active"
+	iorw "github/efjoubert/lnksys/iorw"
+	active "github/efjoubert/lnksys/iorw/active"
 	"io"
 	"sync"
 	/**/

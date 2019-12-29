@@ -3,9 +3,9 @@ package lnks
 import (
 	"strings"
 
-	"../env"
-	"../network"
-	"../service"
+	"github/efjoubert/lnksys/env"
+	"github/efjoubert/lnksys/network"
+	"github/efjoubert/lnksys/service"
 )
 
 //LnkService LnkService

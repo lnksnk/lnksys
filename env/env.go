@@ -1,7 +1,7 @@
 package env
 
 import (
-	network "../network"
+	network "github/efjoubert/lnksys/network"
 )
 
 var wrapupcalls []func()

@@ -1,7 +1,7 @@
 package active
 
 import (
-	iorw "../../iorw"
+	iorw "github/efjoubert/lnksys/iorw"
 	"fmt"
 	goja "github.com/dop251/goja"
 	gojaparse "github.com/dop251/goja/parser"

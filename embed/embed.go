@@ -1,19 +1,19 @@
 package emded
 
 import (
-	babel "./babel"
-	babylon "./babylon"
-	bootstrap "./bootstrap"
-	fontawesome "./fontawesome"
-	jquery "./jquery"
-	jss "./jss"
-	materialdb "./materialdb"
-	react "./react"
-	require "./require"
-	rxjs "./rxjs"
-	three "./three"
-	falcor "./falcor"
-	video "./video"
+	babel "github/efjoubert/lnksys/babel"
+	babylon "github/efjoubert/lnksys/babylon"
+	bootstrap "github/efjoubert/lnksys/bootstrap"
+	fontawesome "github/efjoubert/lnksys/fontawesome"
+	jquery "github/efjoubert/lnksys/jquery"
+	jss "github/efjoubert/lnksys/jss"
+	materialdb "github/efjoubert/lnksys/materialdb"
+	react "github/efjoubert/lnksys/react"
+	require "github/efjoubert/lnksys/require"
+	rxjs "github/efjoubert/lnksys/rxjs"
+	three "github/efjoubert/lnksys/three"
+	falcor "github/efjoubert/lnksys/falcor"
+	video "github/efjoubert/lnksys/video"
 	"io"
 )
 

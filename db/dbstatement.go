@@ -1,7 +1,7 @@
 package db
 
 import (
-	parameters "../parameters"
+	parameters "github/efjoubert/lnksys/parameters"
 	"database/sql"
 	"fmt"
 	"strings"

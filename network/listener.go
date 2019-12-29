@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	active "../iorw/active"
+	active "github/efjoubert/lnksys/iorw/active"
 )
 
 type Listening interface {

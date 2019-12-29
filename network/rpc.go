@@ -9,7 +9,7 @@ import (
 	_ "reflect"
 	"time"
 
-	active "../iorw/active"
+	active "github/efjoubert/lnksys/iorw/active"
 )
 
 /*RPCRequest RPCRequest
