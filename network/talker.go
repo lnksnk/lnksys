@@ -7,9 +7,9 @@ import (
 	http "net/http"
 	"time"
 
-	iorw "github/efjoubert/lnksys/iorw"
-	"github/efjoubert/lnksys/iorw/active"
-	"github/efjoubert/lnksys/parameters"
+	iorw "github.com/efjoubert/lnksys/iorw"
+	"github.com/efjoubert/lnksys/iorw/active"
+	"github.com/efjoubert/lnksys/parameters"
 )
 
 type Talker struct {

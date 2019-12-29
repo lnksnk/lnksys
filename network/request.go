@@ -14,13 +14,13 @@ import (
 	"bufio"
 	"path/filepath"
 
-	db "github/efjoubert/lnksys/db"
-	embed "github/efjoubert/lnksys/embed"
-	iorw "github/efjoubert/lnksys/iorw"
-	active "github/efjoubert/lnksys/iorw/active"
-	parameters "github/efjoubert/lnksys/parameters"
-	gzip "github/efjoubert/lnksys/gzip"
-	"github/efjoubert/lnksys/mime"
+	db "github.com/efjoubert/lnksys/db"
+	embed "github.com/efjoubert/lnksys/embed"
+	iorw "github.com/efjoubert/lnksys/iorw"
+	active "github.com/efjoubert/lnksys/iorw/active"
+	parameters "github.com/efjoubert/lnksys/parameters"
+	gzip "github.com/efjoubert/lnksys/gzip"
+	"github.com/efjoubert/lnksys/mime"
 )
 
 const maxbufsize int = 81920

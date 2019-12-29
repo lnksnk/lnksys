@@ -1,19 +1,19 @@
 package emded
 
 import (
-	babel "github/efjoubert/lnksys/babel"
-	babylon "github/efjoubert/lnksys/babylon"
-	bootstrap "github/efjoubert/lnksys/bootstrap"
-	fontawesome "github/efjoubert/lnksys/fontawesome"
-	jquery "github/efjoubert/lnksys/jquery"
-	jss "github/efjoubert/lnksys/jss"
-	materialdb "github/efjoubert/lnksys/materialdb"
-	react "github/efjoubert/lnksys/react"
-	require "github/efjoubert/lnksys/require"
-	rxjs "github/efjoubert/lnksys/rxjs"
-	three "github/efjoubert/lnksys/three"
-	falcor "github/efjoubert/lnksys/falcor"
-	video "github/efjoubert/lnksys/video"
+	babel "github.com/efjoubert/lnksys/babel"
+	babylon "github.com/efjoubert/lnksys/babylon"
+	bootstrap "github.com/efjoubert/lnksys/bootstrap"
+	fontawesome "github.com/efjoubert/lnksys/fontawesome"
+	jquery "github.com/efjoubert/lnksys/jquery"
+	jss "github.com/efjoubert/lnksys/jss"
+	materialdb "github.com/efjoubert/lnksys/materialdb"
+	react "github.com/efjoubert/lnksys/react"
+	require "github.com/efjoubert/lnksys/require"
+	rxjs "github.com/efjoubert/lnksys/rxjs"
+	three "github.com/efjoubert/lnksys/three"
+	falcor "github.com/efjoubert/lnksys/falcor"
+	video "github.com/efjoubert/lnksys/video"
 	"io"
 )
 

@@ -1,9 +1,9 @@
 package main
 
 import (
-	_ "github/efjoubert/lnksys/iorw/active"
-	_ "github/efjoubert/lnksys/db"
-	"github/efjoubert/lnksys/lnks"
+	_ "github.com/efjoubert/lnksys/iorw/active"
+	_ "github.com/efjoubert/lnksys/db"
+	"github.com/efjoubert/lnksys/lnks"
 	"os"
 )
 
