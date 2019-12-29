@@ -19,8 +19,8 @@ import (
 	iorw "github.com/efjoubert/lnksys/iorw"
 	active "github.com/efjoubert/lnksys/iorw/active"
 	parameters "github.com/efjoubert/lnksys/parameters"
-	gzip "github.com/efjoubert/lnksys/gzip"
-	"github.com/efjoubert/lnksys/mime"
+	gzip "github.com/efjoubert/lnksys/network/gzip"
+	"github.com/efjoubert/lnksys/network/mime"
 )
 
 const maxbufsize int = 81920
