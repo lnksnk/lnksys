@@ -1,19 +1,19 @@
 package emded
 
 import (
-	babel "github.com/efjoubert/lnksys/babel"
-	babylon "github.com/efjoubert/lnksys/babylon"
-	bootstrap "github.com/efjoubert/lnksys/bootstrap"
-	fontawesome "github.com/efjoubert/lnksys/fontawesome"
-	jquery "github.com/efjoubert/lnksys/jquery"
-	jss "github.com/efjoubert/lnksys/jss"
-	materialdb "github.com/efjoubert/lnksys/materialdb"
-	react "github.com/efjoubert/lnksys/react"
-	require "github.com/efjoubert/lnksys/require"
-	rxjs "github.com/efjoubert/lnksys/rxjs"
-	three "github.com/efjoubert/lnksys/three"
-	falcor "github.com/efjoubert/lnksys/falcor"
-	video "github.com/efjoubert/lnksys/video"
+	babel "github.com/efjoubert/lnksys/embed/babel"
+	babylon "github.com/efjoubert/lnksys/embed/babylon"
+	bootstrap "github.com/efjoubert/lnksys/embed/bootstrap"
+	fontawesome "github.com/efjoubert/lnksys/embed/fontawesome"
+	jquery "github.com/efjoubert/lnksys/embed/jquery"
+	jss "github.com/efjoubert/lnksys/embed/jss"
+	materialdb "github.com/efjoubert/lnksys/embed/materialdb"
+	react "github.com/efjoubert/lnksys/embed/react"
+	require "github.com/efjoubert/lnksys/embed/require"
+	rxjs "github.com/efjoubert/lnksys/embed/rxjs"
+	three "github.com/efjoubert/lnksys/embed/three"
+	falcor "github.com/efjoubert/lnksys/embed/falcor"
+	video "github.com/efjoubert/lnksys/embed/video"
 	"io"
 )
 
