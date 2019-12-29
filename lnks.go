@@ -1,10 +1,10 @@
 package main
 
 import (
-	_ "github.com/efjoubert/lnksys/iorw/active"
 	_ "github.com/efjoubert/lnksys/db"
-	"github.com/efjoubert/lnksys/lnks"
-	"os"
+	_ "github.com/efjoubert/lnksys/iorw/active"
+	lnks "github.com/efjoubert/lnksys/lnks"
+	os "os"
 )
 
 func main() {

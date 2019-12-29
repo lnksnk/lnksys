@@ -8,6 +8,8 @@ import (
 	active "github.com/efjoubert/lnksys/iorw/active"
 )
 
+/*Listening interface
+ */
 type Listening interface {
 	Shutdown()
 	ShutdownHost(string)

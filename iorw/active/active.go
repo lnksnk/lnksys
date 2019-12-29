@@ -77,10 +77,28 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 		atv.psvPrvR[0] = rune(0)
 	}
 	if atv.rdrRune != nil {
+		var nextRune = make(chan rune,maxbufsize)
+		var doneRune =make(chan bool)
+		go func() {
+			var nextRun = true
+			for nextRun {
+				select{
+				case nrune:=<-nextRune:
+					processRune(nrune, atv, atv.runeLabel, atv.runeLabelI, atv.runePrvR)
+				case nextR:=<-doneRune:
+					if nextR {
+						nextRun=false
+					}
+				}
+			}
+			doneRune<-true
+		}()
+
 		for atvCntntRunesErr == nil {
 			if rne, rnsize, rnerr := atv.rdrRune.ReadRune(); rnerr == nil {
 				if rnsize > 0 {
-					processRune(rne, atv, atv.runeLabel, atv.runeLabelI, atv.runePrvR)
+					//processRune(rne, atv, atv.runeLabel, atv.runeLabelI, atv.runePrvR)
+					nextRune<-rne
 				}
 			} else {
 				if rnerr != io.EOF {
@@ -89,6 +107,9 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 				break
 			}
 		}
+		doneRune<-true
+		<-doneRune
+		
 		if atverr == nil {
 			flushPassiveContent(atv, true)
 			if atv.foundCode {
