@@ -52,6 +52,21 @@ func (atv *Active) activeCode() *iorw.BufferedRW {
 	return atv.curAtvCde
 }
 
+type activeRune struct {
+	rne rune
+	rnesize int
+	rneerr error
+	atv*Active
+}
+
+func(atvRne*activeRune) process() {
+	processRune(atvRne.rne, atvRne.atv, atvRne.atv.runeLabel, atvRne.atv.runeLabelI, atvRne.atv.runePrvR)
+}
+
+func(atvRne*activeRune) close() {
+	atvRne.atv=nil
+}
+
 func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 	atv.lck.RLock()
 	defer atv.lck.RUnlock()
@@ -77,39 +92,48 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 		atv.psvPrvR[0] = rune(0)
 	}
 	if atv.rdrRune != nil {
-		var nextRune = make(chan rune,maxbufsize)
-		var doneRune =make(chan bool)
-		go func() {
-			var nextRun = true
-			for nextRun {
-				select{
-				case nrune:=<-nextRune:
-					processRune(nrune, atv, atv.runeLabel, atv.runeLabelI, atv.runePrvR)
-				case nextR:=<-doneRune:
-					if nextR {
-						nextRun=false
+		func() {
+			var nextRune = make(chan *activeRune,maxbufsize)
+			var doneRune =make(chan bool)
+			defer func(){
+				close(nextRun)
+				close(doneRune)
+			}
+			go func() {
+				var nextRun = true
+				for nextRun {
+					select{
+					case nrune:=<-nextRune:
+						func() {
+							defer nrune.close()
+							nrune.process()
+						}()
+					case nextR:=<-doneRune:
+						if nextR {
+							nextRun=false
+						}
 					}
 				}
-			}
-			doneRune<-true
-		}()
+				doneRune<-true
+			}()
 
-		for atvCntntRunesErr == nil {
-			if rne, rnsize, rnerr := atv.rdrRune.ReadRune(); rnerr == nil {
-				if rnsize > 0 {
-					//processRune(rne, atv, atv.runeLabel, atv.runeLabelI, atv.runePrvR)
-					nextRune<-rne
+			for atvCntntRunesErr == nil {
+				if rne, rnsize, rnerr := atv.rdrRune.ReadRune(); rnerr == nil {
+					if rnsize > 0 {
+						//processRune(rne, atv, atv.runeLabel, atv.runeLabelI, atv.runePrvR)
+						nextRune<-&activeRune{atv:atv,rne:rne,rnesize:rnsize,rneerr:rnerr}
+					}
+				} else {
+					if rnerr != io.EOF {
+						atverr = rnerr
+					}
+					doneRune<-true
+					break
 				}
-			} else {
-				if rnerr != io.EOF {
-					atverr = rnerr
-				}
-				break
 			}
-		}
-		doneRune<-true
-		<-doneRune
-		
+			
+			<-doneRune
+		}()
 		if atverr == nil {
 			flushPassiveContent(atv, true)
 			if atv.foundCode {

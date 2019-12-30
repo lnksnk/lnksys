@@ -10,6 +10,7 @@ import (
 	iorw "github.com/efjoubert/lnksys/iorw"
 	"github.com/efjoubert/lnksys/iorw/active"
 	"github.com/efjoubert/lnksys/parameters"
+	http2 "golang.org/x/net/http2"
 )
 
 type Talker struct {
@@ -18,20 +19,26 @@ type Talker struct {
 	atv         *active.Active
 	prms        *parameters.Parameters
 	enableClose bool
+	h2c bool
 }
 
 const maxBufferSize int64 = 81920
 
-func NewTalker() (tlkr *Talker) {
-	var netTransport = &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout: 5 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout: 5 * time.Second,
+func NewTalker(h2c ...bool) (tlkr *Talker) {
+	var netTransport *http.Transport = nil
+	if len(h2c) == 1 && h2c[0] {
+		netTransport = &http2.Transport{}
+	} else {
+		netTransport = &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout: 5 * time.Second,
+			}).Dial,
+			TLSHandshakeTimeout: 5 * time.Second,
+		}
 	}
 	var trwref *iorw.BufferedRW = iorw.NewBufferedRW(maxBufferSize, nil)
 	tlkr = &Talker{enableClose: false, trw: trwref, client: &http.Client{Timeout: time.Second * 10, Transport: netTransport},
-		prms: parameters.NewParameters()}
+		prms: parameters.NewParameters(),h2c:len(h2c)==1 && h2c[0]}
 	tlkr.atv = active.NewActive(map[string]interface{}{"out": tlkr.trw})
 	return
 }
