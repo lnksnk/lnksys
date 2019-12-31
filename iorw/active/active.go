@@ -94,11 +94,11 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 	if atv.rdrRune != nil {
 		func() {
 			var nextRune = make(chan *activeRune,maxbufsize)
-			var doneRune =make(chan bool)
+			var doneRune = make(chan bool)
 			defer func(){
-				close(nextRun)
+				close(nextRune)
 				close(doneRune)
-			}
+			}()
 			go func() {
 				var nextRun = true
 				for nextRun {
