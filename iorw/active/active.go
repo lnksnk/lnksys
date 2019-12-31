@@ -99,6 +99,7 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 				close(nextRune)
 				close(doneRune)
 			}()
+
 			go func() {
 				var nextRun = true
 				for nextRun {
