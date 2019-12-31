@@ -25,17 +25,17 @@ type Talker struct {
 const maxBufferSize int64 = 81920
 
 func NewTalker(h2c ...bool) (tlkr *Talker) {
-	var netTransport http.Transport = nil
-	//if len(h2c) == 1 && h2c[0] {
-	//	netTransport = http2.Transport{}
-	//} else {
+	var netTransport *http.Transport = nil
+	if len(h2c) == 1 && h2c[0] {
+		netTransport = http2.Transport{}
+	} else {
 		netTransport = &http.Transport{
 			Dial: (&net.Dialer{
 				Timeout: 5 * time.Second,
 			}).Dial,
 			TLSHandshakeTimeout: 5 * time.Second,
 		}
-	//}
+	}
 	var trwref *iorw.BufferedRW = iorw.NewBufferedRW(maxBufferSize, nil)
 	tlkr = &Talker{enableClose: false, trw: trwref, client: &http.Client{Timeout: time.Second * 10, Transport: netTransport},
 		prms: parameters.NewParameters(),h2c:len(h2c)==1 && h2c[0]}
