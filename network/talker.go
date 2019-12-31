@@ -10,8 +10,9 @@ import (
 	iorw "github.com/efjoubert/lnksys/iorw"
 	"github.com/efjoubert/lnksys/iorw/active"
 	"github.com/efjoubert/lnksys/parameters"
-	http2 "golang.org/x/net/http2"
+	
 )
+//http2 "golang.org/x/net/http2"
 
 type Talker struct {
 	client      *http.Client
