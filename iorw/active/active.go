@@ -1,10 +1,10 @@
 package active
 
 import (
-	iorw "github.com/efjoubert/lnksys/iorw"
 	"fmt"
 	goja "github.com/dop251/goja"
 	gojaparse "github.com/dop251/goja/parser"
+	iorw "github.com/efjoubert/lnksys/iorw"
 	"io"
 	"strings"
 	"sync"
@@ -53,18 +53,18 @@ func (atv *Active) activeCode() *iorw.BufferedRW {
 }
 
 type activeRune struct {
-	rne rune
+	rne     rune
 	rnesize int
-	rneerr error
-	atv*Active
+	rneerr  error
+	atv     *Active
 }
 
-func(atvRne*activeRune) process() {
+func (atvRne *activeRune) process() {
 	processRune(atvRne.rne, atvRne.atv, atvRne.atv.runeLabel, atvRne.atv.runeLabelI, atvRne.atv.runePrvR)
 }
 
-func(atvRne*activeRune) close() {
-	atvRne.atv=nil
+func (atvRne *activeRune) close() {
+	atvRne.atv = nil
 }
 
 func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
@@ -93,45 +93,45 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 	}
 	if atv.rdrRune != nil {
 		func() {
-			var nextRune = make(chan *activeRune,maxbufsize)
+			var nextRune = make(chan *activeRune, maxbufsize)
 			var doneRune = make(chan bool)
-			defer func(){
+			defer func() {
 				close(nextRune)
 				close(doneRune)
 			}()
 			go func() {
 				var nextRun = true
 				for nextRun {
-					select{
-					case nrune:=<-nextRune:
+					select {
+					case nrune := <-nextRune:
 						func() {
 							defer nrune.close()
 							nrune.process()
 						}()
-					case nextR:=<-doneRune:
+					case nextR := <-doneRune:
 						if nextR {
-							nextRun=false
+							nextRun = false
 						}
 					}
 				}
-				doneRune<-true
+				doneRune <- true
 			}()
 
 			for atvCntntRunesErr == nil {
 				if rne, rnsize, rnerr := atv.rdrRune.ReadRune(); rnerr == nil {
 					if rnsize > 0 {
 						//processRune(rne, atv, atv.runeLabel, atv.runeLabelI, atv.runePrvR)
-						nextRune<-&activeRune{atv:atv,rne:rne,rnesize:rnsize,rneerr:rnerr}
+						nextRune <- &activeRune{atv: atv, rne: rne, rnesize: rnsize, rneerr: rnerr}
 					}
 				} else {
 					if rnerr != io.EOF {
 						atverr = rnerr
 					}
-					doneRune<-true
+					doneRune <- true
 					break
 				}
 			}
-			
+
 			<-doneRune
 		}()
 		if atverr == nil {
