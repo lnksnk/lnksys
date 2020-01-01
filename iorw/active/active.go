@@ -92,48 +92,25 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 		atv.psvPrvR[0] = rune(0)
 	}
 	if atv.rdrRune != nil {
-		func() {
-			var nextRune = make(chan *activeRune, maxbufsize)
-			var doneRune = make(chan bool)
-			defer func() {
-				close(nextRune)
-				close(doneRune)
-			}()
-
+		func() bool{
+			var doneActRead = make(chan bool,1)
+			defer close(doneActRead)
 			go func() {
-				var nextRun = true
-				for nextRun {
-					select {
-					case nrune := <-nextRune:
-						func() {
-							defer nrune.close()
-							nrune.process()
-						}()
-					case nextR := <-doneRune:
-						if nextR {
-							nextRun = false
+				for atvCntntRunesErr == nil {
+					if rne, rnsize, rnerr := atv.rdrRune.ReadRune(); rnerr == nil {
+						if rnsize > 0 {
+							processRune(rne, atv, atv.runeLabel, atv.runeLabelI, atv.runePrvR)
 						}
+					} else {
+						if rnerr != io.EOF {
+							atverr = rnerr
+						}
+						break
 					}
 				}
-				doneRune <- true
+				doneActRead<-true
 			}()
-
-			for atvCntntRunesErr == nil {
-				if rne, rnsize, rnerr := atv.rdrRune.ReadRune(); rnerr == nil {
-					if rnsize > 0 {
-						//processRune(rne, atv, atv.runeLabel, atv.runeLabelI, atv.runePrvR)
-						nextRune <- &activeRune{atv: atv, rne: rne, rnesize: rnsize, rneerr: rnerr}
-					}
-				} else {
-					if rnerr != io.EOF {
-						atverr = rnerr
-					}
-					doneRune <- true
-					break
-				}
-			}
-
-			<-doneRune
+			return <-doneActRead
 		}()
 		if atverr == nil {
 			flushPassiveContent(atv, true)
