@@ -46,12 +46,12 @@ func ReactAceJS() io.Reader {
 }
 
 func AcsJSFindJS(acejsifndjs string) io.Reader {
-	if strings.LastIndex(acejsfindjs, "/") >= 0 {
-		acejsfindjs = acejsfindjs[strings.LastIndex(acejsfindjs, "/")+1:]
+	if strings.LastIndex(acejsifndjs, "/") >= 0 {
+		acejsifndjs = acejsifndjs[strings.LastIndex(acejsifndjs, "/")+1:]
 	}
-	if acejsfindjs == "ace.js" {
+	if acejsifndjs == "ace.js" {
 		return AceJS()
-	} else if acejsfindjs=="react-ace.js" {
+	} else if acejsifndjs=="react-ace.js" {
         return ReactAceJS()
     }
 	return nil
