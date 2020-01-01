@@ -136,26 +136,27 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 							}
 						}
 					}
-					var code = atv.activeCode()
-					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", code, 0) //goja.Compile("", code, false)
+					var code = atv.activeCode().String()
+
+					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "",strings.NewReader(code), 0) //goja.Compile("", code, false)
 					if parsedprgmerr == nil {
 						var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
 						if prgmerr == nil {
 							var _, vmerr = atv.vm.RunProgram(prgm)
 							if vmerr != nil {
 								fmt.Println(vmerr)
-								//fmt.Println(code)
+								fmt.Println(code)
 								atverr = vmerr
 							}
 						} else {
 							fmt.Println(prgmerr)
-							//fmt.Println(code)
+							fmt.Println(code)
 							atverr = prgmerr
 						}
 						prgm = nil
 					} else {
 						fmt.Println(parsedprgmerr)
-						//fmt.Println(code)
+						fmt.Println(code)
 						atverr = parsedprgmerr
 					}
 					parsedprgm = nil
