@@ -26,5 +26,5 @@ func JSPanelFindJSCSS(jspanelfindjscss string) io.Reader {
 	} else if jspanelfindjscss == "jspanel.css" {
 		return JSPanelCSS()
 	}
-	return nil
+	return JSPanelExtensionFindJS(jspanelfindjscss)
 }
