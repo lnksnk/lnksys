@@ -15,6 +15,7 @@ import (
 	falcor "github.com/efjoubert/lnksys/embed/falcor"
 	video "github.com/efjoubert/lnksys/embed/video"
 	jspanel "github.com/efjoubert/lnksys/embed/jspanel"
+	ace "github.com/efjoubert/lnksys/embed/ace"
 	"io"
 )
 
@@ -48,6 +49,8 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	} else if embedjs = video.VideoFindJSCSS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs=jspanel.JSPanelFindJSCSS(embedfindjs); embedjs!=nil {
+		return
+	} else if embedjs=ace.AcsJSFindJS(embedfindjs); embedjs!=nil {
 		return
 	}
 	return
