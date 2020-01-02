@@ -16,6 +16,7 @@ import (
 	video "github.com/efjoubert/lnksys/embed/video"
 	jspanel "github.com/efjoubert/lnksys/embed/jspanel"
 	ace "github.com/efjoubert/lnksys/embed/ace"
+	chart "github.com/efjoubert/lnksys/embed/chart"
 	"io"
 )
 
@@ -51,6 +52,8 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	} else if embedjs=jspanel.JSPanelFindJSCSS(embedfindjs); embedjs!=nil {
 		return
 	} else if embedjs=ace.AcsJSFindJS(embedfindjs); embedjs!=nil {
+		return
+	} else if embedjs=chart.ChartFindJS(embedfindjs); embedjs!=nil {
 		return
 	}
 	return
