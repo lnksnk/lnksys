@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-type ActiveParser {
+type ActiveParser struct {
 	maxBufSize int64
 	rdrRune    io.RuneReader
 	rdskr      io.Seeker
