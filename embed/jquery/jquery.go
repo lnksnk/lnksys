@@ -3,6 +3,7 @@ package jquery
 import (
 	"io"
 	"strings"
+	"github.com/efjoubert/lnksys/embed/jquery/terminal"
 )
 
 const jqueryjs string = `/* jQuery v3.4.1 | (c) JS Foundation and other contributors | jquery.org/license */
@@ -19,5 +20,5 @@ func JQueryFindJS(jqueryfindjs string) io.Reader {
 	if jqueryfindjs == "jquery.js" {
 		return JQueryJS()
 	}
-	return nil
+	return terminal.JQueryTerminalFindJSCSS(jqueryfindjs)
 }

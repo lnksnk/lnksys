@@ -10,6 +10,37 @@ import (
 	"sync"
 )
 
+type ActiveParser {
+	maxBufSize int64
+	rdrRune    io.RuneReader
+	rdskr      io.Seeker
+	//
+	runesToParse  []rune
+	runesToParsei int
+	runeLabel     [][]rune
+	runeLabelI    []int
+	runePrvR      []rune
+	//
+	passiveRune             []rune
+	passiveRunei            int
+	passiveBuffer           [][]rune
+	passiveBufferOffset     int64
+	lastPassiveBufferOffset int64
+	//
+	psvRunesToParse  []rune
+	psvRunesToParsei int
+	psvLabel         [][]rune
+	psvLabelI        []int
+	psvPrvR          []rune
+	//
+	hasCode          bool
+	foundCode        bool
+	atvRunesToParse  []rune
+	atvRunesToParsei int
+
+	curAtvCde *iorw.BufferedRW
+}
+
 type Active struct {
 	lck        *sync.RWMutex
 	maxBufSize int64
@@ -67,6 +98,15 @@ func (atvRne *activeRune) close() {
 	atvRne.atv = nil
 }
 
+func (atv *Active) APrint(a ...interface{}) {
+
+}
+
+func (atv *Active) APrintln(a ...interface{}) {
+	atv.APrint(a...)
+	atv.APrint("/r/n")
+}
+
 func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 	atv.lck.RLock()
 	defer atv.lck.RUnlock()
@@ -92,8 +132,8 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 		atv.psvPrvR[0] = rune(0)
 	}
 	if atv.rdrRune != nil {
-		func() bool{
-			var doneActRead = make(chan bool,1)
+		func() bool {
+			var doneActRead = make(chan bool, 1)
 			defer close(doneActRead)
 			go func() {
 				for atvCntntRunesErr == nil {
@@ -108,7 +148,7 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 						break
 					}
 				}
-				doneActRead<-true
+				doneActRead <- true
 			}()
 			return <-doneActRead
 		}()
@@ -137,8 +177,8 @@ func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
 						}
 					}
 					var code = atv.activeCode().String()
-					var coderdr=strings.NewReader(code)
-					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "",coderdr, 0) //goja.Compile("", code, false)
+					var coderdr = strings.NewReader(code)
+					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
 					if parsedprgmerr == nil {
 						var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
 						if prgmerr == nil {
