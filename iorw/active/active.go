@@ -547,7 +547,7 @@ func setAtvA(atv *Active, d interface{}) {
 
 func NewActive(a ...interface{}) (atv *Active) {
 	atv = &Active{atvprsr: &activeParser{maxBufSize: 81920, lck: &sync.RWMutex{}}}
-
+	atv.atvprsr.atv = atv
 	for _, d := range a {
 		setAtvA(atv, d)
 	}
