@@ -162,6 +162,27 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	atvprsr.lck.RLock()
 	defer atvprsr.lck.RUnlock()
 	atvprsr.atvbufrdr().Print(a...)
+	if len(atvprsr.runesToParse) == 0 {
+		atvprsr.runesToParse = make([]rune, atvprsr.maxBufSize)
+		atvprsr.runesToParsei = int(0)
+	}
+	
+	if len(atvprsr.runeLabel) == 0 {
+		atvprsr.runeLabel = [][]rune{[]rune("<@"), []rune("@>")}
+		atvprsr.runeLabelI = []int{0, 0}
+		if len(atvprsr.runePrvR) == 0 {
+			atvprsr.runePrvR = []rune{rune(0)}
+		}
+		atvprsr.runePrvR[0] = rune(0)
+	}
+	if len(atvprsr.psvLabel) == 0 {
+		atvprsr.psvLabel = [][]rune{[]rune("<"), []rune(">")}
+		atvprsr.psvLabelI = []int{0, 0}
+		if len(atvprsr.psvPrvR) == 0 {
+			atvprsr.psvPrvR = []rune{rune(0)}
+		}
+		atvprsr.psvPrvR[0] = rune(0)
+	}
 	for {
 		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
@@ -180,8 +201,9 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 func (atvprsr *activeParser) ACommit() (acerr error) {
 	if len(atvprsr.runesToParse) == 0 {
 		atvprsr.runesToParse = make([]rune, atvprsr.maxBufSize)
+		atvprsr.runesToParsei = int(0)
 	}
-	atvprsr.runesToParsei = int(0)
+	
 	if len(atvprsr.runeLabel) == 0 {
 		atvprsr.runeLabel = [][]rune{[]rune("<@"), []rune("@>")}
 		atvprsr.runeLabelI = []int{0, 0}
