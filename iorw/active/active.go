@@ -713,6 +713,7 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 				if cmt {
 					select {
 					case rne := <-prsreRuneQueue:
+						fmt.Print(string(rne))
 						processRune(rne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
 					default:
 						break
