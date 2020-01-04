@@ -165,7 +165,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	for {
 		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
-				processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+				atvprsr.runesToParseQueue<-rne
 			}
 		} else {
 			if rnerr != io.EOF {
