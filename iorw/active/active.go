@@ -75,6 +75,20 @@ func (atvprsr *activeParser) Reset() {
 }
 
 func (atvprsr *activeParser) Close() {
+	if atvprsr.closing!=nil {
+		atvprsr.closing<-true
+		<-atvprsr.closing
+		close(atvprsr.closing)
+		atvprsr.closing=nil
+	}
+	if atvprsr.runesToParseQueue!=nil {
+		close(atvprsr.runesToParseQueue)
+		atvprsr.runesToParseQueue=nil
+	}
+	if atvprsr.commitParsedQueue!=nil {
+		close(atvprsr.commitParsedQueue)
+		atvprsr.commitParsedQueue=nil
+	}
 	if len(atvprsr.runeLabel) > 0 {
 		atvprsr.runeLabelI = nil
 		atvprsr.runeLabel = nil
@@ -187,8 +201,8 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 	}
 	
 	if atvprsr.atvrdr != nil {
-		atvprsr.commitNow<-true
-		if <-atvprsr.commitNow {
+		atvprsr.commitParsedQueue<-true
+		if <-atvprsr.commitParsedQueue {
 			flushPassiveContent(atvprsr, true)
 			if atvprsr.foundCode {
 				flushActiveCode(atvprsr)
