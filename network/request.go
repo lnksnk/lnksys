@@ -213,7 +213,7 @@ func (reqst *Request) ExecuteRequest() {
 		}
 
 		if atverr := func() (fnerr error) {
-			fnerr = reqst.Active.ExecuteActive(81920); fnerr==nil		
+			fnerr = reqst.Active.ExecuteActive(81920);		
 			return
 		}(); atverr != nil {
 			fmt.Print(atverr)
