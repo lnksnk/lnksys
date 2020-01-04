@@ -162,27 +162,6 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	atvprsr.lck.RLock()
 	defer atvprsr.lck.RUnlock()
 	atvprsr.atvbufrdr().Print(a...)
-	if len(atvprsr.runesToParse) == 0 {
-		atvprsr.runesToParse = make([]rune, atvprsr.maxBufSize)
-		atvprsr.runesToParsei = int(0)
-	}
-	
-	if len(atvprsr.runeLabel) == 0 {
-		atvprsr.runeLabel = [][]rune{[]rune("<@"), []rune("@>")}
-		atvprsr.runeLabelI = []int{0, 0}
-		if len(atvprsr.runePrvR) == 0 {
-			atvprsr.runePrvR = []rune{rune(0)}
-		}
-		atvprsr.runePrvR[0] = rune(0)
-	}
-	if len(atvprsr.psvLabel) == 0 {
-		atvprsr.psvLabel = [][]rune{[]rune("<"), []rune(">")}
-		atvprsr.psvLabelI = []int{0, 0}
-		if len(atvprsr.psvPrvR) == 0 {
-			atvprsr.psvPrvR = []rune{rune(0)}
-		}
-		atvprsr.psvPrvR[0] = rune(0)
-	}
 	for {
 		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
@@ -202,23 +181,6 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 	if len(atvprsr.runesToParse) == 0 {
 		atvprsr.runesToParse = make([]rune, atvprsr.maxBufSize)
 		atvprsr.runesToParsei = int(0)
-	}
-	
-	if len(atvprsr.runeLabel) == 0 {
-		atvprsr.runeLabel = [][]rune{[]rune("<@"), []rune("@>")}
-		atvprsr.runeLabelI = []int{0, 0}
-		if len(atvprsr.runePrvR) == 0 {
-			atvprsr.runePrvR = []rune{rune(0)}
-		}
-		atvprsr.runePrvR[0] = rune(0)
-	}
-	if len(atvprsr.psvLabel) == 0 {
-		atvprsr.psvLabel = [][]rune{[]rune("<"), []rune(">")}
-		atvprsr.psvLabelI = []int{0, 0}
-		if len(atvprsr.psvPrvR) == 0 {
-			atvprsr.psvPrvR = []rune{rune(0)}
-		}
-		atvprsr.psvPrvR[0] = rune(0)
 	}
 	
 	if atvprsr.atvrdr != nil {
@@ -720,6 +682,27 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 		maxBufSize = 81920
 	}
 	atv = &Active{atvprsr: &activeParser{closing: make(chan bool, 1), runesToParseQueue: make(chan rune, 1), commitParsedQueue: make(chan bool, 1), maxBufSize: maxBufSize, lck: &sync.RWMutex{}}}
+	if len(atv.atvprsr.runesToParse) == 0 {
+		atv.atvprsr.runesToParse = make([]rune, atvprsr.maxBufSize)
+	}
+	atv.atvprsr.runesToParsei = int(0)
+	if len(atv.atvprsr.runeLabel) == 0 {
+		atv.atvprsr.runeLabel = [][]rune{[]rune("<@"), []rune("@>")}
+		atv.atvprsr.runeLabelI = []int{0, 0}
+		if len(atv.atvprsr.runePrvR) == 0 {
+			atv.atvprsr.runePrvR = []rune{rune(0)}
+		}
+		atv.atvprsr.runePrvR[0] = rune(0)
+	}
+	if len(atv.atvprsr.psvLabel) == 0 {
+		atv.atvprsr.psvLabel = [][]rune{[]rune("<"), []rune(">")}
+		atv.atvprsr.psvLabelI = []int{0, 0}
+		if len(atv.atvprsr.psvPrvR) == 0 {
+			atv.atvprsr.psvPrvR = []rune{rune(0)}
+		}
+		atv.atvprsr.psvPrvR[0] = rune(0)
+	}
+	
 	go func(prsr *activeParser, prsreRuneQueue chan rune, commitNow chan bool, closeNow chan bool) {
 		var isActive = true
 		for isActive {
