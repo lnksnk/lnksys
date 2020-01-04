@@ -279,6 +279,14 @@ func (atvprsr *activeParser) Print(a ...interface{}) {
 	}
 }
 
+func (atvprsr *activeParser) APrint(a ...interface{}) {
+
+}
+
+func (atvprsr *activeParser) Commit() {
+
+}
+
 type Active struct {
 	printer   iorw.Printing
 	atvprsr   *activeParser
@@ -309,7 +317,15 @@ func (atvRne *activeRune) close() {
 }
 
 func (atv *Active) APrint(a ...interface{}) {
+	if atv.atvprsr != nil {
+		atv.atvprsr.APrint(a...)
+	}
+}
 
+func (atv *Active) ACommit() {
+	if atv.atvprsr != nil {
+		atv.atvprsr.Commit()
+	}
 }
 
 func (atv *Active) APrintln(a ...interface{}) {
