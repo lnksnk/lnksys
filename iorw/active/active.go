@@ -182,7 +182,6 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 		atvprsr.runesToParse = make([]rune, atvprsr.maxBufSize)
 	}
 	atvprsr.runesToParsei = int(0)
-	var atvCntntRunesErr = error(nil)
 	if len(atvprsr.runeLabel) == 0 {
 		atvprsr.runeLabel = [][]rune{[]rune("<@"), []rune("@>")}
 		atvprsr.runeLabelI = []int{0, 0}
