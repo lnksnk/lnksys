@@ -1,6 +1,7 @@
 package io
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 )
@@ -147,6 +148,7 @@ func (rw *RW) Close() (err error) {
 
 type BufferedRW struct {
 	altRW         ReaderWriter
+	runeRdr       *bufio.Reader
 	buffer        [][]byte
 	bytes         []byte
 	bytesi        int
@@ -162,6 +164,14 @@ type BufferedRW struct {
 
 func NewBufferedRW(maxBufferSize int64, altRW ReaderWriter) (bufRW *BufferedRW) {
 	bufRW = &BufferedRW{altRW: altRW, maxBufferSize: maxBufferSize, bufRWActn: bufRWNoAction, bufRWActnDone: make(chan bool, 1)}
+	return
+}
+
+func (bufRW *BufferedRW) ReadRune() (r rune, size int, err error) {
+	if bufRW.runeRdr == nil {
+		bufRW.runeRdr = bufio.NewReader(bufRW)
+	}
+	r, size, err = bufRW.runeRdr.ReadRune()
 	return
 }
 
@@ -349,6 +359,9 @@ func (bufRW *BufferedRW) Close() (err error) {
 	if bufRW.bufRWActnDone != nil {
 		close(bufRW.bufRWActnDone)
 		bufRW.bufRWActnDone = nil
+	}
+	if bufRW.runeRdr != nil {
+		bufRW.runeRdr = nil
 	}
 	return
 }

@@ -12,16 +12,20 @@ import (
 
 type activeParser struct {
 	atv        *Active
+	atvrdr     *iorw.BufferedRW
 	rdrRune    io.RuneReader
 	rdskr      io.Seeker
 	maxBufSize int64
 	lck        *sync.RWMutex
 	//
-	runesToParse  []rune
-	runesToParsei int
-	runeLabel     [][]rune
-	runeLabelI    []int
-	runePrvR      []rune
+	runesToParseQueue chan rune
+	commitParsedQueue chan bool
+	closing           chan bool
+	runesToParse      []rune
+	runesToParsei     int
+	runeLabel         [][]rune
+	runeLabelI        []int
+	runePrvR          []rune
 	//
 	passiveRune             []rune
 	passiveRunei            int
@@ -41,6 +45,13 @@ type activeParser struct {
 	atvRunesToParsei int
 
 	curAtvCde *iorw.BufferedRW
+}
+
+func (atvprsr *activeParser) atvbufrdr() *iorw.BufferedRW {
+	if atvprsr.atvrdr == nil {
+		atvprsr.atvrdr = iorw.NewBufferedRW(atvprsr.maxBufSize, nil)
+	}
+	return atvprsr.atvrdr
 }
 
 func (atvprsr *activeParser) activeCode() *iorw.BufferedRW {
@@ -131,6 +142,108 @@ func (atvprsr *activeParser) Close() {
 	if atvprsr.atv != nil {
 		atvprsr.atv = nil
 	}
+}
+
+func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
+	atvprsr.lck.RLock()
+	defer atvprsr.lck.RUnlock()
+	atvprsr.atvbufrdr().Print(a...)
+	for {
+		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
+			if rnsize > 0 {
+				processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+			}
+		} else {
+			if rnerr != io.EOF {
+				err = rnerr
+			}
+			break
+		}
+	}
+	return
+}
+
+func (atvprsr *activeParser) ACommit() (acerr error) {
+	if len(atvprsr.runesToParse) == 0 {
+		atvprsr.runesToParse = make([]rune, atvprsr.maxBufSize)
+	}
+	atvprsr.runesToParsei = int(0)
+	var atvCntntRunesErr = error(nil)
+	if len(atvprsr.runeLabel) == 0 {
+		atvprsr.runeLabel = [][]rune{[]rune("<@"), []rune("@>")}
+		atvprsr.runeLabelI = []int{0, 0}
+		if len(atvprsr.runePrvR) == 0 {
+			atvprsr.runePrvR = []rune{rune(0)}
+		}
+		atvprsr.runePrvR[0] = rune(0)
+	}
+	if len(atvprsr.psvLabel) == 0 {
+		atvprsr.psvLabel = [][]rune{[]rune("<"), []rune(">")}
+		atvprsr.psvLabelI = []int{0, 0}
+		if len(atvprsr.psvPrvR) == 0 {
+			atvprsr.psvPrvR = []rune{rune(0)}
+		}
+		atvprsr.psvPrvR[0] = rune(0)
+	}
+	
+	if atvprsr.atvrdr != nil {
+		atvprsr.commitNow<-true
+		if <-atvprsr.commitNow {
+			flushPassiveContent(atvprsr, true)
+			if atvprsr.foundCode {
+				flushActiveCode(atvprsr)
+				func() {
+					if atvprsr.atv != nil {
+						if atvprsr.atv.vm == nil {
+							atvprsr.atv.vm = goja.New()
+						}
+						atvprsr.atv.vm.Set("out", atvprsr.atv)
+						atvprsr.atv.vm.Set("_atvprsr", atvprsr)
+						if len(atvprsr.atv.activeMap) > 0 {
+							for k, v := range atvprsr.atv.activeMap {
+								if atvprsr.atv.vm.Get(k) != v {
+									atvprsr.atv.vm.Set(k, v)
+								}
+							}
+						}
+						if len(activeGlobalMap) > 0 {
+							for k, v := range activeGlobalMap {
+								if atvprsr.atv.vm.Get(k) != v {
+									atvprsr.atv.vm.Set(k, v)
+								}
+							}
+						}
+						var code = atvprsr.activeCode().String()
+						var coderdr = strings.NewReader(code)
+						var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
+						if parsedprgmerr == nil {
+							var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
+							if prgmerr == nil {
+								var _, vmerr = atvprsr.atv.vm.RunProgram(prgm)
+								if vmerr != nil {
+									fmt.Println(vmerr)
+									fmt.Println(code)
+									acerr = vmerr
+								}
+							} else {
+								fmt.Println(prgmerr)
+								fmt.Println(code)
+								acerr = prgmerr
+							}
+							prgm = nil
+						} else {
+							fmt.Println(parsedprgmerr)
+							fmt.Println(code)
+							acerr = parsedprgmerr
+						}
+						parsedprgm = nil
+						atvprsr.atv.vm = nil
+					}
+				}()
+			}
+		}
+	}
+	return
 }
 
 func (atvprsr *activeParser) ExecuteActive(maxbufsize int) (atverr error) {
@@ -279,14 +392,6 @@ func (atvprsr *activeParser) Print(a ...interface{}) {
 	}
 }
 
-func (atvprsr *activeParser) APrint(a ...interface{}) {
-
-}
-
-func (atvprsr *activeParser) Commit() {
-
-}
-
 type Active struct {
 	printer   iorw.Printing
 	atvprsr   *activeParser
@@ -316,16 +421,18 @@ func (atvRne *activeRune) close() {
 	atvRne.atvprsr = nil
 }
 
-func (atv *Active) APrint(a ...interface{}) {
+func (atv *Active) APrint(a ...interface{}) (err error) {
 	if atv.atvprsr != nil {
-		atv.atvprsr.APrint(a...)
+		err = atv.atvprsr.APrint(a...)
 	}
+	return
 }
 
-func (atv *Active) ACommit() {
+func (atv *Active) ACommit() (err error) {
 	if atv.atvprsr != nil {
-		atv.atvprsr.Commit()
+		err = atv.atvprsr.ACommit()
 	}
+	return
 }
 
 func (atv *Active) APrintln(a ...interface{}) {
@@ -573,8 +680,35 @@ func setAtvA(atv *Active, d interface{}) {
 	}
 }
 
-func NewActive(a ...interface{}) (atv *Active) {
-	atv = &Active{atvprsr: &activeParser{maxBufSize: 81920, lck: &sync.RWMutex{}}}
+func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
+	if maxBufSize < 81920 {
+		maxBufSize = 81920
+	}
+	atv = &Active{atvprsr: &activeParser{closing: make(chan bool, 1), runesToParseQueue: make(chan rune, 1), commitParsedQueue: make(chan bool, 1), maxBufSize: maxBufSize, lck: &sync.RWMutex{}}}
+	go func(prsr *activeParser, prsreRuneQueue chan rune, commitNow chan bool, closeNow chan bool) {
+		var isActive = true
+		for isActive {
+			select {
+			case prsrrne := <-prsreRuneQueue:
+				processRune(prsrrne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
+			case cmt := <-commitNow:
+				if cmt {
+					select {
+					case rne := <-prsreRuneQueue:
+						processRune(rne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
+					default:
+						break
+					}
+					<-commitNow
+				}
+			case dne := <-closeNow:
+				if dne {
+					isActive = false
+				}
+			}
+		}
+		closeNow <- true
+	}(atv.atvprsr, atv.atvprsr.runesToParseQueue, atv.atvprsr.commitParsedQueue, atv.atvprsr.closing)
 	atv.atvprsr.atv = atv
 	for _, d := range a {
 		setAtvA(atv, d)

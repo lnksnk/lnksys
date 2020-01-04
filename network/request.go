@@ -190,7 +190,7 @@ func (reqst *Request) ExecuteRequest() {
 		reqst.w.WriteHeader(200)
 
 		if reqst.Active == nil {
-			reqst.Active = active.NewActive(reqst, map[string]interface{}{"DBMS": db.DBMSManager, "Parameters": func() *parameters.Parameters {
+			reqst.Active = active.NewActive(maxbufsize,reqst, map[string]interface{}{"DBMS": db.DBMSManager, "Parameters": func() *parameters.Parameters {
 				return reqst.Parameters()
 			}, "DBQuery": func(alias string, query string, args ...interface{}) (dbquery *db.DBQuery) {
 				dbquery = reqst.DbQuery(alias, query, args)
@@ -211,7 +211,13 @@ func (reqst *Request) ExecuteRequest() {
 		} else {
 			reqst.Active.Reset()
 		}
-		if atverr := reqst.Active.ExecuteActive(maxbufsize); atverr != nil {
+
+		if atverr := func() (fnerr error) {
+			if fnerr = reqst.Active.APrint(reqst); fnerr==nil {
+				fnerr = reqst.Active.ACommit()
+			}			
+			return
+		}(); atverr != nil {
 			fmt.Print(atverr)
 		}
 	} else {
