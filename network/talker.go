@@ -40,7 +40,7 @@ func NewTalker(h2c ...bool) (tlkr *Talker) {
 	var trwref *iorw.BufferedRW = iorw.NewBufferedRW(maxBufferSize, nil)
 	tlkr = &Talker{enableClose: false, trw: trwref, client: &http.Client{Timeout: time.Second * 10, Transport: netTransport},
 		prms: parameters.NewParameters(), h2c: len(h2c) == 1 && h2c[0]}
-	tlkr.atv = active.NewActive(81920, map[string]interface{}{"out": tlkr.trw})
+	tlkr.atv = active.NewActive(int64(81920), map[string]interface{}{"out": tlkr.trw})
 	return
 }
 
