@@ -681,33 +681,25 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	if maxBufSize < 81920 {
 		maxBufSize = 81920
 	}
-	atv = &Active{atvprsr: &activeParser{closing: make(chan bool, 1), runesToParseQueue: make(chan rune, 1), commitParsedQueue: make(chan bool, 1), maxBufSize: maxBufSize, lck: &sync.RWMutex{}}}
-	if len(atv.atvprsr.runesToParse) == 0 {
-		atv.atvprsr.runesToParse = make([]rune, atv.atvprsr.maxBufSize)
-	}
-	atv.atvprsr.runesToParsei = int(0)
-	if len(atv.atvprsr.runeLabel) == 0 {
-		atv.atvprsr.runeLabel = [][]rune{[]rune("<@"), []rune("@>")}
-		atv.atvprsr.runeLabelI = []int{0, 0}
-		if len(atv.atvprsr.runePrvR) == 0 {
-			atv.atvprsr.runePrvR = []rune{rune(0)}
-		}
-		atv.atvprsr.runePrvR[0] = rune(0)
-	}
-	if len(atv.atvprsr.psvLabel) == 0 {
-		atv.atvprsr.psvLabel = [][]rune{[]rune("<"), []rune(">")}
-		atv.atvprsr.psvLabelI = []int{0, 0}
-		if len(atv.atvprsr.psvPrvR) == 0 {
-			atv.atvprsr.psvPrvR = []rune{rune(0)}
-		}
-		atv.atvprsr.psvPrvR[0] = rune(0)
-	}
-	
+	atv = &Active{atvprsr: &activeParser{closing: make(chan bool, 1),
+		runesToParseQueue: make(chan rune, 1), 
+		commitParsedQueue: make(chan bool, 1), 
+		maxBufSize: maxBufSize, lck: &sync.RWMutex{},
+		runesToParse:make([]rune, maxBufSize),
+		runeLabel : [][]rune{[]rune("<@"), []rune("@>")},
+		runeLabelI : []int{0, 0},
+		runesToParsei : int(0),
+		runePrvR : []rune{rune(0)},
+		psvLabel : [][]rune{[]rune("<"), []rune(">")},
+		psvLabelI : []int{0, 0},
+		psvPrvR : []rune{rune(0)}}}
+		
 	go func(prsr *activeParser, prsreRuneQueue chan rune, commitNow chan bool, closeNow chan bool) {
 		var isActive = true
 		for isActive {
 			select {
 			case prsrrne := <-prsreRuneQueue:
+				fmt.Print(string(rne))
 				processRune(prsrrne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
 			case cmt := <-commitNow:
 				if cmt {
