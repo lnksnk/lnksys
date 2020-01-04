@@ -699,17 +699,9 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 		for isActive {
 			select {
 			case prsrrne := <-prsreRuneQueue:
-				fmt.Print(string(prsrrne))
 				processRune(prsrrne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
 			case cmt := <-commitNow:
 				if cmt {
-					select {
-					case rne := <-prsreRuneQueue:
-						fmt.Print(string(rne))
-						processRune(rne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
-					default:
-						break
-					}
 					<-commitNow
 				}
 			case dne := <-closeNow:
