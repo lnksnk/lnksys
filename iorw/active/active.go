@@ -75,19 +75,19 @@ func (atvprsr *activeParser) Reset() {
 }
 
 func (atvprsr *activeParser) Close() {
-	if atvprsr.closing!=nil {
-		atvprsr.closing<-true
+	if atvprsr.closing != nil {
+		atvprsr.closing <- true
 		<-atvprsr.closing
 		close(atvprsr.closing)
-		atvprsr.closing=nil
+		atvprsr.closing = nil
 	}
-	if atvprsr.runesToParseQueue!=nil {
+	if atvprsr.runesToParseQueue != nil {
 		close(atvprsr.runesToParseQueue)
-		atvprsr.runesToParseQueue=nil
+		atvprsr.runesToParseQueue = nil
 	}
-	if atvprsr.commitParsedQueue!=nil {
+	if atvprsr.commitParsedQueue != nil {
 		close(atvprsr.commitParsedQueue)
-		atvprsr.commitParsedQueue=nil
+		atvprsr.commitParsedQueue = nil
 	}
 	if len(atvprsr.runeLabel) > 0 {
 		atvprsr.runeLabelI = nil
@@ -165,7 +165,8 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	for {
 		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
-				atvprsr.runesToParseQueue<-rne
+				processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+				atvprsr.runesToParseQueue <- rne
 			}
 		} else {
 			if rnerr != io.EOF {
@@ -182,63 +183,63 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 		atvprsr.runesToParse = make([]rune, atvprsr.maxBufSize)
 		atvprsr.runesToParsei = int(0)
 	}
-	
+
 	if atvprsr.atvrdr != nil {
-		atvprsr.commitParsedQueue<-true
-		if <-atvprsr.commitParsedQueue {
-			flushPassiveContent(atvprsr, true)
-			if atvprsr.foundCode {
-				flushActiveCode(atvprsr)
-				func() {
-					if atvprsr.atv != nil {
-						if atvprsr.atv.vm == nil {
-							atvprsr.atv.vm = goja.New()
-						}
-						atvprsr.atv.vm.Set("out", atvprsr.atv)
-						atvprsr.atv.vm.Set("_atvprsr", atvprsr)
-						if len(atvprsr.atv.activeMap) > 0 {
-							for k, v := range atvprsr.atv.activeMap {
-								if atvprsr.atv.vm.Get(k) != v {
-									atvprsr.atv.vm.Set(k, v)
-								}
-							}
-						}
-						if len(activeGlobalMap) > 0 {
-							for k, v := range activeGlobalMap {
-								if atvprsr.atv.vm.Get(k) != v {
-									atvprsr.atv.vm.Set(k, v)
-								}
-							}
-						}
-						var code = atvprsr.activeCode().String()
-						var coderdr = strings.NewReader(code)
-						var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
-						if parsedprgmerr == nil {
-							var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
-							if prgmerr == nil {
-								var _, vmerr = atvprsr.atv.vm.RunProgram(prgm)
-								if vmerr != nil {
-									fmt.Println(vmerr)
-									fmt.Println(code)
-									acerr = vmerr
-								}
-							} else {
-								fmt.Println(prgmerr)
-								fmt.Println(code)
-								acerr = prgmerr
-							}
-							prgm = nil
-						} else {
-							fmt.Println(parsedprgmerr)
-							fmt.Println(code)
-							acerr = parsedprgmerr
-						}
-						parsedprgm = nil
-						atvprsr.atv.vm = nil
+		//atvprsr.commitParsedQueue <- true
+		//if <-atvprsr.commitParsedQueue {
+		flushPassiveContent(atvprsr, true)
+		if atvprsr.foundCode {
+			flushActiveCode(atvprsr)
+			func() {
+				if atvprsr.atv != nil {
+					if atvprsr.atv.vm == nil {
+						atvprsr.atv.vm = goja.New()
 					}
-				}()
-			}
+					atvprsr.atv.vm.Set("out", atvprsr.atv)
+					atvprsr.atv.vm.Set("_atvprsr", atvprsr)
+					if len(atvprsr.atv.activeMap) > 0 {
+						for k, v := range atvprsr.atv.activeMap {
+							if atvprsr.atv.vm.Get(k) != v {
+								atvprsr.atv.vm.Set(k, v)
+							}
+						}
+					}
+					if len(activeGlobalMap) > 0 {
+						for k, v := range activeGlobalMap {
+							if atvprsr.atv.vm.Get(k) != v {
+								atvprsr.atv.vm.Set(k, v)
+							}
+						}
+					}
+					var code = atvprsr.activeCode().String()
+					var coderdr = strings.NewReader(code)
+					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
+					if parsedprgmerr == nil {
+						var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
+						if prgmerr == nil {
+							var _, vmerr = atvprsr.atv.vm.RunProgram(prgm)
+							if vmerr != nil {
+								fmt.Println(vmerr)
+								fmt.Println(code)
+								acerr = vmerr
+							}
+						} else {
+							fmt.Println(prgmerr)
+							fmt.Println(code)
+							acerr = prgmerr
+						}
+						prgm = nil
+					} else {
+						fmt.Println(parsedprgmerr)
+						fmt.Println(code)
+						acerr = parsedprgmerr
+					}
+					parsedprgm = nil
+					atvprsr.atv.vm = nil
+				}
+			}()
 		}
+		//}
 	}
 	return
 }
@@ -682,17 +683,17 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 		maxBufSize = 81920
 	}
 	atv = &Active{atvprsr: &activeParser{closing: make(chan bool, 1),
-		runesToParseQueue: make(chan rune, 1), 
-		commitParsedQueue: make(chan bool, 1), 
-		maxBufSize: maxBufSize, lck: &sync.RWMutex{},
-		runesToParse:make([]rune, maxBufSize),
-		runeLabel : [][]rune{[]rune("<@"), []rune("@>")},
-		runeLabelI : []int{0, 0},
-		runesToParsei : int(0),
-		runePrvR : []rune{rune(0)},
-		psvLabel : [][]rune{[]rune("<"), []rune(">")},
-		psvLabelI : []int{0, 0},
-		psvPrvR : []rune{rune(0)}}}
+		runesToParseQueue: make(chan rune, 1),
+		commitParsedQueue: make(chan bool, 1),
+		maxBufSize:        maxBufSize, lck: &sync.RWMutex{},
+		runesToParse:  make([]rune, maxBufSize),
+		runeLabel:     [][]rune{[]rune("<@"), []rune("@>")},
+		runeLabelI:    []int{0, 0},
+		runesToParsei: int(0),
+		runePrvR:      []rune{rune(0)},
+		psvLabel:      [][]rune{[]rune("<"), []rune(">")},
+		psvLabelI:     []int{0, 0},
+		psvPrvR:       []rune{rune(0)}}}
 
 	go func(prsr *activeParser, prsreRuneQueue chan rune, commitNow chan bool, closeNow chan bool) {
 		var isActive = true
