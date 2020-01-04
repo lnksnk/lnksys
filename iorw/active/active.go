@@ -693,13 +693,13 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 		psvLabel : [][]rune{[]rune("<"), []rune(">")},
 		psvLabelI : []int{0, 0},
 		psvPrvR : []rune{rune(0)}}}
-		
+
 	go func(prsr *activeParser, prsreRuneQueue chan rune, commitNow chan bool, closeNow chan bool) {
 		var isActive = true
 		for isActive {
 			select {
 			case prsrrne := <-prsreRuneQueue:
-				fmt.Print(string(rne))
+				fmt.Print(string(prsrrne))
 				processRune(prsrrne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
 			case cmt := <-commitNow:
 				if cmt {
