@@ -683,7 +683,7 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	}
 	atv = &Active{atvprsr: &activeParser{closing: make(chan bool, 1), runesToParseQueue: make(chan rune, 1), commitParsedQueue: make(chan bool, 1), maxBufSize: maxBufSize, lck: &sync.RWMutex{}}}
 	if len(atv.atvprsr.runesToParse) == 0 {
-		atv.atvprsr.runesToParse = make([]rune, atvprsr.maxBufSize)
+		atv.atvprsr.runesToParse = make([]rune, atv.atvprsr.maxBufSize)
 	}
 	atv.atvprsr.runesToParsei = int(0)
 	if len(atv.atvprsr.runeLabel) == 0 {
