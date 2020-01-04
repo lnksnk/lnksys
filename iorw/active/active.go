@@ -188,7 +188,7 @@ func (atvprsr *activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 							atvprsr.atv.vm = goja.New()
 						}
 						atvprsr.atv.vm.Set("out", atvprsr.atv)
-						atvprsr.atv.vm.Set("_atv", atvprsr.atv)
+						atvprsr.atv.vm.Set("_atvprsr", atvprsr)
 						if len(atvprsr.atv.activeMap) > 0 {
 							for k, v := range atvprsr.atv.activeMap {
 								if atvprsr.atv.vm.Get(k) != v {
@@ -234,6 +234,49 @@ func (atvprsr *activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 		}
 	}
 	return
+}
+
+func (atvprsr *activeParser) PassivePrint(fromOffset int64, toOffset int64) {
+	if len(atvprsr.passiveBuffer) > 0 {
+		if fromOffset >= 0 && toOffset <= atvprsr.passiveBufferOffset {
+			var psi = int(0)
+			var pei = int(0)
+			var pfrom = int64(0)
+			var pto = int64(0)
+			var pl = int64(0)
+			for _, psvb := range atvprsr.passiveBuffer {
+				pl = int64(len(psvb))
+				pto = pl + pfrom
+				if fromOffset < pto {
+					if fromOffset < pfrom {
+						psi = int(pfrom - fromOffset)
+					} else {
+						psi = int(fromOffset - pfrom)
+					}
+					if pto <= toOffset {
+						pei = int(pl - (pto - toOffset))
+						atvprsr.Print(string(psvb[psi:pei]))
+						if pto == toOffset {
+							break
+						}
+					} else if toOffset < pto {
+						if pto-toOffset > 0 {
+							pei = int(pl - (pto - toOffset))
+							atvprsr.Print(string(psvb[psi:pei]))
+						}
+						break
+					}
+				}
+				pfrom += pto
+			}
+		}
+	}
+}
+
+func (atvprsr *activeParser) Print(a ...interface{}) {
+	if atvprsr.atv != nil {
+		atvprsr.atv.Print(a...)
+	}
 }
 
 type Active struct {
@@ -339,7 +382,7 @@ func flushPassiveContent(atvprsr *activeParser, force bool) {
 		}
 
 		if atvprsr.lastPassiveBufferOffset < atvprsr.passiveBufferOffset {
-			for _, arune := range []rune(fmt.Sprintf("_atv.PassivePrint(%d,%d);", atvprsr.lastPassiveBufferOffset, atvprsr.passiveBufferOffset)) {
+			for _, arune := range []rune(fmt.Sprintf("_atvprsr.PassivePrint(%d,%d);", atvprsr.lastPassiveBufferOffset, atvprsr.passiveBufferOffset)) {
 				if len(atvprsr.atvRunesToParse) == 0 {
 					atvprsr.atvRunesToParse = make([]rune, 81920)
 				}
@@ -356,39 +399,8 @@ func flushPassiveContent(atvprsr *activeParser, force bool) {
 }
 
 func (atv *Active) PassivePrint(fromOffset int64, toOffset int64) {
-	if atv.atvprsr != nil && len(atv.atvprsr.passiveBuffer) > 0 {
-		if fromOffset >= 0 && toOffset <= atv.atvprsr.passiveBufferOffset {
-			var psi = int(0)
-			var pei = int(0)
-			var pfrom = int64(0)
-			var pto = int64(0)
-			var pl = int64(0)
-			for _, psvb := range atv.atvprsr.passiveBuffer {
-				pl = int64(len(psvb))
-				pto = pl + pfrom
-				if fromOffset < pto {
-					if fromOffset < pfrom {
-						psi = int(pfrom - fromOffset)
-					} else {
-						psi = int(fromOffset - pfrom)
-					}
-					if pto <= toOffset {
-						pei = int(pl - (pto - toOffset))
-						atv.Print(string(psvb[psi:pei]))
-						if pto == toOffset {
-							break
-						}
-					} else if toOffset < pto {
-						if pto-toOffset > 0 {
-							pei = int(pl - (pto - toOffset))
-							atv.Print(string(psvb[psi:pei]))
-						}
-						break
-					}
-				}
-				pfrom += pto
-			}
-		}
+	if atv.atvprsr != nil {
+		atv.atvprsr.PassivePrint(fromOffset, toOffset)
 	}
 }
 
