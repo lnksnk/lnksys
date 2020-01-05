@@ -158,7 +158,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 		}
 	}
 	
-return
+	return
 }
 
 func (atvprsr *activeParser)ACommit() (acerr error) {
