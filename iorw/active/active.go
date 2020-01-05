@@ -82,7 +82,7 @@ func (atvprsr *activeParser) Close() {
 	if atvprsr.runesToParsi > 0 {
 		atvprsr.runesToParsei = 0
 	}
-	if len(atvprsr.runesToParse) > 0 
+	if len(atvprsr.runesToParse) > 0 {
 		atvprsr.runesToParse = nil
 	}
 	if atvprsr.rdrRune != nil {
