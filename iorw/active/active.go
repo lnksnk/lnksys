@@ -266,7 +266,7 @@ func (atvprsr activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 			}()
 			return <-doneActRead
 		}()
-		if atverr == il {
+		if atverr == nil {
 			flushPassiveContent(atvprsr, true)
 			if atvprsr.foundCode {
 				flushActivCode(atvprsr)
