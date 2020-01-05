@@ -165,7 +165,8 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	for {
 		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
-				processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+				//processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+				atvprsr.runesToParseQueue<-rne
 			}
 		} else {
 			if rnerr != io.EOF {
@@ -179,6 +180,8 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 
 func (atvprsr *activeParser) ACommit() (acerr error) {
 	if atvprsr.atvrdr != nil {
+		atvprsr.commitParsedQueue<-true
+		<-atvprsr.commitParsedQueue
 		atvprsr.lck.RLock()
 		defer atvprsr.lck.RUnlock()
 		flushPassiveContent(atvprsr, true)
@@ -676,7 +679,7 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 		maxBufSize = 81920
 	}
 	atv = &Active{atvprsr: &activeParser{closing: make(chan bool, 1),
-		runesToParseQueue: make(chan rune, 1),
+		runesToParseQueue: make(chan rune, maxBufSize),
 		commitParsedQueue: make(chan bool, 1),
 		maxBufSize:        maxBufSize, lck: &sync.RWMutex{},
 		runesToParse:  make([]rune, maxBufSize),
