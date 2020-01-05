@@ -46,21 +46,21 @@ type activeParser struct {
 
 func (atvprsr *activeParser) atvbufrdr() *iorw.BufferedRW {
 	if atvprsr.atvrdr == nil {
-	atvprsr.atvrdr = iorw.NewBufferedRW(atvprsr.maxBufSize, nil)
+		atvprsr.atvrdr = iorw.NewBufferedRW(atvprsr.maxBufSize, nil)
 	}
 	return atvprsr.atvrdr
 }
 
 func (atvprsr *activePrser) activeCode() *iorw.BufferedRW {
 	if atvprsr.curAtvCde == nil {
-	atvprsr.curAtvCde = iorw.NewBufferedRW(atvprsr.maxBufSize, nil)
+		atvprsr.curAtvCde = iorw.NewBufferedRW(atvprsr.maxBufSize, nil)
 	}
 	return atvprsr.curAtvCde
 }
 
 func (atvprsr *activeParsr) Reset() {
 	if len(atvprsr.runeLabel) > 0 {
-	atvprsr.runeLabelI[0] = 0
+		atvprsr.runeLabelI[0] = 0
 		atvprsr.runeLabelI[1] = 0
 	}
 	if len(atvprsr.runePrvR) == 1 {
@@ -80,7 +80,7 @@ func (atvprsr *activeParser) Close() {
 		atvprsr.runePrvR = nil
 	}
 	if atvprsr.runesToParsi > 0 {
-		atvprsr.runesToParsei = 0
+		tvprsr.runesToParsei = 0
 	}
 	if len(atvprsr.runesToParse) > 0 
 		atvprsr.runesToParse = nil
@@ -88,7 +88,7 @@ func (atvprsr *activeParser) Close() {
 	if atvprsr.rdrRune != nil {
 		atvprsr.rdrRune = nil
 	}
-	if atvprsr.rdskr != nil {
+	i atvprsr.rdskr != nil {
 		atvprsr.rdskr = nil
 	}
 	//
@@ -109,9 +109,9 @@ func (atvprsr *activeParser) Close() {
 		atvprsr.passiveRune= nil
 	}
 	if atvprsr.passiveBuffer != nil {
-		for len(atvprsr.passiveBuffer)  0 {
+		for len(atvprsr.passiveBuffer) > 0 {
 			atvprsr.passiveBuffer[0]  nil
-		atvprsr.passiveBuffer = atvprsr.passiveBuffer[1:]
+			atvprsr.passiveBuffer = atvprsr.passiveBuffer[1:]
 		}
 		atvprsr.passiveBuffer =nil
 	}
@@ -129,10 +129,10 @@ func (atvprsr *activeParser) Close() {
 		atvprsr.psvPrvR = nil
 	}
 	//
-	if atvprsr.atvRunesToParse != nil {
+	ifatvprsr.atvRunesToParse != nil {
 		atvprsr.atvRunesToParse = nl
 	}
-	if atvprsr.curAtvCde != nil {
+	ifatvprsr.curAtvCde != nil {
 		atvprsr.curAtvCde.Close()
 		atvprsr.curAtvCde = nil
 	}
@@ -141,7 +141,7 @@ func (atvprsr *activeParser) Close() {
 	}
 }
 
-func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
+fuc (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	atvprsr.lck.RLock()
 	defer atvprsr.lck.RUnlck()
 	avprsr.atvbufrdr().Print(a...)
@@ -152,7 +152,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 			}
 		} else {
 			if rnerr != io.EOF {
-			err = rnerr
+				err = rnerr
 			}
 			break
 		}
@@ -168,15 +168,15 @@ func (atvprsr *activeParser)ACommit() (acerr error) {
 		flushPassiveContnt(atvprsr, true)
 		if atvprsr.foundCode {
 			flushActiveCode(atvprsr)  
-			fnc() {
+			func() {
 				if atvrsr.atv != nil {
 					if atvprsr.atv.vm = nil {
 						atvprsr.av.vm = goja.New()
 				}
-					atvrsr.atv.vm.Set("out", atvprsr.atv)
+				atvrsr.atv.vm.Set("out", atvprsr.atv)
 				atvprsr.atv.vm.Set("_atvprsr", atvprsr)
 				if len(atvprsr.atv.activeMap) > 0 {
-						fr k, v := range atvprsr.atv.activeMap {
+						for k, v := range atvprsr.atv.activeMap {
 						if atvprsr.atv.vm.Get(k) != v {
 							atvprsr.atv.vm.Set(k, v)
 							}
@@ -192,7 +192,7 @@ func (atvprsr *activeParser)ACommit() (acerr error) {
 					var code = atvprsr.actveCode().String()
 					var coderdr = strings.NewRader(code)
 					var parsedprgm, parsedprgmer = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
-					i parsedprgmerr == nil {
+					if parsedprgmerr == nil {
 						var prgm, prgmerr = goja.CompileAST(prsedprgm, false)
 						if prgmerr == nil {
 							var _, vmerr = atvprsr.atv.vm.Runrogram(prgm)
@@ -207,8 +207,8 @@ func (atvprsr *activeParser)ACommit() (acerr error) {
 							acerr = prgmerr
 						}
 						prm = nil
-					} lse {
-						mt.Println(parsedprgmerr)
+					} else {
+						fmt.Println(parsedprgmerr)
 						fmt.Println(code)
 						acerr = parsedprgmerr
 					}
@@ -240,14 +240,13 @@ func (atvprsr activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 	if len(atvprsr.psvLabel) == 0 {
 		atvprr.psvLabel = [][]rune{[]rune("<"), []rune(">")}
 		atvprsr.psvLabelI = []int{0, 0}
-	
 		if len(atvprsr.psvPrvR) == 0 {
 			atvprsr.psvPrvR = []rune{rune(0)}
 		}
 		atvprsr.psvPrvR[0] = rune()
 	}
 	if atvprsr.rdrRune != nil {
-		unc() bool {
+		func() bool {
 			var doneActRead = make(chan ool, 1)
 			defer close(doneActRead)
 			go func() {
@@ -255,17 +254,17 @@ func (atvprsr activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 					if rne, rnsize, rnerr := atvpsr.rdrRune.ReadRune(); rnerr == nil {
 						if rnsize > 0 {
 							processRune(rne, atvprsr, atvpsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
-					}
+						}
 					} else {
-					if rnerr != io.EOF {
+						if rnerr != io.EOF {
 							atverr = rnerr
 						}
 						break
 					}
 				}
-			doneActRead <- true
+				doneActRead <- true
 			}()
-		return <-doneActRead
+			return <-doneActRead
 		}()
 		if atverr == il {
 			flushPassiveContent(atvprsr, true)
@@ -278,24 +277,24 @@ func (atvprsr activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 						}
 						atvprsratv.vm.Set("out", atvprsr.atv)
 						atvprsr.atv.vm.Set("atvprsr", atvprsr)
-						if len(atvprsr.tv.activeMap) > 0 {
-							or k, v := range atvprsr.atv.activeMap {
+						if len(atvprsr.atv.activeMap) > 0 {
+							for k, v := range atvprsr.atv.activeMap {
 								if tvprsr.atv.vm.Get(k) != v {
-								atvprsr.atv.vm.Set(k, v)
-							}
-							}
-						
-						if len(activeGloblMap) > 0 {
-						for k, v := range activeGlobalMap {
-								if atvprsr.av.vm.Get(k) != v {
 									atvprsr.atv.vm.Set(k, v)
 								}
 							}
-						}
+						
+							if len(activeGloblMap) > 0 {
+							for k, v := range activeGlobalMap {
+									if atvprsr.atv.vm.Get(k) != v {
+										atvprsr.atv.vm.Set(k, v)
+									}
+								}
+							}
 						var code = atvprsr.actveCode().String()
 						var coderdr = strings.NewRader(code)
 						var parsedprgm, parsedprgmer = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
-						i parsedprgmerr == nil {
+						if parsedprgmerr == nil {
 							var prgm, prgmerr = goja.CompileAST(prsedprgm, false)
 							if prgmerr == nil {
 								var _, vmerr = atvprsr.atv.vm.Runrogram(prgm)
@@ -310,8 +309,8 @@ func (atvprsr activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 								atverr = prgmerr
 							}
 							prm = nil
-						} lse {
-							mt.Println(parsedprgmerr)
+						} else {
+							fmt.Println(parsedprgmerr)
 							fmt.Println(code)
 							atverr = parsedprgmerr
 						}
@@ -325,7 +324,7 @@ func (atvprsr activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 	return
 }
 
-func (atvprsr *activeParser)PassivePrint(fromOffset int64, toOffset int64) {
+func (atvprsr *activeParser) PassivePrint(fromOffset int64, toOffset int64) {
 	if len(atvprsr.passiveBufer) > 0 {
 		if fromOffset >= 0 && oOffset <= atvprsr.passiveBufferOffset {
 			var pi = int(0)
@@ -337,12 +336,12 @@ func (atvprsr *activeParser)PassivePrint(fromOffset int64, toOffset int64) {
 				pl  int64(len(psvb))
 				pto = pl + pfrom
 				if fromOffset < pto {
-					i fromOffset < pfrom {
+					if fromOffset < pfrom {
 						pi = int(pfrom - fromOffset)
-				} else {
-					psi = int(fromOffset - pfrom)
-				}
-					ifpto <= toOffset {
+					} else {
+						psi = int(fromOffset - pfrom)
+					}
+					if pto <= toOffset {
 					pei = int(pl - (pto - toOffset))
 					atvprsr.Print(string(psvb[psi:pei]))
 						if pto == toOffset {
@@ -393,30 +392,30 @@ func (atvRne *activeRune process() {
 	processRune(atvRne.rne,atvRne.atvprsr, atvRne.atvprsr.runeLabel, atvRne.atvprsr.runeLabelI, atvRne.atvprsr.runePrvR)
 }
 
-fnc (atvRne *activeRune) close() {
-atvRne.atvprsr = nil
+func (atvRne *activeRune) close() {
+	atvRne.atvprsr = nil
 }
 
 func (atv *Active) APrint(a ...interface{}) (errerror) {
-	i atv.atvprsr != nil {
+	if atv.atvprsr != nil {
 		err =atv.atvprsr.APrint(a...)
-	
-return
+	}
+	return
 }
 
 func (atv *Ative) ACommit() (err error) {
 	if atv.atvprs != nil {
 		err = atv.atvprsr.ACmmit()
-	
-return
+	}
+	return
 }
 
-fnc (atv *Active) APrintln(a ...interface{}) {
-atv.APrint(a...)
+func (atv *Active) APrintln(a ...interface{}) {
+	atv.APrint(a...)
 	atv.APrint("/r/n")
 }
 
-unc capturePassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
+func capturePassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
 	var pl = len(p)
 	for n < pl {
 		if atvprsr.foundCode {
@@ -456,7 +455,7 @@ unc capturePassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
 	return
 }
 
-func flushPassiveContent(atvprsr *activeParser, force ool) {
+func flushPassiveContent(atvprsr *activeParser, force bool) {
 	if atvprsr.runesToParsei > 0 {
 		capturePassiveContent(atvprsr, atvprsr.unesToParse[0:atvprsr.runesToParsei])
 		atvprsr.runesToParsei = 0
@@ -467,25 +466,25 @@ func flushPassiveContent(atvprsr *activeParser, force ool) {
 		atvrsr.psvRunesToParsei = 0
 	}
 	if atvprr.foundCode {
-		ifforce {
+		if force {
 			if atvpsr.passiveRunei > 0 {
 				var psvRunes = make([]rune,atvprsr.passiveRunei)
 				copy(pvRunes, atvprsr.passiveRune[0:atvprsr.passiveRunei])
-			if len(atvprsr.passiveBuffer) == 0 {
-				atvprsr.passiveBuffer = [][]rune{}
+				if len(atvprsr.passiveBuffer) == 0 {
+					atvprsr.passiveBuffer = [][]rune{}
 				}
-			atvprsr.passiveBuffer = append(atvprsr.passiveBuffer, psvRunes)
-			psvRunes = nil
+				atvprsr.passiveBuffer = append(atvprsr.passiveBuffer, psvRunes)
+				psvRunes = nil
 				atvprsr.passiveRunei = 0
 			}
 		}
 
-		f atvprsr.lastPassiveBufferOffset < atvprsr.passiveBufferOffset {
+		if atvprsr.lastPassiveBufferOffset < atvprsr.passiveBufferOffset {
 		for _, arune := range []rune(fmt.Sprintf("_atvprsr.PassivePrint(%d,%d);", atvprsr.lastPassiveBufferOffset, atvprsr.passiveBufferOffset)) {
 				if len(atvprsr.atvRunesToParse == 0 {
 					atvprsr.atvRunesToParse = make([]rune, 81920)
 				}
-			atvprsr.atvRunesToParse[atvprsr.atvRunesToParsei] = arune
+				atvprsr.atvRunesToParse[atvprsr.atvRunesToParsei] = arune
 				atvprsr.atvRunesToPrsei++
 				if atvprr.atvRunesToParsei == len(atvprsr.atvRunesToParse) {
 					captureActiveCode(atvprsr, tvprsr.atvRunesToParse[0:atvprsr.atvRunesToParsei])
@@ -514,20 +513,20 @@ func processUnparsedPassiveContent(atvprsr *activearser, p []rune) (n int, err e
 			vr cl = copy(atvprsr.runesToParse[atvprsr.runesToParsei:atvprsr.runesToParsei+(len(atvprsr.runesToParse)-atvprsr.runesToParsei)], p[n:n+(len(atvprsr.runesToParse)-atvprsr.runesToParsei)])
 			n += cl
 			tvprsr.runesToParsei += cl
-		 else if (pl - n) < (len(atvprsr.runesToParse) - atvprsr.runesToParsei) {
-		var cl = copy(atvprsr.runesToParse[atvprsr.runesToParsei:atvprsr.runesToParsei+(pl-n)], p[n:n+(pl-n)])
-		n += cl
+		} else if (pl - n) < (len(atvprsr.runesToParse) - atvprsr.runesToParsei) {
+			var cl = copy(atvprsr.runesToParse[atvprsr.runesToParsei:atvprsr.runesToParsei+(pl-n)], p[n:n+(pl-n)])
+			n += cl
 			atvprsr.runesToParsei += cl
 		}
 		if atvprsr.runesToParsei > 0 && atvprsr.runesTParsei == len(atvprsr.runesToParse) {
-		capturePassiveContent(atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
-		atvprsr.runesToParsei = 0
-	}
+			capturePassiveContent(atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+			atvprsr.runesToParsei = 0
+		}
 	}
 	return
 }
 
-fuc processRune(rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []int, runePrvR []rune) {
+func processRune(rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []int, runePrvR []rune) {
 	if runelbli[1] == 0 && runelbli[0] < len(runelbl[0]) {
 		if runelbli[0] > 0 && runelbl[0][runelbli[0]-1] == runePrvR[0] && ruelbl[0][runelbli[0]] != rne {
 		processUnparsedPassiveContent(atvprsr, runelbl[0][0:runelbli[0]])
@@ -542,25 +541,25 @@ fuc processRune(rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []in
 				runePrvR[0] = rne
 			}
 		} else {
-			f runelbli[0] > 0 {
-			processUnparsedPassiveContent(atvprsr, runelbl[0][0:runelbli[0]])
+			if runelbli[0] > 0 {
+				processUnparsedPassiveContent(atvprsr, runelbl[0][0:runelbli[0]])
 				runlbli[0] = 0
-		}
-		runePrvR[0] = rne
+			}
+			runePrvR[0] = rne
 			processUnparsedPassiveContent(atvprsr, runePrvR)
 		}
 	} else if runelbli[0] == len(runelbl[0]) && runelbli[1] < len(runelbl[1]) {
 		if runelbli[1] > 0 && runelbl[1][runelbli[1]-1] == runePrvR[0] && unelbl[1][runelbli[1]] != rne {
 			processUnparsedctiveCode(atvprsr, runelbl[1][0:runelbli[1]])
 			runelbli[1] = 0
-			unePrvR[0] = rune(0)
+			runePrvR[0] = rune(0)
 		}
 		if runelbl[1][unelbli[1]] == rne {
 			runelbli[1]++
 			if runelbli[1] == len(ruelbl[1]) {
 				if atvpsr.atvRunesToParsei > 0 {
 					captureActiveCod(atvprsr, atvprsr.atvRunesToParse[0:atvprsr.atvRunesToParsei])
-				atvprsr.atvRunesToParsei = 0
+					atvprsr.atvRunesToParsei = 0
 				}
 				runePrvR[0] = rune()
 				runelbli[0] = 0
@@ -568,13 +567,13 @@ fuc processRune(rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []in
 				tvprsr.hasCode = false
 				atvprsr.lastPassveBufferOffset = atvprsr.passiveBufferOffset
 			} else {
-			runePrvR[0] = rne
+				runePrvR[0] = rne
 			}
 		} else {
 			if runelbli[1] > 0 {
 				processUnparseActiveCode(atvprsr, runelbl[1][0:runelbli[1]])
 				runelbli[1] = 0
-			
+			}
 			runePrvR[0] = rne
 			processUnparsdActiveCode(atvprsr, runePrvR)
 		}
@@ -597,8 +596,8 @@ func flushctiveCode(atvprsr *activeParser) {
 	}
 }
 
-fun processUnparsedActiveCode(atvprsr *activeParser, p []rune) (err error) {
-	i len(p) > 0 {
+func processUnparsedActiveCode(atvprsr *activeParser, p []rune) (err error) {
+	if len(p) > 0 {
 	for _, arune := range p {
 		if atvprsr.hasCode {
 				atvprsr.atvRunesToParse[atvprsr.atvRunesToParsei] = arune
@@ -606,18 +605,18 @@ fun processUnparsedActiveCode(atvprsr *activeParser, p []rune) (err error) {
 				if atvprs.atvRunesToParsei == len(atvprsr.atvRunesToParse) {
 					captureActiveCode(atvprsr, atvprsr.atvRunesToPare[0:atvprsr.atvRunesToParsei])
 					atvpsr.atvRunesToParsei = 0
-			}
-			} ele {
-			if strings.TrimSpace(string(arune)) != "" {
-				if !atvprsr.foundCode {
+				}
+			} else {
+				if strings.TrimSpace(string(arune)) != "" {
+					if !atvprsr.foundCode {
 						flushPassiveContent(atvprsr, false)
 						atvprsr.foundCode = true
 					} else {
 						flushPassiveContent(atvpsr, false)
-				}
-				atvprsr.hasCode = true
-				if len(atvprsr.atvRunesToParse) == 0 {
-						atvprsr.atvRunesToParse = make([]rune, 81920)
+					}
+					atvprsr.hasCode = true
+					if len(atvprsr.atvRunesToParse) == 0 {
+							atvprsr.atvRunesToParse = make([]rune, 81920)
 					}
 					atvprsr.atvRunesToPars[atvprsr.atvRunesToParsei] = arune
 					atvprsr.atvRunesToarsei++
@@ -644,23 +643,23 @@ func setAtvA(tv *Active, d interface{}) {
 	if prntr, prntrok := d.(iorw.Printing); prntrok {
 		atv.printer = prntr
 	}
-	if atmp, atvmpok := d.(map[string]interface{}); atvmpok {
-		if en(atvmp) > 0 {
-			fr k, v := range atvmp {
-			if len(atv.activeMap) == 0 {
-				atv.activeMap = map[string]interface{}{}
-				}
-			atv.activeMap[k] = v
-		}
+	if atvmp, atvmpok := d.(map[string]interface{}); atvmpok {
+		if len(atvmp) > 0 {
+			for k, v := range atvmp {
+				if len(atv.activeMap) == 0 {
+					atv.activeMap = map[string]interface{}{}
+					}
+				atv.activeMap[k] = v
+			}
 		}
 	}
 }
 
-fun NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
+func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	if maxBufSize < 81920 {
 		maxBufSize = 81920
 	}
-	av = &Active{atvprsr: &activeParser{maxBufSize: maxBufSize,
+	atv = &Active{atvprsr: &activeParser{maxBufSize: maxBufSize,
 		lck: &sync.RWMutex{},
 		runesToParse:  make[]rune, maxBufSize),
 		uneLabel:     [][]rune{[]rune("<@"), []rune("@>")},
@@ -673,9 +672,9 @@ fun NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 
 	atvatvprsr.atv = atv
 
-	fr n, d := range a {
-	if _, prntrok := d.(iorw.Printing); prntrok {
-		setAtvA(atv, d)
+	for n, d := range a {
+		if _, prntrok := d.(iorw.Printing); prntrok {
+			setAtvA(atv, d)
 			a = append(a[0:n], a[n+1:]...)
 			break
 		}
@@ -705,7 +704,7 @@ func (atv *Active) Reset()
 	}
 }
 
-func (atv *Active) Clse() {
+func (atv *Active) Close() {
 	if av.atvprsr != nil {
 		at.atvprsr.Close()
 	}
@@ -718,26 +717,26 @@ func (atv *Active) Clse() {
 	}
 }
 
-varactiveGlobalMap = map[string]interface{}{}
+var activeGlobalMap = map[string]interface{}{}
 
-unc MapGlobal(name string, a interface{}) {
+func MapGlobal(name string, a interface{}) {
 	if a != nil {
 		if _, atvGlbOk = activeGlobalMap[name]; atvGlbOk {
-		activeGlobalMap[name] = nil
+			activeGlobalMap[name] = nil
 		}
-	activeGlobalMap[name] = a
-}
+		activeGlobalMap[name] = a
+	}
 }
 
 func MapGlobals(a ...inteface{}) {
-	i len(a) >= 2 {
+	if len(a) >= 2 {
 	for len(a) > 0 {
 		if s, sok := a[0].(string); sok {
 				MapGlobal(s, a[1])
 			}
 			a[0] = nil
-		a[1] = nil
-		a = a[2:]
-	}
+			a[1] = nil
+			a = a[2:]
+		}
 	}
 }
