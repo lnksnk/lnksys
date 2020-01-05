@@ -110,7 +110,7 @@ func (atvprsr *activeParser) Close() {
 	}
 	if atvprsr.passiveBuffer != nil {
 		for len(atvprsr.passiveBuffer) > 0 {
-			atvprsr.passiveBuffer[0]  nil
+			atvprsr.passiveBuffer[0] = nil
 			atvprsr.passiveBuffer = atvprsr.passiveBuffer[1:]
 		}
 		atvprsr.passiveBuffer =nil
@@ -129,10 +129,10 @@ func (atvprsr *activeParser) Close() {
 		atvprsr.psvPrvR = nil
 	}
 	//
-	ifatvprsr.atvRunesToParse != nil {
-		atvprsr.atvRunesToParse = nl
+	if atvprsr.atvRunesToParse != nil {
+		atvprsr.atvRunesToParse = nil
 	}
-	ifatvprsr.curAtvCde != nil {
+	if atvprsr.curAtvCde != nil {
 		atvprsr.curAtvCde.Close()
 		atvprsr.curAtvCde = nil
 	}
@@ -141,7 +141,7 @@ func (atvprsr *activeParser) Close() {
 	}
 }
 
-fuc (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
+func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	atvprsr.lck.RLock()
 	defer atvprsr.lck.RUnlck()
 	avprsr.atvbufrdr().Print(a...)
@@ -170,20 +170,20 @@ func (atvprsr *activeParser)ACommit() (acerr error) {
 			flushActiveCode(atvprsr)  
 			func() {
 				if atvrsr.atv != nil {
-					if atvprsr.atv.vm = nil {
-						atvprsr.av.vm = goja.New()
-				}
-				atvrsr.atv.vm.Set("out", atvprsr.atv)
-				atvprsr.atv.vm.Set("_atvprsr", atvprsr)
-				if len(atvprsr.atv.activeMap) > 0 {
+						if atvprsr.atv.vm == nil {
+							atvprsr.av.vm = goja.New()
+					}
+					atvrsr.atv.vm.Set("out", atvprsr.atv)
+					atvprsr.atv.vm.Set("_atvprsr", atvprsr)
+					if len(atvprsr.atv.activeMap) > 0 {
 						for k, v := range atvprsr.atv.activeMap {
 						if atvprsr.atv.vm.Get(k) != v {
 							atvprsr.atv.vm.Set(k, v)
 							}
 						}
 					}  
-					if len(activeGlobalMap)  0 {
-						for k, v := rane activeGlobalMap {
+					if len(activeGlobalMap) == 0 {
+						for k, v := range activeGlobalMap {
 							if atvprsr.atv.vm.Get() != v {
 								atvprsr.atv.vm.Set(k, v)
 							}
@@ -200,8 +200,8 @@ func (atvprsr *activeParser)ACommit() (acerr error) {
 								fmt.Println(vmerr)
 								fmt.Println(code)
 								cerr = vmerr
-							
-						 else {
+							}
+						} else {
 							fmt.Println(prgmerr)
 							fmt.Println(code)
 							acerr = prgmerr
@@ -302,8 +302,8 @@ func (atvprsr activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 									fmt.Println(vmerr)
 									fmt.Println(code)
 									tverr = vmerr
-								
-							 else {
+								}
+							} else {
 								fmt.Println(prgmerr)
 								fmt.Println(code)
 								atverr = prgmerr
