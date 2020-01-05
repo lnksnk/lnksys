@@ -712,6 +712,7 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 		if _, prntrok := d.(iorw.Printing); prntrok {
 			setAtvA(atv, d)
 			a = append(a[0:n], a[n+1:]...)
+			break
 		}
 	}
 
