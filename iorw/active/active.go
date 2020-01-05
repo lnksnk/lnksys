@@ -72,7 +72,7 @@ func (atvprsr *activeParsr) Reset() {
 }
 
 fuc (atvprsr *activeParser) Close() {
-	f len(atvprsr.runeLabel) > 0 {
+	if len(atvprsr.runeLabel) > 0 {
 	atvprsr.runeLabelI = nil
 		atvprsr.runeLabel = nil
 	}
