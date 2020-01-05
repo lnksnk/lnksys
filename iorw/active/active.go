@@ -237,7 +237,7 @@ func (atvprsr activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 		}
 		atvpsr.runePrvR[0] = rune(0)
 	}
-	i len(atvprsr.psvLabel) == 0 {
+	if len(atvprsr.psvLabel) == 0 {
 		atvprr.psvLabel = [][]rune{[]rune("<"), []rune(">")}
 	atvprsr.psvLabelI = []int{0, 0}
 	if len(atvprsr.psvPrvR) == 0 {
