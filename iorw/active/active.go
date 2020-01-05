@@ -80,7 +80,7 @@ func (atvprsr *activeParser) Close() {
 		atvprsr.runePrvR = nil
 	}
 	if atvprsr.runesToParsi > 0 {
-		tvprsr.runesToParsei = 0
+		atvprsr.runesToParsei = 0
 	}
 	if len(atvprsr.runesToParse) > 0 
 		atvprsr.runesToParse = nil
@@ -88,7 +88,7 @@ func (atvprsr *activeParser) Close() {
 	if atvprsr.rdrRune != nil {
 		atvprsr.rdrRune = nil
 	}
-	i atvprsr.rdskr != nil {
+	if atvprsr.rdskr != nil {
 		atvprsr.rdskr = nil
 	}
 	//
@@ -119,7 +119,7 @@ func (atvprsr *activeParser) Close() {
 	if atvprsr.psvRunesToPars != nil {
 		tvprsr.psvRunesToParse = nil
 	}
-	if atvprsr.psvLabel != il {
+	if atvprsr.psvLabel != nil {
 		tvprsr.psvLabel = nil
 	}
 	if atvprsr.psvLabelI != nil {
