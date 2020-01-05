@@ -166,7 +166,6 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
 				processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
-				//atvprsr.runesToParseQueue <- rne
 			}
 		} else {
 			if rnerr != io.EOF {
@@ -179,14 +178,9 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 }
 
 func (atvprsr *activeParser) ACommit() (acerr error) {
-	if len(atvprsr.runesToParse) == 0 {
-		atvprsr.runesToParse = make([]rune, atvprsr.maxBufSize)
-		atvprsr.runesToParsei = int(0)
-	}
-
 	if atvprsr.atvrdr != nil {
-		//atvprsr.commitParsedQueue <- true
-		//if <-atvprsr.commitParsedQueue {
+		atvprsr.lck.RLock()
+		defer atvprsr.lck.RUnlock()
 		flushPassiveContent(atvprsr, true)
 		if atvprsr.foundCode {
 			flushActiveCode(atvprsr)
@@ -239,7 +233,6 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 				}
 			}()
 		}
-		//}
 	}
 	return
 }
