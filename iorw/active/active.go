@@ -326,6 +326,7 @@ func (atvprsr activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 }
 
 func (atvprsr *activeParser) PassivePrint(fromOffset int64, toOffset int64) {
+
 	if len(atvprsr.passiveBufer) > 0 {
 		if fromOffset >= 0 && oOffset <= atvprsr.passiveBufferOffset {
 			var pi = int(0)
