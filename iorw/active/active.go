@@ -18,9 +18,6 @@ type activeParser struct {
 	maxBufSize int64
 	lck        *sync.RWMutex
 	//
-	runesToParseQueue chan rune
-	commitParsedQueue chan bool
-	closing           chan bool
 	runesToParse      []rune
 	runesToParsei     int
 	runeLabel         [][]rune
@@ -75,20 +72,6 @@ func (atvprsr *activeParser) Reset() {
 }
 
 func (atvprsr *activeParser) Close() {
-	if atvprsr.closing != nil {
-		atvprsr.closing <- true
-		<-atvprsr.closing
-		close(atvprsr.closing)
-		atvprsr.closing = nil
-	}
-	if atvprsr.runesToParseQueue != nil {
-		close(atvprsr.runesToParseQueue)
-		atvprsr.runesToParseQueue = nil
-	}
-	if atvprsr.commitParsedQueue != nil {
-		close(atvprsr.commitParsedQueue)
-		atvprsr.commitParsedQueue = nil
-	}
 	if len(atvprsr.runeLabel) > 0 {
 		atvprsr.runeLabelI = nil
 		atvprsr.runeLabel = nil
@@ -165,8 +148,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	for {
 		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
-				//processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
-				atvprsr.runesToParseQueue<-rne
+				processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
 			}
 		} else {
 			if rnerr != io.EOF {
@@ -678,10 +660,8 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	if maxBufSize < 81920 {
 		maxBufSize = 81920
 	}
-	atv = &Active{atvprsr: &activeParser{closing: make(chan bool, 1),
-		runesToParseQueue: make(chan rune, maxBufSize),
-		commitParsedQueue: make(chan bool, 1),
-		maxBufSize:        maxBufSize, lck: &sync.RWMutex{},
+	atv = &Active{atvprsr: &activeParser{maxBufSize: maxBufSize,
+		lck: &sync.RWMutex{},
 		runesToParse:  make([]rune, maxBufSize),
 		runeLabel:     [][]rune{[]rune("<@"), []rune("@>")},
 		runeLabelI:    []int{0, 0},
@@ -691,24 +671,6 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 		psvLabelI:     []int{0, 0},
 		psvPrvR:       []rune{rune(0)}}}
 
-	go func(prsr *activeParser, prsreRuneQueue chan rune, commitNow chan bool, closeNow chan bool) {
-		var isActive = true
-		for isActive {
-			select {
-			case prsrrne := <-prsreRuneQueue:
-				processRune(prsrrne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
-			case cmt := <-commitNow:
-				if cmt {
-					<-commitNow
-				}
-			case dne := <-closeNow:
-				if dne {
-					isActive = false
-				}
-			}
-		}
-		closeNow <- true
-	}(atv.atvprsr, atv.atvprsr.runesToParseQueue, atv.atvprsr.commitParsedQueue, atv.atvprsr.closing)
 	atv.atvprsr.atv = atv
 
 	for n, d := range a {
