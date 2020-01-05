@@ -707,6 +707,14 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 		closeNow <- true
 	}(atv.atvprsr, atv.atvprsr.runesToParseQueue, atv.atvprsr.commitParsedQueue, atv.atvprsr.closing)
 	atv.atvprsr.atv = atv
+
+	for n, d := range a {
+		if _, prntrok := d.(iorw.Printing); prntrok {
+			setAtvA(atv, d)
+			a = append(a[0:n], a[n+1:]...)
+		}
+	}
+
 	for _, d := range a {
 		setAtvA(atv, d)
 	}
