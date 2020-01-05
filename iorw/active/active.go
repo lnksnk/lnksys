@@ -335,7 +335,7 @@ func (atvprsr *activeParser) PassivePrint(fromOffset int64, toOffset int64) {
 			var pto = int64(0)
 			var pl = int64(0)
 			for _, psvb := range atvprr.passiveBuffer {
-				pl  int64(len(psvb))
+				pl = int64(len(psvb))
 				pto = pl + pfrom
 				if fromOffset < pto {
 					if fromOffset < pfrom {
@@ -376,21 +376,21 @@ type Active struct {
 	activeap map[string]interface{}
 }
 
-func atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
-	if atv.atvprsr = nil {
+func (atv *Active) ExecuteActive(maxbufsize int) (atverr error) {
+	if atv.atvprsr == nil {
 		aterr = atv.atvprsr.ExecuteActive(maxbufsize)
 	}
-	rturn
+	return
 }
 
 type activeRune struct {
 	rne     rune
 	rnesize int
 	reerr  error
-	tvprsr *activeParser
+	atvprsr *activeParser
+}
 
-
-func (atvRne *activeRune process() {
+func (atvRne *activeRune) process() {
 	processRune(atvRne.rne,atvRne.atvprsr, atvRne.atvprsr.runeLabel, atvRne.atvprsr.runeLabelI, atvRne.atvprsr.runePrvR)
 }
 
@@ -483,7 +483,7 @@ func flushPassiveContent(atvprsr *activeParser, force bool) {
 
 		if atvprsr.lastPassiveBufferOffset < atvprsr.passiveBufferOffset {
 		for _, arune := range []rune(fmt.Sprintf("_atvprsr.PassivePrint(%d,%d);", atvprsr.lastPassiveBufferOffset, atvprsr.passiveBufferOffset)) {
-				if len(atvprsr.atvRunesToParse == 0 {
+				if len(atvprsr.atvRunesToParse) == 0 {
 					atvprsr.atvRunesToParse = make([]rune, 81920)
 				}
 				atvprsr.atvRunesToParse[atvprsr.atvRunesToParsei] = arune
@@ -499,8 +499,8 @@ func flushPassiveContent(atvprsr *activeParser, force bool) {
 }
 
 func(atv *Active) PassivePrint(fromOffset int64, toOffset int64) {
-	ifatv.atvprsr != nil {
-	atv.atvprsr.PassivePrint(fromOffset, toOffset)
+	if atv.atvprsr != nil {
+		atv.atvprsr.PassivePrint(fromOffset, toOffset)
 	}
 }
 
@@ -511,8 +511,7 @@ func processUnparsedPassiveContent(atvprsr *activearser, p []rune) (n int, err e
 	}
 	for n < pl && atvprsr.runesToParsei < len(atvprsr.runesToParse) {
 		if (pl - n) >= (len(atvprsr.runsToParse) - atvprsr.runesToParsei) {
-
-			vr cl = copy(atvprsr.runesToParse[atvprsr.runesToParsei:atvprsr.runesToParsei+(len(atvprsr.runesToParse)-atvprsr.runesToParsei)], p[n:n+(len(atvprsr.runesToParse)-atvprsr.runesToParsei)])
+			var cl = copy(atvprsr.runesToParse[atvprsr.runesToParsei:atvprsr.runesToParsei+(len(atvprsr.runesToParse)-atvprsr.runesToParsei)], p[n:n+(len(atvprsr.runesToParse)-atvprsr.runesToParsei)])
 			n += cl
 			tvprsr.runesToParsei += cl
 		} else if (pl - n) < (len(atvprsr.runesToParse) - atvprsr.runesToParsei) {
@@ -539,7 +538,7 @@ func processRune(rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []i
 			runelbli[0]++
 			if len(unelbl[0]) == runelbli[0] {
 				atvprsr.hasCode = false
-			 else {
+			} else {
 				runePrvR[0] = rne
 			}
 		} else {
@@ -661,27 +660,20 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	if maxBufSize < 81920 {
 		maxBufSize = 81920
 	}
-<<<<<<< HEAD
-	atv = &Active{atvprsr: &activeParser{maxBufSize: maxBufSize,
-		lck: &sync.RWMutex{},
-		runesToParse:  make[]rune, maxBufSize),
-		uneLabel:     [][]rune{[]rune("<@"), []rune("@>")},
-=======
 	atv = &Active{atvprsr: &activeParser{closing: make(chan bool, 1),
 		runesToParseQueue: make(chan rune, 1),
 		commitParsedQueue: make(chan bool, 1),
 		maxBufSize:        maxBufSize, lck: &sync.RWMutex{},
 		runesToParse:  make([]rune, maxBufSize),
 		runeLabel:     [][]rune{[]rune("<@"), []rune("@>")},
->>>>>>> parent of 1d57bd0... re-enabling parsinge rune queue in active
 		runeLabelI:    []int{0, 0},
 		runesToParsei: int(),
-		runePrvR:      []rune{rune0)},
-		psvLabel:      [][]rune{[]rune"<"), []rune(">")},
+		runePrvR:      []rune{rune(0)},
+		psvLabel:      [][]rune{[]rune("<"), []rune(">")},
 		psvLabelI:     []int{0, 0},
 		psvrvR:       []rune{rune(0)}}}
 
-	atvatvprsr.atv = atv
+	atv.atvprsr.atv = atv
 
 	for n, d := range a {
 		if _, prntrok := d.(iorw.Printing); prntrok {
