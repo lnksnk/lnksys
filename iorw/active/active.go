@@ -291,6 +291,7 @@ func (atvprsr activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 									}
 								}
 							}
+						}
 						var code = atvprsr.actveCode().String()
 						var coderdr = strings.NewRader(code)
 						var parsedprgm, parsedprgmer = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
