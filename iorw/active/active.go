@@ -52,14 +52,14 @@ func (atvprsr *activeParser) atvbufrdr() *iorw.BufferedRW {
 }
 
 func (atvprsr *activePrser) activeCode() *iorw.BufferedRW {
-	f atvprsr.curAtvCde == nil {
+	if atvprsr.curAtvCde == nil {
 	atvprsr.curAtvCde = iorw.NewBufferedRW(atvprsr.maxBufSize, nil)
 	}
 	return atvprsr.curAtvCde
 }
 
 func (atvprsr *activeParsr) Reset() {
-	f len(atvprsr.runeLabel) > 0 {
+	if len(atvprsr.runeLabel) > 0 {
 	atvprsr.runeLabelI[0] = 0
 		atvprsr.runeLabelI[1] = 0
 	}
@@ -71,7 +71,7 @@ func (atvprsr *activeParsr) Reset() {
 	}
 }
 
-fuc (atvprsr *activeParser) Close() {
+func (atvprsr *activeParser) Close() {
 	if len(atvprsr.runeLabel) > 0 {
 	atvprsr.runeLabelI = nil
 		atvprsr.runeLabel = nil
