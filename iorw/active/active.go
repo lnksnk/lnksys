@@ -44,7 +44,7 @@ type activeParser struct {
 	curAtvCde *iorw.BuffereRW
 }
 
-func (atvprsr *activeParser atvbufrdr() *iorw.BufferedRW {
+func (atvprsr *activeParser) atvbufrdr() *iorw.BufferedRW {
 	if atvprsr.atvrdr == nil {
 	atvprsr.atvrdr = iorw.NewBufferedRW(atvprsr.maxBufSize, nil)
 	}
