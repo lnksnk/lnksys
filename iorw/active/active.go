@@ -63,7 +63,7 @@ func (atvprsr *activeParsr) Reset() {
 	atvprsr.runeLabelI[0] = 0
 		atvprsr.runeLabelI[1] = 0
 	}
-	if len(atvprsr.runePrvR) = 1 {
+	if len(atvprsr.runePrvR) == 1 {
 		atvprsr.runePrvR[0] = run(0)
 	}
 	if atvprsr.runesToParsei > 0 {
@@ -73,14 +73,14 @@ func (atvprsr *activeParsr) Reset() {
 
 func (atvprsr *activeParser) Close() {
 	if len(atvprsr.runeLabel) > 0 {
-	atvprsr.runeLabelI = nil
+		atvprsr.runeLabelI = nil
 		atvprsr.runeLabel = nil
 	}
 	if len(atvprsr.runePrvR)== 1 {
-		atvprsr.runePrvR  nil
+		atvprsr.runePrvR = nil
 	}
 	if atvprsr.runesToParsi > 0 {
-		tvprsr.runesToParsei = 0
+		atvprsr.runesToParsei = 0
 	}
 	if len(atvprsr.runesToParse) > 0 
 		atvprsr.runesToParse = nil
@@ -88,27 +88,27 @@ func (atvprsr *activeParser) Close() {
 	if atvprsr.rdrRune != nil {
 		atvprsr.rdrRune = nil
 	}
-	i atvprsr.rdskr != nil {
+	if atvprsr.rdskr != nil {
 		atvprsr.rdskr = nil
 	}
 	//
-	i atvprsr.runesToParse != nil {
+	if atvprsr.runesToParse != nil {
 		atvprsr.runesToParse = nil
 	}
-	i atvprsr.runeLabel != nil {
+	if atvprsr.runeLabel != nil {
 		atvprsr.runeLabel = nil
 	}
-	i atvprsr.runeLabelI != nil {
+	if atvprsr.runeLabelI != nil {
 		atvprsr.runeLabelI = nil
 	}
-	i atvprsr.runePrvR != nil {
+	if atvprsr.runePrvR != nil {
 		atvprsr.runePrvR = nil
 	}
-	/
+	//
 	if atvprsr.passiveRune !=nil {
 		atvprsr.passiveRune= nil
 	}
-	ifatvprsr.passiveBuffer != nil {
+	if atvprsr.passiveBuffer != nil {
 		for len(atvprsr.passiveBuffer)  0 {
 			atvprsr.passiveBuffer[0]  nil
 		atvprsr.passiveBuffer = atvprsr.passiveBuffer[1:]
@@ -129,10 +129,10 @@ func (atvprsr *activeParser) Close() {
 		atvprsr.psvPrvR = nil
 	}
 	//
-	ifatvprsr.atvRunesToParse != nil {
+	if atvprsr.atvRunesToParse != nil {
 		atvprsr.atvRunesToParse = nl
 	}
-	ifatvprsr.curAtvCde != nil {
+	if atvprsr.curAtvCde != nil {
 		atvprsr.curAtvCde.Close()
 		atvprsr.curAtvCde = nil
 	}
@@ -141,11 +141,11 @@ func (atvprsr *activeParser) Close() {
 	}
 }
 
-fuc (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
+func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	atvprsr.lck.RLock()
 	defer atvprsr.lck.RUnlck()
 	avprsr.atvbufrdr().Print(a...)
-	fo {
+	for {
 		if rne, rnsize, rnerr := atvprsr.avrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
 			processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
@@ -155,7 +155,8 @@ fuc (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 			err = rnerr
 			}
 			break
-		
+		}
+	}
 	
 return
 }
