@@ -148,7 +148,11 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	for {
 		if rne, rnsize, rnerr := atvprsr.avrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
+<<<<<<< HEAD
 			processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+=======
+				processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+>>>>>>> parent of 1d57bd0... re-enabling parsinge rune queue in active
 			}
 		} else {
 			if rnerr != io.EOF {
@@ -163,7 +167,11 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 
 func (atvprsr *activeParser)ACommit() (acerr error) {
 	if atvprsr.atvrdr != nil {
+<<<<<<< HEAD
 		atvpsr.lck.RLock()
+=======
+		atvprsr.lck.RLock()
+>>>>>>> parent of 1d57bd0... re-enabling parsinge rune queue in active
 		defer atvprsr.lck.RUnlock()
 		flushPassiveContnt(atvprsr, true)
 		if atvprsr.foundCode {
@@ -660,10 +668,19 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	if maxBufSize < 81920 {
 		maxBufSize = 81920
 	}
+<<<<<<< HEAD
 	atv = &Active{atvprsr: &activeParser{maxBufSize: maxBufSize,
 		lck: &sync.RWMutex{},
 		runesToParse:  make[]rune, maxBufSize),
 		uneLabel:     [][]rune{[]rune("<@"), []rune("@>")},
+=======
+	atv = &Active{atvprsr: &activeParser{closing: make(chan bool, 1),
+		runesToParseQueue: make(chan rune, 1),
+		commitParsedQueue: make(chan bool, 1),
+		maxBufSize:        maxBufSize, lck: &sync.RWMutex{},
+		runesToParse:  make([]rune, maxBufSize),
+		runeLabel:     [][]rune{[]rune("<@"), []rune("@>")},
+>>>>>>> parent of 1d57bd0... re-enabling parsinge rune queue in active
 		runeLabelI:    []int{0, 0},
 		runesToParsei: int(),
 		runePrvR:      []rune{rune0)},
