@@ -172,6 +172,11 @@ func (reqst *Request) AddResource(resource ...string) {
 }
 
 func (reqst *Request) ExecuteRequest() {
+	defer func(){
+		if reqst.piper!=nil && reqst.pipew!=nil {
+			reqst.pipew.Close();
+		}
+	}()
 	var reqstContentType = reqst.r.Header.Get("Content-Type")
 	if reqst.bufRW == nil {
 		reqst.bufRW = iorw.NewBufferedRW(int64(maxbufsize), reqst)
@@ -512,11 +517,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 		go func(outw io.Writer) {
 			var pw = make([]byte,81920)
 			for {
-					if cpyn,cpyerr := io.CopyBuffer(reqst.w,reqst.piper,pw); cpyerr==nil {
-						if cpyn==0 {
-							break
-						}
-					} else {
+					if _,cpyerr := io.CopyBuffer(reqst.w,reqst.piper,pw); cpyerr!=nil {
 						break
 					}
 			}
