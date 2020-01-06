@@ -445,7 +445,6 @@ func capturePassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
 				break
 			}
 		} else {
-			fmt.Print(string(p))
 			atvprsr.atv.Print(string(p))
 			n += pl
 		}
@@ -455,7 +454,7 @@ func capturePassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
 
 func flushPassiveContent(atvprsr *activeParser, force bool) {
 	if atvprsr.runesToParsei > 0 {
-		capturePassiveContent(atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+		processUnparsedPassiveContent(atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
 		atvprsr.runesToParsei = 0
 	}
 
@@ -502,23 +501,22 @@ func (atv *Active) PassivePrint(fromOffset int64, toOffset int64) {
 
 func processUnparsedPassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
 	var pl = len(p)
-	fmt.Print(string(p))
 	if pl > 0 {
 		flushActiveCode(atvprsr)
 	}
-	for n < pl && atvprsr.runesToParsei < len(atvprsr.runesToParse) {
-		if (pl - n) >= (len(atvprsr.runesToParse) - atvprsr.runesToParsei) {
-			var cl = copy(atvprsr.runesToParse[atvprsr.runesToParsei:atvprsr.runesToParsei+(len(atvprsr.runesToParse)-atvprsr.runesToParsei)], p[n:n+(len(atvprsr.runesToParse)-atvprsr.runesToParsei)])
+	for n < pl && atvprsr.psvRunesToParsei < len(atvprsr.psvRunesToParse) {
+		if (pl - n) >= (len(atvprsr.psvRunesToParse) - atvprsr.psvRunesToParsei) {
+			var cl = copy(atvprsr.psvRunesToParse[atvprsr.psvRunesToParsei:atvprsr.psvRunesToParsei+(len(atvprsr.psvRunesToParse)-atvprsr.psvRunesToParsei)], p[n:n+(len(atvprsr.psvRunesToParse)-atvprsr.psvRunesToParsei)])
 			n += cl
-			atvprsr.runesToParsei += cl
-		} else if (pl - n) < (len(atvprsr.runesToParse) - atvprsr.runesToParsei) {
-			var cl = copy(atvprsr.runesToParse[atvprsr.runesToParsei:atvprsr.runesToParsei+(pl-n)], p[n:n+(pl-n)])
+			atvprsr.psvRunesToParsei += cl
+		} else if (pl - n) < (len(atvprsr.psvRunesToParse) - atvprsr.psvRunesToParsei) {
+			var cl = copy(atvprsr.psvRunesToParse[atvprsr.psvRunesToParsei:atvprsr.psvRunesToParsei+(pl-n)], p[n:n+(pl-n)])
 			n += cl
-			atvprsr.runesToParsei += cl
+			atvprsr.psvRunesToParsei += cl
 		}
-		if atvprsr.runesToParsei > 0 && atvprsr.runesToParsei == len(atvprsr.runesToParse) {
-			capturePassiveContent(atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
-			atvprsr.runesToParsei = 0
+		if atvprsr.psvRunesToParsei > 0 && atvprsr.psvRunesToParsei == len(atvprsr.psvRunesToParse) {
+			capturePassiveContent(atvprsr, atvprsr.psvRunesToParse[0:atvprsr.psvRunesToParsei])
+			atvprsr.psvRunesToParsei = 0
 		}
 	}
 	return
