@@ -507,7 +507,22 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 }
 
 func (reqst *Request) Write(p []byte) (n int, err error) {
-	n,err = reqst.w.Write(p)
+	if reqst.piper==nil && reqst.pipew==nil {
+		reqst.piper,reqst.pipew = io.Pipe();
+		go func(outw io.Writer) {
+			var pw = make([]byte,81920)
+			for {
+					if cpyn,cpyerr=io.Copy(reqst.w,reqst.piper); cpynerr==nil {
+						if cpyn==0 {
+							break
+						}
+					} else {
+						break
+					}
+			}
+		}(reqst.w)
+	}
+	n,err = rreqst.pipew.Write(p)
 	return
 }
 
@@ -626,6 +641,14 @@ func (reqst *Request) Close() (err error) {
 			reqst.shuttingdownEnv()
 		}
 		reqst.shuttingdownEnv = nil
+	}
+	if reqst.piper!=nil {
+		reqst.piper.Close()
+		reqst.piper=nil
+	}
+	if reqst.pipew!=nil {
+		reqst.pipew.Close()
+		reqst.pipew=nil
 	}
 	return
 }
