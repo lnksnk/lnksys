@@ -68,8 +68,8 @@ type Request struct {
 	canShutdownListener  bool
 	shuttingdownEnv      func()
 	canShutdownEnv       bool
-	piper 				 io.ReaderCloser
-	pipew 				 io.WriterCloser
+	piper 				 io.ReadCloser
+	pipew 				 io.WriteCloser
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
