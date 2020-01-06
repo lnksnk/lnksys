@@ -512,7 +512,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 		go func(outw io.Writer) {
 			var pw = make([]byte,81920)
 			for {
-					if cpyn,cpyerr=io.Copy(reqst.w,reqst.piper); cpynerr==nil {
+					if cpyn,cpyerr := io.Copy(reqst.w,reqst.piper); cpynerr==nil {
 						if cpyn==0 {
 							break
 						}
