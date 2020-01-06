@@ -347,7 +347,7 @@ func (reqst *Request) WriteTo(w io.Writer) (n int64, err error) {
 	return
 }
 
-func readingRead(reqst *Request,p []byte) (n int,err error) {
+func readingRequest(reqst *Request,p []byte) (n int,err error) {
 	if len(reqst.currentbytes) == 0 {
 		reqst.currentbytes = make([]byte, maxbufsize)
 	}
@@ -384,6 +384,7 @@ func readingRead(reqst *Request,p []byte) (n int,err error) {
 		err = io.EOF
 		n = 0
 	}
+	return
 }
 
 func (reqst *Request) Read(p []byte) (n int, err error) {
