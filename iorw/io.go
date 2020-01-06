@@ -146,6 +146,36 @@ func (rw *RW) Close() (err error) {
 	return
 }
 
+func FPrint(w io.Write, a ...interface{}) (err error){
+	for _, d := range a {
+		if r, rok := d.(io.Reader); rok {
+			io.Copy(w, r)
+		} else if rnrdr, rnrdrok := d.(io.RuneReader); rnrdrok {
+			for {
+				if rne, rnsize, rnerr := rnrdr.ReadRune(); rnerr == nil {
+					if rnsize > 0 {
+						fmt.FPrint(w,string(rne))
+					}
+				} else {
+					if rnerr != io.EOF {
+						err = rnerr
+					}
+					break
+				}
+			}
+		} else if uarr, uarrok := d.([]uint8); uarrok {
+			fmt.Fprint(w, string(uarr))
+		} else if runearr, runearrok := d.([]rune); runearrok {
+			fmt.Fprint(w, string(runearr))
+		} else if barr, barrok := d.([]byte); barrok {
+			fmt.Fprint(w, string(barr))
+		} else {
+			fmt.Fprint(w, d)
+		}
+	}
+	return
+}
+
 type BufferedRW struct {
 	altRW         ReaderWriter
 	runeRdr       *bufio.Reader
