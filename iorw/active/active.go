@@ -657,14 +657,16 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	}
 	atv = &Active{atvprsr: &activeParser{
 		maxBufSize: maxBufSize, lck: &sync.RWMutex{},
-		runesToParse:  make([]rune, maxBufSize),
-		runeLabel:     [][]rune{[]rune("<@"), []rune("@>")},
-		runeLabelI:    []int{0, 0},
-		runesToParsei: int(0),
-		runePrvR:      []rune{rune(0)},
-		psvLabel:      [][]rune{[]rune("<"), []rune(">")},
-		psvLabelI:     []int{0, 0},
-		psvPrvR:       []rune{rune(0)}}}
+		runesToParse:     make([]rune, maxBufSize),
+		runeLabel:        [][]rune{[]rune("<@"), []rune("@>")},
+		runeLabelI:       []int{0, 0},
+		runesToParsei:    int(0),
+		runePrvR:         []rune{rune(0)},
+		psvLabel:         [][]rune{[]rune("<"), []rune(">")},
+		psvLabelI:        []int{0, 0},
+		psvPrvR:          []rune{rune(0)},
+		psvRunesToParsei: int(0),
+		psvRunesToParse:  make([]rune, maxBufSize)}}
 
 	atv.atvprsr.atv = atv
 
