@@ -143,7 +143,6 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	for {
 		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
-				fmt.Print(string(rne))
 				processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
 			}
 		} else {
@@ -446,6 +445,7 @@ func capturePassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
 				break
 			}
 		} else {
+			fmt.Print(string(p))
 			atvprsr.atv.Print(string(p))
 			n += pl
 		}
