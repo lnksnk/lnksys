@@ -68,6 +68,8 @@ type Request struct {
 	canShutdownListener  bool
 	shuttingdownEnv      func()
 	canShutdownEnv       bool
+	piper 				 io.Reader
+	pipew 				 io.Writer
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -260,19 +262,7 @@ func (reqst *Request) Println(a ...interface{}) {
 }
 
 func (reqst *Request) Print(a ...interface{}) {
-	for _, d := range a {
-		if r, rok := d.(io.Reader); rok {
-			io.Copy(reqst.w, r)
-		} else if uarr, uarrok := d.([]uint8); uarrok {
-			fmt.Fprint(reqst.w, string(uarr))
-		} else if runearr, runearrok := d.([]rune); runearrok {
-			fmt.Fprint(reqst.w, string(runearr))
-		} else if barr, barrok := d.([]byte); barrok {
-			fmt.Fprint(reqst.w, string(barr))
-		} else {
-			fmt.Fprint(reqst.w, d)
-		}
-	}
+	iorw.Fprint(reqst,a...)
 }
 
 func (reqst *Request) ReadRune() (r rune, size int, err error) {
@@ -351,14 +341,13 @@ func (reqst *Request) WriteTo(w io.Writer) (n int64, err error) {
 				err = pnerr
 				break
 			}
-
 		}
 	}
 	p = nil
 	return
 }
 
-func (reqst *Request) Read(p []byte) (n int, err error) {
+func readingRead(reqst *Request,p []byte) (n,err error) {
 	if len(reqst.currentbytes) == 0 {
 		reqst.currentbytes = make([]byte, maxbufsize)
 	}
@@ -395,7 +384,10 @@ func (reqst *Request) Read(p []byte) (n int, err error) {
 		err = io.EOF
 		n = 0
 	}
-	return
+}
+
+func (reqst *Request) Read(p []byte) (n int, err error) {
+	return readingRequest(reqst,p)
 }
 
 func readResources(reqst *Request, p []byte) (n int, err error) {
@@ -514,6 +506,7 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 }
 
 func (reqst *Request) Write(p []byte) (n int, err error) {
+	n,err = reqst.w.Write(p)
 	return
 }
 
