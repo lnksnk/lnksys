@@ -502,6 +502,7 @@ func (atv *Active) PassivePrint(fromOffset int64, toOffset int64) {
 
 func processUnparsedPassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
 	var pl = len(p)
+	fmt.Print(string(p))
 	if pl > 0 {
 		flushActiveCode(atvprsr)
 	}
