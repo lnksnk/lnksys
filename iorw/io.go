@@ -146,7 +146,7 @@ func (rw *RW) Close() (err error) {
 	return
 }
 
-func FPrint(w io.Write, a ...interface{}) (err error){
+func FPrint(w io.Writer, a ...interface{}) (err error){
 	for _, d := range a {
 		if r, rok := d.(io.Reader); rok {
 			io.Copy(w, r)
@@ -154,7 +154,7 @@ func FPrint(w io.Write, a ...interface{}) (err error){
 			for {
 				if rne, rnsize, rnerr := rnrdr.ReadRune(); rnerr == nil {
 					if rnsize > 0 {
-						fmt.FPrint(w,string(rne))
+						fmt.Fprint(w,string(rne))
 					}
 				} else {
 					if rnerr != io.EOF {
