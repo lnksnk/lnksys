@@ -262,7 +262,7 @@ func (reqst *Request) Println(a ...interface{}) {
 }
 
 func (reqst *Request) Print(a ...interface{}) {
-	iorw.Fprint(reqst,a...)
+	iorw.FPrint(reqst,a...)
 }
 
 func (reqst *Request) ReadRune() (r rune, size int, err error) {
