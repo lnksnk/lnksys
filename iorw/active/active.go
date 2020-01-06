@@ -177,7 +177,7 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 							}
 						}
 					}
-					if len(activeGlobalMap) == 0 {
+					if len(activeGlobalMap) > 0 {
 						for k, v := range activeGlobalMap {
 							if atvprsr.atv.vm.Get(k) != v {
 								atvprsr.atv.vm.Set(k, v)
