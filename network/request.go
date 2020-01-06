@@ -522,7 +522,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			}
 		}(reqst.w)
 	}
-	n,err = rreqst.pipew.Write(p)
+	n,err = reqst.pipew.Write(p)
 	return
 }
 
