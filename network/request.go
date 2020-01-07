@@ -977,7 +977,19 @@ func DefaultServeHttp(w io.Writer, method string, url string, body io.Reader) {
 			HttpRequestHandler(reqst).ServeHTTP(whttp, rhttp)
 		}
 	}
+}
 
+func BrokerServeHttp(w io.Writer,body io.Reader ,exename string,exealias string, args ...string) {
+	var url="/"
+	var method="GET"
+
+	if rhttp, rhttperr := http.NewRequest(method, url, body); rhttperr == nil {
+		if rhttp != nil {
+			var whttp = NewResponse(w, rhttp)
+			var reqst = NewRequest(nil, whttp, rhttp, nil, nil, false)
+			HttpRequestHandler(reqst).ServeHTTP(whttp, rhttp)
+		}
+	}
 }
 
 var callableResources map[string]func() io.Reader

@@ -50,5 +50,5 @@ func RunService(args ...string) {
 }
 
 func RunBroker(exename string,exealias string, args ...string) {
-	
+	network.BrokerServeHttp(os.Stdout,os.Stdin,exename,exealias,args...)
 }
