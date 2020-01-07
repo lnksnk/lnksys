@@ -54,7 +54,6 @@ type Request struct {
 	dbcn             map[string]*db.DbConnection
 	params           *parameters.Parameters
 	*active.Active
-	ctx                  context.Context
 	interuptRequest      bool
 	runeBuffer           []rune
 	runeBufferErr        error
@@ -73,26 +72,19 @@ type Request struct {
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithCancel(context.Background())
-	reqst.ctx = ctx
 	reqstsQueue <- reqst
 	var wi interface{} = w
 	defer func() {
 		var isInterupted = reqst.interuptRequest
 		reqst.Close()
-		if isInterupted {
-			cancel()
-		}
 	}()
 	if _, wiok := wi.(*Response); !wiok {
+		var wnotify=w.(http.CloseNotifier).CloseNotify()
 		go func() {
 			var checking = true
 			for checking {
 				select {
-				case <-w.(http.CloseNotifier).CloseNotify():
-					reqst.interuptRequest = true
-					checking = false
-				case <-r.Context().Done():
+				case <-wnotify:
 					reqst.interuptRequest = true
 					checking = false
 				}
