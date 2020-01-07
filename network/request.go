@@ -332,7 +332,7 @@ func (reqst *Request) WriteTo(w io.Writer) (n int64, err error) {
 			if pn > 0 {
 				var pnn = 0
 				for pnn < pn {
-					if wn, wnerr := w.Write(p[pnn : pnn+(pn-pnn)]); wn > 0 || wnerr != nil {
+					if wn, wnerr := reqst.Write(p[pnn : pnn+(pn-pnn)]); wn > 0 || wnerr != nil {
 						pnn += wn
 						if wnerr != nil {
 							pnerr = wnerr
