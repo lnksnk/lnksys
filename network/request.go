@@ -327,12 +327,19 @@ func (reqst *Request) ReadRune() (r rune, size int, err error) {
 
 func (reqst *Request) WriteTo(w io.Writer) (n int64, err error) {
 	var p = make([]byte, maxbufsize)
+	var f http.Flusher=nil
+	var fok=false
 	for {
 		if pn, pnerr := reqst.Read(p); pn > 0 || pnerr != nil {
 			if pn > 0 {
 				var pnn = 0
 				for pnn < pn {
 					if wn, wnerr := reqst.Write(p[pnn : pnn+(pn-pnn)]); wn > 0 || wnerr != nil {
+						if f==nil {
+							if f, fok = reqst.w.(http.Flusher); fok {
+								f.Flush()
+							}
+						}
 						pnn += wn
 						if wnerr != nil {
 							pnerr = wnerr
