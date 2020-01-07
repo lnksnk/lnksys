@@ -6,9 +6,11 @@ import (
 	lnks "github.com/efjoubert/lnksys/lnks"
 	network "github.com/efjoubert/lnksys/network"
 	os "os"
+	runtime "runtime"
 )
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	/*var tlkr=network.NewTalker()
 	tlkr.Send("https://www.google.com")
 	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
