@@ -17,9 +17,9 @@ import (
 	embed "github.com/efjoubert/lnksys/embed"
 	iorw "github.com/efjoubert/lnksys/iorw"
 	active "github.com/efjoubert/lnksys/iorw/active"
-	parameters "github.com/efjoubert/lnksys/parameters"
 	gzip "github.com/efjoubert/lnksys/network/gzip"
 	mime "github.com/efjoubert/lnksys/network/mime"
+	parameters "github.com/efjoubert/lnksys/parameters"
 )
 
 const maxbufsize int = 81920
@@ -66,19 +66,18 @@ type Request struct {
 	canShutdownListener  bool
 	shuttingdownEnv      func()
 	canShutdownEnv       bool
-	piper 				 io.ReadCloser
-	pipew 				 io.WriteCloser
+	piper                io.ReadCloser
+	pipew                io.WriteCloser
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqstsQueue <- reqst
 	var wi interface{} = w
 	defer func() {
-		var isInterupted = reqst.interuptRequest
 		reqst.Close()
 	}()
 	if _, wiok := wi.(*Response); !wiok {
-		var wnotify=w.(http.CloseNotifier).CloseNotify()
+		var wnotify = w.(http.CloseNotifier).CloseNotify()
 		go func() {
 			var checking = true
 			for checking {
@@ -163,9 +162,9 @@ func (reqst *Request) AddResource(resource ...string) {
 }
 
 func (reqst *Request) ExecuteRequest() {
-	defer func(){
-		if reqst.piper!=nil && reqst.pipew!=nil {
-			reqst.pipew.Close();
+	defer func() {
+		if reqst.piper != nil && reqst.pipew != nil {
+			reqst.pipew.Close()
 		}
 	}()
 	var reqstContentType = reqst.r.Header.Get("Content-Type")
@@ -188,7 +187,7 @@ func (reqst *Request) ExecuteRequest() {
 		reqst.w.WriteHeader(200)
 
 		if reqst.Active == nil {
-			reqst.Active = active.NewActive(int64(maxbufsize),reqst, map[string]interface{}{"DBMS": db.DBMSManager, "Parameters": func() *parameters.Parameters {
+			reqst.Active = active.NewActive(int64(maxbufsize), reqst, map[string]interface{}{"DBMS": db.DBMSManager, "Parameters": func() *parameters.Parameters {
 				return reqst.Parameters()
 			}, "DBQuery": func(alias string, query string, args ...interface{}) (dbquery *db.DBQuery) {
 				dbquery = reqst.DbQuery(alias, query, args)
@@ -211,9 +210,9 @@ func (reqst *Request) ExecuteRequest() {
 		}
 
 		if atverr := func() (fnerr error) {
-			// fnerr = reqst.Active.ExecuteActive(81920);		
-			if fnerr=reqst.Active.APrint(reqst); fnerr==nil {
-				fnerr=reqst.Active.ACommit();
+			// fnerr = reqst.Active.ExecuteActive(81920);
+			if fnerr = reqst.Active.APrint(reqst); fnerr == nil {
+				fnerr = reqst.Active.ACommit()
 			}
 			return
 		}(); atverr != nil {
@@ -258,7 +257,7 @@ func (reqst *Request) Println(a ...interface{}) {
 }
 
 func (reqst *Request) Print(a ...interface{}) {
-	iorw.FPrint(reqst,a...)
+	iorw.FPrint(reqst, a...)
 }
 
 func (reqst *Request) ReadRune() (r rune, size int, err error) {
@@ -318,15 +317,15 @@ func (reqst *Request) ReadRune() (r rune, size int, err error) {
 
 func (reqst *Request) WriteTo(w io.Writer) (n int64, err error) {
 	var p = make([]byte, maxbufsize)
-	var f http.Flusher=nil
-	var fok=false
+	var f http.Flusher = nil
+	var fok = false
 	for {
 		if pn, pnerr := reqst.Read(p); pn > 0 || pnerr != nil {
 			if pn > 0 {
 				var pnn = 0
 				for pnn < pn {
 					if wn, wnerr := w.Write(p[pnn : pnn+(pn-pnn)]); wn > 0 || wnerr != nil {
-						if f==nil {
+						if f == nil {
 							if f, fok = reqst.w.(http.Flusher); fok {
 								f.Flush()
 							}
@@ -350,7 +349,7 @@ func (reqst *Request) WriteTo(w io.Writer) (n int64, err error) {
 	return
 }
 
-func readingRequest(reqst *Request,p []byte) (n int,err error) {
+func readingRequest(reqst *Request, p []byte) (n int, err error) {
 	if len(reqst.currentbytes) == 0 {
 		reqst.currentbytes = make([]byte, maxbufsize)
 	}
@@ -391,7 +390,7 @@ func readingRequest(reqst *Request,p []byte) (n int,err error) {
 }
 
 func (reqst *Request) Read(p []byte) (n int, err error) {
-	return readingRequest(reqst,p)
+	return readingRequest(reqst, p)
 }
 
 func readResources(reqst *Request, p []byte) (n int, err error) {
@@ -510,7 +509,7 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 }
 
 func (reqst *Request) Write(p []byte) (n int, err error) {
-	if n,err = reqst.w.Write(p); n>0 && err==nil {
+	if n, err = reqst.w.Write(p); n > 0 && err == nil {
 		if f, ok := reqst.w.(http.Flusher); ok {
 			f.Flush()
 		}
@@ -634,13 +633,13 @@ func (reqst *Request) Close() (err error) {
 		}
 		reqst.shuttingdownEnv = nil
 	}
-	if reqst.piper!=nil {
+	if reqst.piper != nil {
 		reqst.piper.Close()
-		reqst.piper=nil
+		reqst.piper = nil
 	}
-	if reqst.pipew!=nil {
+	if reqst.pipew != nil {
 		reqst.pipew.Close()
-		reqst.pipew=nil
+		reqst.pipew = nil
 	}
 	return
 }
@@ -970,9 +969,9 @@ func DefaultServeHttp(w io.Writer, method string, url string, body io.Reader) {
 	}
 }
 
-func BrokerServeHttp(w io.Writer,body io.Reader ,exename string,exealias string, args ...string) {
-	var url="/"
-	var method="GET"
+func BrokerServeHttp(w io.Writer, body io.Reader, exename string, exealias string, args ...string) {
+	var url = "/"
+	var method = "GET"
 
 	if rhttp, rhttperr := http.NewRequest(method, url, body); rhttperr == nil {
 		if rhttp != nil {
