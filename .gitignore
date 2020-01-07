@@ -2,3 +2,4 @@
 *.exe
 __debug_bin
 *.code-workspace
+.vscode/settings.json
