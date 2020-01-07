@@ -3,6 +3,7 @@ package main
 import (
 	_ "github.com/efjoubert/lnksys/db"
 	_ "github.com/efjoubert/lnksys/iorw/active"
+	_ "github.com/efjoubert/lnksys/network"
 	lnks "github.com/efjoubert/lnksys/lnks"
 	os "os"
 )
