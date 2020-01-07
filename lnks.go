@@ -3,8 +3,8 @@ package main
 import (
 	_ "github.com/efjoubert/lnksys/db"
 	_ "github.com/efjoubert/lnksys/iorw/active"
-	_ "github.com/efjoubert/lnksys/network"
 	lnks "github.com/efjoubert/lnksys/lnks"
+	network "github.com/efjoubert/lnksys/network"
 	os "os"
 )
 
@@ -50,6 +50,6 @@ func RunService(args ...string) {
 	}
 }
 
-func RunBroker(exename string,exealias string, args ...string) {
-	network.BrokerServeHttp(os.Stdout,os.Stdin,exename,exealias,args...)
+func RunBroker(exename string, exealias string, args ...string) {
+	network.BrokerServeHttp(os.Stdout, os.Stdin, exename, exealias, args...)
 }
