@@ -512,7 +512,11 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 }
 
 func (reqst *Request) Write(p []byte) (n int, err error) {
-	n,err = reqst.w.Write(p)
+	if n,err = reqst.w.Write(p); n>0 && err==nil {
+		if f, ok := reqst.w.(http.Flusher); ok {
+			f.Flush()
+		}
+	}
 	return
 }
 
