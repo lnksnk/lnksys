@@ -519,7 +519,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			for {
 				if _,cpyerr := io.CopyBuffer(reqst.w,reqst.piper,pw); cpyerr!=nil {
 					break
-				} else if reqst.isInterupted {
+				} else if reqst.interuptRequest {
 					break
 				}
 			}
