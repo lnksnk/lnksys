@@ -316,24 +316,12 @@ func (bufRW *BufferedRW) Read(p []byte) (n int, err error) {
 }
 
 func (bufRW *BufferedRW) Println(a ...interface{}) {
-	bufRW.Print(a...)
-	bufRW.Print("\r\n")
+	FPrint(bufRW,a...)
+	FPrint(bufRW,"\r\n")
 }
 
 func (bufRW *BufferedRW) Print(a ...interface{}) {
-	for _, d := range a {
-		if r, rok := d.(io.Reader); rok {
-			io.Copy(bufRW, r)
-		} else if uarr, uarrok := d.([]uint8); uarrok {
-			fmt.Fprint(bufRW, string(uarr))
-		} else if runearr, runearrok := d.([]rune); runearrok {
-			fmt.Fprint(bufRW, string(runearr))
-		} else if barr, barrok := d.([]byte); barrok {
-			fmt.Fprint(bufRW, string(barr))
-		} else {
-			fmt.Fprint(bufRW, d)
-		}
-	}
+	FPrint(bufRW,a...)
 }
 
 func (bufRW *BufferedRW) Write(p []byte) (n int, err error) {
