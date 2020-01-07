@@ -512,19 +512,18 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 }
 
 func (reqst *Request) Write(p []byte) (n int, err error) {
-	/*if reqst.piper==nil && reqst.pipew==nil {
+	if reqst.piper==nil && reqst.pipew==nil {
 		reqst.piper,reqst.pipew = io.Pipe();
 		go func(outw io.Writer) {
 			var pw = make([]byte,81920)
 			for {
-					if _,cpyerr := io.CopyBuffer(reqst.w,reqst.piper,pw); cpyerr!=nil {
-						break
-					}
+				if _,cpyerr := io.CopyBuffer(reqst.w,reqst.piper,pw); cpyerr!=nil {
+					break
+				}
 			}
 		}(reqst.w)
 	}
-	n,err = reqst.pipew.Write(p)*/
-	n,err = reqst.w.Write(p)
+	n,err = reqst.pipew.Write(p)
 	return
 }
 
