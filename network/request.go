@@ -2,7 +2,6 @@ package network
 
 import (
 	"archive/zip"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
