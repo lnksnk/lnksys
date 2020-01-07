@@ -71,14 +71,12 @@ type Request struct {
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	reqstsQueue <- reqst
-	var wi interface{} = w
 	defer func() {
 		reqst.Close()
 	}()
+	var wi interface{} = w
 	if _, wiok := wi.(*Response); !wiok {
-		var wnotify = w.(http.CloseNotifier).CloseNotify()
-		go func() {
+		go func(wnotify <-chan bool) {
 			var checking = true
 			for checking {
 				select {
@@ -88,8 +86,10 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			return
-		}()
+		}(w.(http.CloseNotifier).CloseNotify())
 	}
+
+	reqstsQueue <- reqst
 
 	<-reqst.done
 }
