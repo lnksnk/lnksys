@@ -12,6 +12,7 @@ import (
 type Service struct {
 	isService   bool
 	isConsole   bool
+	isBroker	bool
 	start       func(*Service, ...string)
 	run         func(*Service, ...string)
 	stop        func(*Service, ...string)
@@ -44,7 +45,7 @@ func (svr *Service) Start(s service.Service) error {
 
 func (svr *Service) exec() {
 	if svr.run != nil {
-		if svr.isService || svr.isConsole {
+		if svr.isService || svr.isConsole || svr.isBroker {
 			svr.run(svr, svr.args...)
 		}
 	}
@@ -53,11 +54,16 @@ func (svr *Service) exec() {
 //Stop Service
 func (svr *Service) Stop(s service.Service) error {
 	if svr.stop != nil {
-		if svr.isService || svr.isConsole {
+		if svr.isService || svr.isConsole || svr.isBroker {
 			svr.stop(svr, svr.args...)
 		}
 	}
 	return nil
+}
+
+//IsBroker Service
+func (svr *Service) IsBroker() bool {
+	return svr.isBroker
 }
 
 //IsConsole Service
@@ -186,6 +192,9 @@ func (svr *Service) Execute(args ...string) (err error) {
 				} else if strings.Index(",console,", ","+arg+",") > -1 {
 					svr.isConsole = true
 					break
+				} else if strings.Index(",broker,", ","+arg+",") > -1 {
+					svr.isBroker = true
+					break
 				}
 				if err != nil {
 					break
@@ -198,6 +207,9 @@ func (svr *Service) Execute(args ...string) (err error) {
 				if svr.isService {
 					err = s.Run()
 				} else if svr.isConsole {
+					svr.Start(s)
+					svr.Stop(s)
+				} else if svr.isBroker {
 					svr.Start(s)
 					svr.Stop(s)
 				}

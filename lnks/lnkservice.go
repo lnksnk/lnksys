@@ -11,10 +11,11 @@ import (
 //LnkService LnkService
 type LnkService struct {
 	*service.Service
+	brkrfnc func(exenme string,exealias string,args ...string)
 }
 
 //NewLnkService NewLnkService
-func NewLnkService() (lnksrvs *LnkService, err error) {
+func NewLnkService(brokerfunc ...interface{}) (lnksrvs *LnkService, err error) {
 	lnksrvs = &LnkService{}
 	var srv, svrerr = service.NewService("LnkService", "LnkService", "LnkService", func(srvs *service.Service, args ...string) {
 		lnksrvs.startLnkService(args...)
@@ -23,6 +24,11 @@ func NewLnkService() (lnksrvs *LnkService, err error) {
 	}, func(srvs *service.Service, args ...string) {
 		lnksrvs.stopLnkService(args...)
 	})
+	if len(brokerfunc)==1 {
+		if brfnc,brfcnok:= brokerfunc[0].(func(exenme string,exealias string,args ...string)); brfcnok {
+			lnksrvs.brkrfnc=brfnc
+		}
+	}
 	if svrerr == nil {
 		lnksrvs.Service = srv
 	} else {
@@ -53,7 +59,10 @@ func (lnksrvs *LnkService) runLnkService(args ...string) {
 				}
 			}
 		}
-
+	} else if lnksrvs.IsBroker() {
+		if lnksrvs.brkrfnc!=nil {
+			lnksrvs.brkrfnc(lnksrvs.ServiceExeName(),lnksrvs.ServiceName(),args...)
+		}
 	}
 }
 

@@ -36,18 +36,11 @@ func main() {
 				}
 			}
 		}*/
-	for argn, arg := range os.Args {
-		if arg == "broker" {
-			var brokerargs = append(os.Args[:argn], os.Args[argn+1:]...)
-			RunBroker(brokerargs...)
-			return
-		}
-	}
 	RunService(os.Args...)
 }
 
 func RunService(args ...string) {
-	var lnksrvs, err = lnks.NewLnkService()
+	var lnksrvs, err = lnks.NewLnkService(RunBroker)
 	if err == nil {
 		err = lnksrvs.Execute(args...)
 	}
@@ -56,6 +49,6 @@ func RunService(args ...string) {
 	}
 }
 
-func RunBroker(args ...string) {
-
+func RunBroker(exename string,exealias string, args ...string) {
+	
 }
