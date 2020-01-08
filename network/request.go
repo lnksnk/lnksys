@@ -98,7 +98,6 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rqst.ExecuteRequest()
 		rqst.done <- true
 	}(reqst)
-	queryRequest(reqst)
 	<-reqst.done
 }
 
