@@ -13,7 +13,7 @@ import (
 )
 
 /*RPCRequest RPCRequest
-*/
+ */
 type RPCRequest struct {
 }
 
@@ -31,6 +31,10 @@ func (rpclstnr *RPCListener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		rpclstnr.ShutdownHost(r.Host)
 	}, true)
 	HttpRequestHandler(reqst).ServeHTTP(w, r)
+}
+
+func (rpclstnr *RPCListener) QueueRequest(reqst *Request) {
+
 }
 
 func (rpclstnr *RPCListener) Shutdown() {
