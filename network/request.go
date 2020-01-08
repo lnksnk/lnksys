@@ -13,7 +13,6 @@ import (
 	"bufio"
 	"path/filepath"
 	"sync"
-	"runtime"
 
 	db "github.com/efjoubert/lnksys/db"
 	embed "github.com/efjoubert/lnksys/embed"
