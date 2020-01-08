@@ -12,6 +12,7 @@ import (
 
 	"bufio"
 	"path/filepath"
+	"sync"
 
 	db "github.com/efjoubert/lnksys/db"
 	embed "github.com/efjoubert/lnksys/embed"
@@ -25,6 +26,7 @@ import (
 const maxbufsize int = 81920
 
 type Request struct {
+	rqstlck          *sync.Mutex
 	bufRW            *iorw.BufferedRW
 	rw               *iorw.RW
 	listener         Listening
@@ -72,8 +74,10 @@ type Request struct {
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
+		reqst.rqstlck.Unlock()
 		reqst.Close()
 	}()
+	reqst.rqstlck.Lock()
 	var wi interface{} = w
 	if _, wiok := wi.(*Response); !wiok {
 		go func(wnotify <-chan bool) {
@@ -518,7 +522,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 }
 
 func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
-	reqst = &Request{listener: listener, w: w, r: r, done: make(chan bool, 1), resdone: make(chan bool, 1), resourcesSize: 0, params: parameters.NewParameters(), interuptRequest: false,
+	reqst = &Request{rqstlck: &sync.Mutex{}, listener: listener, w: w, r: r, done: make(chan bool, 1), resdone: make(chan bool, 1), resourcesSize: 0, params: parameters.NewParameters(), interuptRequest: false,
 		shuttingdownHost:     shuttingDownHost,
 		canShutdownHost:      shuttingDownHost != nil,
 		shuttingdownListener: shuttingDownListener}
