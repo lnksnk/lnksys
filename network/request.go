@@ -92,10 +92,16 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}(w.(http.CloseNotifier).CloseNotify())
 	}
-
-	reqstsQueue <- reqst
-
+	queryRequest(reqst)
 	<-reqst.done
+}
+
+var qrqstlck *sync.Mutex
+
+func queryRequest(reqst *Request) {
+	qrqstlck.Lock()
+	defer qrqstlck.Unlock()
+	reqstsQueue <- reqst
 }
 
 func (reqst *Request) Interupted() bool {
@@ -558,6 +564,7 @@ func ShutdownEnv() {
 
 func init() {
 	if reqstsQueue == nil {
+		qrqstlck = &sync.Mutex{}
 		reqstsQueue = make(chan *Request, runtime.NumCPU()*4)
 		go func() {
 			for {
