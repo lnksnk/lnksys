@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"net/http"
+	"sync"
 	"time"
 
 	active "github.com/efjoubert/lnksys/iorw/active"
@@ -13,13 +14,22 @@ import (
 type Listening interface {
 	Shutdown()
 	ShutdownHost(string)
+	QueueRequest(*Request)
 }
 
 /*Listener - Listener
  */
 type Listener struct {
-	servers     map[string]*http.Server
-	servmutexes map[string]*http.ServeMux
+	servers        map[string]*http.Server
+	servmutexes    map[string]*http.ServeMux
+	queuedRequests chan *Request
+	qrqstlck       *sync.Mutex
+}
+
+func (lstnr *Listener) QueueRequest(reqst *Request) {
+	lstnr.qrqstlck.Lock()
+	defer lstnr.qrqstlck.Unlock()
+	lstnr.queuedRequests <- reqst
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +105,18 @@ func InvokeListener(host string) {
 
 func init() {
 	if lstnr == nil {
-		lstnr = &Listener{}
+		lstnr = &Listener{queuedRequests: make(chan *Request), qrqstlck: &sync.Mutex{}}
+		go func(qlstnr *Listener) {
+			for {
+				select {
+				case reqst := <-qlstnr.queuedRequests:
+					go func() {
+						reqst.ExecuteRequest()
+						reqst.done <- true
+					}()
+				}
+			}
+		}(lstnr)
 	}
 	active.MapGlobals("InvokeListener", InvokeListener)
 }

@@ -99,9 +99,12 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 var qrqstlck *sync.Mutex
 
 func queryRequest(reqst *Request) {
-	qrqstlck.Lock()
-	defer qrqstlck.Unlock()
-	reqstsQueue <- reqst
+	if reqst.listener==nil {
+		qrqstlck.Lock()
+		defer qrqstlck.Unlock()
+		reqstsQueue <- reqst
+	}
+	reqst.QueueRequest(reqst)
 }
 
 func (reqst *Request) Interupted() bool {
