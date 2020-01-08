@@ -76,7 +76,6 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		reqst.rqstlck.Unlock()
 		reqst.Close()
-		runtime.GC()
 	}()
 	reqst.rqstlck.Lock()
 	var wi interface{} = w
