@@ -104,9 +104,8 @@ func queryRequest(reqst *Request) {
 		defer qrqstlck.Unlock()
 		reqstsQueue <- reqst
 	} else {
-
+		reqst.listener.QueueRequest(reqst)
 	}
-	reqst.listener.QueueRequest(reqst)
 }
 
 func (reqst *Request) Interupted() bool {
