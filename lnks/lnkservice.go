@@ -67,5 +67,7 @@ func (lnksrvs *LnkService) runLnkService(args ...string) {
 }
 
 func (lnksrvs *LnkService) stopLnkService(args ...string) {
-
+	if lnksrvs.IsService() {
+		env.ShutdownEnvironment()
+	}
 }
