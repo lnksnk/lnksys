@@ -91,9 +91,9 @@ func (lstnr *Listener) ListenAndServer(host string) {
 		srvmutex.Handle("/", lstnr)
 		var server = &http.Server{Addr: host, Handler: srvmutex}
 		lstnr.servers[host] = server
-		go func() {
-			server.ListenAndServe()
-		}()
+		go func(srvr *http.Server) {
+			srvr.ListenAndServe()
+		}(server)
 	}
 }
 
