@@ -487,18 +487,18 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 						}
 						reqst.currdr.activeEnd = false
 					} else {
+						if len(reqst.resources) > 0 {
+							reqst.resources[reqst.lastrdri] = nil
+							reqst.resources = reqst.resources[reqst.lastrdri+1:]
+							if len(reqst.resources) == 0 {
+								reqst.lastrdri = -1
+							}
+						}
 						reqst.currdr.activeEnd = true
 						n = copy(p[n:], []byte("@>"))
 						err = nil
 					}
 				} else {
-					if len(reqst.resources) > 0 {
-						reqst.resources[reqst.lastrdri] = nil
-						reqst.resources = reqst.resources[reqst.lastrdri+1:]
-						if len(reqst.resources) == 0 {
-							reqst.lastrdri = -1
-						}
-					}
 					if len(reqst.resources) > 0 {
 						n = copy(p[n:], []byte("\r\n"))
 					}
