@@ -461,7 +461,7 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 	}
 	if reqst.currdr != nil {
 		if reqst.currdr.activeInverse {
-			if reqst.currdr.actviveEnd {
+			if reqst.currdr.activeEnd {
 				err = io.EOF
 			} else {
 				nt, errt := reqst.currdr.Read(p[n : n+(pl-n)])
@@ -481,22 +481,36 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 			var currdr io.Reader = reqst.currdr
 			if reqst.currdr.IsActiveContent() {
 				if reqst.currdr.activeInverse {
-					if reqst.currdr.actviveEnd {
+					if reqst.currdr.activeEnd {
 						if len(reqst.resources) > 0 {
 							n = copy(p[n:], []byte("\r\n"))
 						}
-						reqst.currdr.actviveEnd = false
+						reqst.currdr.activeEnd = false
 					} else {
-						reqst.currdr.actviveEnd = true
+						reqst.currdr.activeEnd = true
 						n = copy(p[n:], []byte("@>"))
 						err = nil
 					}
 				} else {
 					if len(reqst.resources) > 0 {
+						reqst.resources[reqst.lastrdri] = nil
+						reqst.resources = reqst.resources[reqst.lastrdri+1:]
+						if len(reqst.resources) == 0 {
+							reqst.lastrdri = -1
+						}
+					}
+					if len(reqst.resources) > 0 {
 						n = copy(p[n:], []byte("\r\n"))
 					}
 				}
 			} else {
+				if len(reqst.resources) > 0 {
+					reqst.resources[reqst.lastrdri] = nil
+					reqst.resources = reqst.resources[reqst.lastrdri+1:]
+					if len(reqst.resources) == 0 {
+						reqst.lastrdri = -1
+					}
+				}
 				if len(reqst.resources) > 0 {
 					n = copy(p[n:], []byte("\r\n"))
 				}
@@ -696,7 +710,7 @@ type Resource struct {
 	readBufferl   int
 	rbuf          *bufio.Reader
 	activeInverse bool
-	actviveEnd    bool
+	activeEnd     bool
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
@@ -785,7 +799,14 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 		r = findR(resourcepath)
 	}
 	if r != nil || finfo != nil {
-		rsrc = &Resource{path: resourcepath, pathroot: lastPathRoot, r: r, finfo: finfo, reqst: reqst, activeInverse: activeInverse, actviveEnd: false}
+		rsrc = &Resource{
+			path:          resourcepath,
+			pathroot:      lastPathRoot,
+			r:             r,
+			finfo:         finfo,
+			reqst:         reqst,
+			activeInverse: activeInverse,
+			activeEnd:     false}
 		if finfo != nil {
 			rsrc.size = finfo.Size()
 		}
