@@ -2,17 +2,17 @@ package network
 
 import (
 	"archive/zip"
+	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
-	"context"
-	"bufio"
-	"path/filepath"
 	"sync"
+	"time"
 
 	db "github.com/efjoubert/lnksys/db"
 	embed "github.com/efjoubert/lnksys/embed"
@@ -80,22 +80,20 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqst.rqstlck.Lock()
 	var wi interface{} = w
 	if _, wiok := wi.(*Response); !wiok {
-		go func(wnotify <-chan bool) {
+		go func(wnotify <-chan bool, rcntx context.Context) {
 			var checking = true
 			for checking {
 				select {
 				case <-wnotify:
 					reqst.interuptRequest = true
 					checking = false
-				case drcntx<-rcntx.Done():
-					if drcntx {
-						reqst.interuptRequest = true
-						checking = false
-					}
+				case <-rcntx.Done():
+					reqst.interuptRequest = true
+					checking = false
 				}
 			}
 			return
-		}(w.(http.CloseNotifier).CloseNotify(),r.Context())
+		}(w.(http.CloseNotifier).CloseNotify(), r.Context())
 	}
 
 	go func(rqst *Request) {
