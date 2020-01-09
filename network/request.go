@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
-
+	"context"
 	"bufio"
 	"path/filepath"
 	"sync"
@@ -87,10 +87,15 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				case <-wnotify:
 					reqst.interuptRequest = true
 					checking = false
+				case drcntx<-rcntx.Done():
+					if drcntx {
+						reqst.interuptRequest = true
+						checking = false
+					}
 				}
 			}
 			return
-		}(w.(http.CloseNotifier).CloseNotify())
+		}(w.(http.CloseNotifier).CloseNotify(),r.Context())
 	}
 
 	go func(rqst *Request) {
