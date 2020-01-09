@@ -35,8 +35,9 @@ type Request struct {
 	done             chan bool
 	resourcesOffset  int64
 	resourcesSize    int64
-	resdone          chan bool
 	currdr           *Resource
+	lastrdri         int
+	resources        []*Resource
 	preCurrentBytes  []byte
 	preCurrentBytesl int
 	preCurrentBytesi int
@@ -49,8 +50,6 @@ type Request struct {
 	preCurrentRunes  []byte
 	preCurrentRunesl int
 	preCurrentRunesi int
-	firstrdr         *Resource
-	lastrdr          *Resource
 	runeRdr          *bufio.Reader
 	dbcn             map[string]*db.DbConnection
 	params           *parameters.Parameters
@@ -68,8 +67,6 @@ type Request struct {
 	canShutdownListener  bool
 	shuttingdownEnv      func()
 	canShutdownEnv       bool
-	piper                io.ReadCloser
-	pipew                io.WriteCloser
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -159,23 +156,40 @@ func (reqst *Request) AddResource(resource ...string) {
 			reqst.AddResource(strings.Split(res, "|")...)
 			continue
 		}
-		if reqst.currdr == nil {
-			if rsrc := reqst.NewResource(res, reqst.lastrdr, nil); rsrc != nil {
+		/*if reqst.currdr == nil {
+			if rsrc := reqst.NewResource(res); rsrc != nil {
 				reqst.resourcesSize = reqst.resourcesSize + rsrc.size
-
-				if reqst.firstrdr == nil {
-					reqst.firstrdr = rsrc
-				}
-				if reqst.lastrdr == nil {
-					reqst.lastrdr = rsrc
-				} else {
-					reqst.lastrdr.nextrsrc = rsrc
-				}
-				reqst.lastrdr = rsrc
 			}
 		} else {
-			if rsrc := reqst.NewResource(res, reqst.currdr, reqst.currdr.nextrsrc); rsrc != nil {
+			if rsrc := reqst.NewResource(res); rsrc != nil {
 				reqst.resourcesSize = reqst.resourcesSize + rsrc.size
+				reqst.currdr = rsrc
+			}
+		}*/
+		if rsrc := reqst.NewResource(res); rsrc != nil {
+			reqst.resourcesSize = reqst.resourcesSize + rsrc.size
+			if len(reqst.resources) == 0 {
+				reqst.resources = []*Resource{}
+			}
+
+			var prersrs []*Resource
+			var postrsrs []*Resource
+
+			var currsrs []*Resource = reqst.resources
+
+			if reqst.lastrdri == -1 {
+				reqst.lastrdri = len(reqst.resources)
+			}
+			prersrs = currsrs[:reqst.lastrdri]
+			postrsrs = currsrs[reqst.lastrdri:]
+			var nextrsrs = append(append(prersrs, rsrc), postrsrs...)
+			reqst.resources = nil
+			reqst.resources = nextrsrs[:]
+			prersrs = nil
+			postrsrs = nil
+			currsrs = nil
+			nextrsrs = nil
+			if reqst.currdr == nil {
 				reqst.currdr = rsrc
 			}
 		}
@@ -183,11 +197,6 @@ func (reqst *Request) AddResource(resource ...string) {
 }
 
 func (reqst *Request) ExecuteRequest() {
-	defer func() {
-		if reqst.piper != nil && reqst.pipew != nil {
-			reqst.pipew.Close()
-		}
-	}()
 	var reqstContentType = reqst.r.Header.Get("Content-Type")
 	if reqst.bufRW == nil {
 		reqst.bufRW = iorw.NewBufferedRW(int64(maxbufsize), reqst)
@@ -436,31 +445,12 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 		return
 	}
 	if reqst.currdr == nil {
-		go func() {
-			var tmpoffset = int64(0)
-			var startrdr = reqst.firstrdr
-			for tmpoffset <= reqst.resourcesOffset && startrdr != nil {
-				if tmpoffset+startrdr.Size() < reqst.resourcesOffset {
-					tmpoffset = tmpoffset + startrdr.Size()
-					if startrdr.nextrsrc != nil {
-						startrdr = startrdr.nextrsrc
-					} else {
-						break
-					}
-				} else {
-					tmpoffset = reqst.resourcesOffset - tmpoffset
-					if sn, snerr := startrdr.Seek(tmpoffset, 0); snerr == nil {
-						if sn == tmpoffset {
-							reqst.currdr = startrdr
-							break
-						}
-					}
-					break
-				}
+		if reqst.lastrdri > -1 {
+			reqst.currdr = reqst.resources[reqst.lastrdri]
+			if len(reqst.resources) > 0 {
+				reqst.resources = reqst.resources[reqst.lastrdri+1:]
 			}
-			reqst.resdone <- true
-		}()
-		<-reqst.resdone
+		}
 		if reqst.currdr == nil {
 			err = io.EOF
 		} else if reqst.currdr != nil {
@@ -492,7 +482,7 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 			if reqst.currdr.IsActiveContent() {
 				if reqst.currdr.activeInverse {
 					if reqst.currdr.actviveEnd {
-						if reqst.currdr.nextrsrc != nil {
+						if len(reqst.resources) > 0 {
 							n = copy(p[n:], []byte("\r\n"))
 						}
 						reqst.currdr.actviveEnd = false
@@ -502,19 +492,24 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 						err = nil
 					}
 				} else {
-					if reqst.currdr.nextrsrc != nil {
+					if len(reqst.resources) > 0 {
 						n = copy(p[n:], []byte("\r\n"))
 					}
 				}
 			} else {
-				if reqst.currdr.nextrsrc != nil {
+				if len(reqst.resources) > 0 {
 					n = copy(p[n:], []byte("\r\n"))
 				}
 			}
 			if err == io.EOF {
-				if reqst.currdr.nextrsrc != nil {
-					reqst.currdr = reqst.currdr.nextrsrc
+				if reqst.lastrdri > -1 {
+					reqst.currdr = reqst.resources[reqst.lastrdri]
+					reqst.resources = reqst.resources[reqst.lastrdri+1:]
 					err = nil
+					if len(reqst.resources) == 0 {
+						reqst.resources = nil
+						reqst.lastrdri = -1
+					}
 				} else {
 					reqst.currdr = nil
 				}
@@ -539,10 +534,20 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 }
 
 func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
-	reqst = &Request{rqstlck: &sync.Mutex{}, listener: listener, w: w, r: r, done: make(chan bool, 1), resdone: make(chan bool, 1), resourcesSize: 0, params: parameters.NewParameters(), interuptRequest: false,
+	reqst = &Request{
+		rqstlck:              &sync.Mutex{},
+		listener:             listener,
+		w:                    w,
+		r:                    r,
+		done:                 make(chan bool, 1),
+		resourcesSize:        0,
+		params:               parameters.NewParameters(),
+		interuptRequest:      false,
 		shuttingdownHost:     shuttingDownHost,
 		canShutdownHost:      shuttingDownHost != nil,
-		shuttingdownListener: shuttingDownListener}
+		shuttingdownListener: shuttingDownListener,
+		lastrdri:             -1,
+	}
 	if canShutdownEnv {
 		reqst.shuttingdownEnv = func() {
 			ShutdownEnv()
@@ -600,10 +605,6 @@ func (reqst *Request) Close() (err error) {
 		close(reqst.done)
 		reqst.done = nil
 	}
-	if reqst.resdone != nil {
-		close(reqst.resdone)
-		reqst.resdone = nil
-	}
 	if reqst.listener != nil {
 		reqst.listener = nil
 	}
@@ -655,13 +656,13 @@ func (reqst *Request) Close() (err error) {
 		}
 		reqst.shuttingdownEnv = nil
 	}
-	if reqst.piper != nil {
-		reqst.piper.Close()
-		reqst.piper = nil
-	}
-	if reqst.pipew != nil {
-		reqst.pipew.Close()
-		reqst.pipew = nil
+	if reqst.resources != nil {
+		for len(reqst.resources) > 0 {
+			reqst.resources[0].Close()
+			reqst.resources[0] = nil
+			reqst.resources = reqst.resources[1:]
+		}
+		reqst.resources = nil
 	}
 	return
 }
@@ -690,8 +691,6 @@ type Resource struct {
 	path          string
 	pathroot      string
 	size          int64
-	prvrsrc       *Resource
-	nextrsrc      *Resource
 	readBuffer    []byte
 	readBufferi   int
 	readBufferl   int
@@ -713,7 +712,7 @@ func (rsrc *Resource) IsActiveContent() (active bool) {
 	return
 }
 
-func (reqst *Request) NewResource(resourcepath string, prevrsrc *Resource, nextrsrc *Resource) (rsrc *Resource) {
+func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 
 	var r io.Reader = nil
 
@@ -786,7 +785,7 @@ func (reqst *Request) NewResource(resourcepath string, prevrsrc *Resource, nextr
 		r = findR(resourcepath)
 	}
 	if r != nil || finfo != nil {
-		rsrc = &Resource{path: resourcepath, pathroot: lastPathRoot, r: r, finfo: finfo, reqst: reqst, prvrsrc: prevrsrc, nextrsrc: nextrsrc, activeInverse: activeInverse, actviveEnd: false}
+		rsrc = &Resource{path: resourcepath, pathroot: lastPathRoot, r: r, finfo: finfo, reqst: reqst, activeInverse: activeInverse, actviveEnd: false}
 		if finfo != nil {
 			rsrc.size = finfo.Size()
 		}
@@ -915,23 +914,6 @@ func (rsrc *Resource) Close() (err error) {
 			rc = nil
 		}
 		rsrc.r = nil
-	}
-	if rsrc.reqst.firstrdr == rsrc {
-		rsrc.reqst.firstrdr = rsrc.nextrsrc
-		if rsrc.nextrsrc != nil {
-			rsrc.nextrsrc.prvrsrc = nil
-		}
-	}
-	if rsrc == rsrc.reqst.lastrdr {
-		rsrc.reqst.lastrdr = rsrc.prvrsrc
-	}
-
-	if rsrc.prvrsrc != nil {
-		rsrc.prvrsrc.nextrsrc = rsrc.nextrsrc
-		rsrc.prvrsrc = nil
-	}
-	if rsrc.nextrsrc != nil {
-		rsrc.nextrsrc = nil
 	}
 	if rsrc.reqst != nil {
 		rsrc.reqst = nil
