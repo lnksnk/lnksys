@@ -156,7 +156,7 @@ func (reqst *Request) AddResource(resource ...string) {
 	for len(resource)>0 && lastresi<len(resource) {
 		var res=resource[lastresi]
 		if res=="" {
-			resource=append(resource[:lastresi],resource[lastresi+1:])
+			resource=append(resource[:lastresi],resource[lastresi+1:]...)
 		} else {
 			if strings.Index(res, "|") > 0 {
 				var rsrs=[]string{}
