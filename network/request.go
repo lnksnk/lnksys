@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -135,47 +134,47 @@ func (reqst *Request) DbQuery(alias string, query string, args ...interface{}) (
 }
 
 func (reqst *Request) AddResource(resource ...string) {
-	if len(resource)>0 {
-		var lastrsri=0
-		if len(reqst.resources)>0 {
-			lastrsri=len(reqst.resources)-1
+	if len(resource) > 0 {
+		var lastrsri = 0
+		if len(reqst.resources) > 0 {
+			lastrsri = len(reqst.resources) - 1
 		}
-		var finalresource=[]string{}
-		for len(finalresource)>0 || len(resource)>0  {
-			if len(resource)>0 {
-				var res=resource[0]
-				resource=resource[1:]
-				if res!="" {
+		var finalresource = []string{}
+		for len(finalresource) > 0 || len(resource) > 0 {
+			if len(resource) > 0 {
+				var res = resource[0]
+				resource = resource[1:]
+				if res != "" {
 					if strings.Index(res, "|") > 0 {
 						for strings.Index(res, "|") > 0 {
-							var rs=res[:strings.Index(res, "|")]
-							res=res[strings.Index(res, "|")+1:] 
-							if rs!="" {
-								finalresource=append(finalresource,rs)
+							var rs = res[:strings.Index(res, "|")]
+							res = res[strings.Index(res, "|")+1:]
+							if rs != "" {
+								finalresource = append(finalresource, rs)
 							}
 						}
-						if res!="" {
-							finalresource=append(finalresource,res)
+						if res != "" {
+							finalresource = append(finalresource, res)
 						}
 					} else {
-						finalresource=append(finalresource,res)
+						finalresource = append(finalresource, res)
 					}
 				}
 			}
-			for len(finalresource)>0 {
-				var fres=finalresource[0]
-				finalresource=finalresource[1:]
+			for len(finalresource) > 0 {
+				var fres = finalresource[0]
+				finalresource = finalresource[1:]
 				if rsrc := reqst.NewResource(fres); rsrc != nil {
 					reqst.resourcesSize = reqst.resourcesSize + rsrc.size
 					if len(reqst.resources) == 0 {
 						reqst.resources = []*Resource{}
 					}
-		
+
 					var prersrs []*Resource
 					var postrsrs []*Resource
-		
+
 					var currsrs []*Resource = reqst.resources
-		
+
 					prersrs = currsrs[:lastrsri]
 					postrsrs = currsrs[lastrsri:]
 					var nextrsrs = append(append(prersrs, rsrc), postrsrs...)
@@ -187,7 +186,7 @@ func (reqst *Request) AddResource(resource ...string) {
 					nextrsrs = nil
 					lastrsri++
 				}
-			}			
+			}
 		}
 	}
 }
@@ -503,8 +502,8 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 					rdclose.Close()
 					rdclose = nil
 				}
-				if len(reqst.resources)>0 {
-					err=nil
+				if len(reqst.resources) > 0 {
+					err = nil
 				}
 				currdr = nil
 			}
