@@ -148,24 +148,36 @@ func (reqst *Request) DbQuery(alias string, query string, args ...interface{}) (
 }
 
 func (reqst *Request) AddResource(resource ...string) {
-	for _, res := range resource {
-		if len(res) == 0 {
-			continue
-		}
-		if strings.Index(res, "|") > 0 {
-			reqst.AddResource(strings.Split(res, "|")...)
-			continue
-		}
-		/*if reqst.currdr == nil {
-			if rsrc := reqst.NewResource(res); rsrc != nil {
-				reqst.resourcesSize = reqst.resourcesSize + rsrc.size
-			}
+	var lastresi=0
+	var lastrsri=0
+	if len(reqst.resources)>0 {
+		lastrsri=len(reqst.resources)-1
+	}
+	for len(resource)>0 && lastresi<len(resource) {
+		var res=resource[lastresi]
+		if res=="" {
+			resource=append(resource[:lastresi],resources[lastresi+1:])
 		} else {
-			if rsrc := reqst.NewResource(res); rsrc != nil {
-				reqst.resourcesSize = reqst.resourcesSize + rsrc.size
-				reqst.currdr = rsrc
+			if strings.Index(res, "|") > 0 {
+				var rsrs=[]string{}
+				for strings.Index(res, "|") > 0 {
+					var rs=res[:strings.Index(res, "|")]
+					res=res[strings.Index(res, "|")+1:] 
+					if rs!="" {
+						rsrs=append(rsrs,rs)
+					}
+				}
+				if len(rsrs)>0 {
+					resources=append(resources[:lastresi],rsrs...)
+					lastresi+=len(rsrs)
+				}
+			} else {
+				lastresi++
 			}
-		}*/
+		}
+	}
+
+	for _, res := range resource {
 		if rsrc := reqst.NewResource(res); rsrc != nil {
 			reqst.resourcesSize = reqst.resourcesSize + rsrc.size
 			if len(reqst.resources) == 0 {
@@ -177,11 +189,8 @@ func (reqst *Request) AddResource(resource ...string) {
 
 			var currsrs []*Resource = reqst.resources
 
-			if reqst.lastrdri == -1 {
-				reqst.lastrdri = len(reqst.resources)
-			}
-			prersrs = currsrs[:reqst.lastrdri]
-			postrsrs = currsrs[reqst.lastrdri:]
+			prersrs = currsrs[:lastrdri]
+			postrsrs = currsrs[lastrdri:]
 			var nextrsrs = append(append(prersrs, rsrc), postrsrs...)
 			reqst.resources = nil
 			reqst.resources = nextrsrs[:]
