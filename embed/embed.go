@@ -29,42 +29,40 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	if strings.LastIndex(embedfindjs, "/") >= 0 {
 		embedfindjs = embedfindjs[strings.LastIndex(embedfindjs, "/")+1:]
 	}
-	if embedjs = FindChachedEmbed(embedfindjs); embedjs != nil {
-		return
-	} else if embedjs = react.ReactFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+	if embedjs = react.ReactFindJS(embedfindjs); embedjs != nil {
+		return 
 	} else if embedjs = react.SchedulerFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = jquery.JQueryFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = require.RequireFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = bootstrap.BootstrapFindJSCSS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = fontawesome.FontawesomeFindJSCSS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = materialdb.MaterialDBFindJSCSS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = babel.BabelFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = babylon.BabylonFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = three.ThreeFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = jss.JSSFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = rxjs.RxJSFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = falcor.FalcorFindJS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = video.VideoFindJSCSS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = jspanel.JSPanelFindJSCSS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = ace.AcsJSFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	} else if embedjs = chart.ChartFindJS(embedfindjs); embedjs != nil {
-		return CacheEmbedResource(embedfindjs, embedjs)
+		return 
 	}
 	return
 }
