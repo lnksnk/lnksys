@@ -1,60 +1,88 @@
 package emded
 
 import (
+	"io"
+	"strings"
+
+	ace "github.com/efjoubert/lnksys/embed/ace"
 	babel "github.com/efjoubert/lnksys/embed/babel"
 	babylon "github.com/efjoubert/lnksys/embed/babylon"
 	bootstrap "github.com/efjoubert/lnksys/embed/bootstrap"
+	chart "github.com/efjoubert/lnksys/embed/chart"
+	falcor "github.com/efjoubert/lnksys/embed/falcor"
 	fontawesome "github.com/efjoubert/lnksys/embed/fontawesome"
 	jquery "github.com/efjoubert/lnksys/embed/jquery"
+	jspanel "github.com/efjoubert/lnksys/embed/jspanel"
 	jss "github.com/efjoubert/lnksys/embed/jss"
 	materialdb "github.com/efjoubert/lnksys/embed/materialdb"
 	react "github.com/efjoubert/lnksys/embed/react"
 	require "github.com/efjoubert/lnksys/embed/require"
 	rxjs "github.com/efjoubert/lnksys/embed/rxjs"
 	three "github.com/efjoubert/lnksys/embed/three"
-	falcor "github.com/efjoubert/lnksys/embed/falcor"
 	video "github.com/efjoubert/lnksys/embed/video"
-	jspanel "github.com/efjoubert/lnksys/embed/jspanel"
-	ace "github.com/efjoubert/lnksys/embed/ace"
-	chart "github.com/efjoubert/lnksys/embed/chart"
-	"io"
+	iorw "github.com/efjoubert/lnksys/iorw"
 )
 
+var cachedResources map[string]*iorw.BufferedRW
+
 func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
-	if embedjs = react.ReactFindJS(embedfindjs); embedjs != nil {
+	if strings.LastIndex(embedfindjs, "/") >= 0 {
+		embedfindjs = embedfindjs[strings.LastIndex(embedfindjs, "/")+1:]
+	}
+	if embedjs = FindChachedEmbed(embedfindjs); embedjs != nil {
 		return
+	} else if embedjs = react.ReactFindJS(embedfindjs); embedjs != nil {
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = react.SchedulerFindJS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = jquery.JQueryFindJS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = require.RequireFindJS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = bootstrap.BootstrapFindJSCSS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = fontawesome.FontawesomeFindJSCSS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = materialdb.MaterialDBFindJSCSS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = babel.BabelFindJS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = babylon.BabylonFindJS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = three.ThreeFindJS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = jss.JSSFindJS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = rxjs.RxJSFindJS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = falcor.FalcorFindJS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = video.VideoFindJSCSS(embedfindjs); embedjs != nil {
-		return
-	} else if embedjs=jspanel.JSPanelFindJSCSS(embedfindjs); embedjs!=nil {
-		return
-	} else if embedjs=ace.AcsJSFindJS(embedfindjs); embedjs!=nil {
-		return
-	} else if embedjs=chart.ChartFindJS(embedfindjs); embedjs!=nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
+	} else if embedjs = jspanel.JSPanelFindJSCSS(embedfindjs); embedjs != nil {
+		return CacheEmbedResource(embedfindjs, embedjs)
+	} else if embedjs = ace.AcsJSFindJS(embedfindjs); embedjs != nil {
+		return CacheEmbedResource(embedfindjs, embedjs)
+	} else if embedjs = chart.ChartFindJS(embedfindjs); embedjs != nil {
+		return CacheEmbedResource(embedfindjs, embedjs)
+	}
+	return
+}
+
+func CacheEmbedResource(embedfindjs string, embedjs io.Reader) io.Reader {
+	var cachedRD *iorw.BufferedRW = iorw.NewBufferedRW(0, nil)
+	var buf = make([]byte, 81920)
+	io.CopyBuffer(cachedRD, embedjs, buf)
+	cachedResources[embedfindjs] = cachedRD
+	return FindChachedEmbed(embedfindjs)
+}
+
+func FindChachedEmbed(embedfindjs string) (cachedReader *iorw.BufferedRW) {
+	if strings.LastIndex(embedfindjs, "/") >= 0 {
+		embedfindjs = embedfindjs[strings.LastIndex(embedfindjs, "/")+1:]
+	}
+	if cachedrw, cachedrwok := cachedResources[embedfindjs]; cachedrwok {
+		cachedReader = iorw.NewBufferedRW(81920, cachedrw)
 	}
 	return
 }
