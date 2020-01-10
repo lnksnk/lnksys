@@ -27,7 +27,7 @@ type lstnrRW struct {
 type Listener struct {
 	servers        map[string]*http.Server
 	servmutexes    map[string]*http.ServeMux
-	queuedRequests chan *lstnrRW
+	queuedRW chan *lstnrRW
 	qrqstlck       *sync.Mutex
 }
 
@@ -114,19 +114,22 @@ func InvokeListener(host string) {
 
 func init() {
 	if lstnr == nil {
-		lstnr = &Listener{queuedRequests: make(chan *Request), qrqstlck: &sync.Mutex{}}
+		lstnr = &Listener{queuedRW: make(chan *lstnrRW), qrqstlck: &sync.Mutex{}}
 		go func(qlstnr *Listener) {
 			for {
 				select {
 				case rw := <-qlstnr.queuedRW:
-					go func() {
-						var reqst = NewRequest(lstnr, w, r, func() {
+					go func(w http.ResponseWriter, r *http.Request) {
+						var reqst = NewRequest(qlstnr,w,r, func() {
 							lstnr.Shutdown()
 						}, func() {
 							lstnr.ShutdownHost(r.Host)
 						}, true)
-						HttpRequestHandler(reqst).ServeHTTP(w, r)
-					}()
+						HttpRequestHandler(reqst).ServeHTTP(w,r)
+					}(rw.w, rw.r)
+					rw.w=nil
+					rw.r=nil
+					rw=nil
 				}
 			}
 		}(lstnr)
