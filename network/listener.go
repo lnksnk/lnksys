@@ -14,11 +14,7 @@ import (
 type Listening interface {
 	Shutdown()
 	ShutdownHost(string)
-}
-
-type lstnrRW struct {
-	w http.ResponseWriter
-	r *http.Request
+	QueueRequest(*Request)
 }
 
 /*Listener - Listener
@@ -26,24 +22,23 @@ type lstnrRW struct {
 type Listener struct {
 	servers        map[string]*http.Server
 	servmutexes    map[string]*http.ServeMux
-	queuedRW chan *lstnrRW
+	queuedRequests chan *Request
 	qrqstlck       *sync.Mutex
 }
 
-func (lstnr *Listener) QueueRW(w http.ResponseWriter, r *http.Request) {
+func (lstnr *Listener) QueueRequest(reqst *Request) {
 	lstnr.qrqstlck.Lock()
 	defer lstnr.qrqstlck.Unlock()
-	lstnr.queuedRW <- &lstnrRW{w:w,r:r}
+	lstnr.queuedRequests <- reqst
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	/*var reqst = NewRequest(lstnr, w, r, func() {
+	var reqst = NewRequest(lstnr, w, r, func() {
 		lstnr.Shutdown()
 	}, func() {
 		lstnr.ShutdownHost(r.Host)
 	}, true)
-	HttpRequestHandler(reqst).ServeHTTP(w, r)*/
-	lstnr.QueueRW(w,r)
+	HttpRequestHandler(reqst).ServeHTTP(w, r)
 }
 
 func (lstnr *Listener) Shutdown() {
@@ -95,7 +90,7 @@ func (lstnr *Listener) ListenAndServer(host string) {
 		var srvmutex = http.NewServeMux()
 		srvmutex.Handle("/", lstnr)
 		var server = &http.Server{
-			ReadHeaderTimeout:10 *time.Second,
+			ReadHeaderTimeout:20 *time.Second,
 			Addr: host, 
 			Handler: srvmutex}
 		lstnr.servers[host] = server
@@ -113,22 +108,15 @@ func InvokeListener(host string) {
 
 func init() {
 	if lstnr == nil {
-		lstnr = &Listener{queuedRW: make(chan *lstnrRW), qrqstlck: &sync.Mutex{}}
+		lstnr = &Listener{queuedRequests: make(chan *Request), qrqstlck: &sync.Mutex{}}
 		go func(qlstnr *Listener) {
 			for {
 				select {
-				case rw := <-qlstnr.queuedRW:
-					go func(w http.ResponseWriter, r *http.Request) {
-						var reqst = NewRequest(qlstnr,w,r, func() {
-							lstnr.Shutdown()
-						}, func() {
-							lstnr.ShutdownHost(r.Host)
-						}, true)
-						HttpRequestHandler(reqst).ServeHTTP(w,r)
-					}(rw.w, rw.r)
-					rw.w=nil
-					rw.r=nil
-					rw=nil
+				case reqst := <-qlstnr.queuedRequests:
+					go func() {
+						reqst.ExecuteRequest()
+						reqst.done <- true
+					}()
 				}
 			}
 		}(lstnr)
