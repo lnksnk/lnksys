@@ -156,7 +156,7 @@ func (reqst *Request) AddResource(resource ...string) {
 	for len(resource)>0 && lastresi<len(resource) {
 		var res=resource[lastresi]
 		if res=="" {
-			resource=append(resource[:lastresi],resources[lastresi+1:])
+			resource=append(resource[:lastresi],resource[lastresi+1:])
 		} else {
 			if strings.Index(res, "|") > 0 {
 				var rsrs=[]string{}
@@ -168,7 +168,7 @@ func (reqst *Request) AddResource(resource ...string) {
 					}
 				}
 				if len(rsrs)>0 {
-					resources=append(resources[:lastresi],rsrs...)
+					resource=append(resource[:lastresi],rsrs...)
 					lastresi+=len(rsrs)
 				}
 			} else {
@@ -189,8 +189,8 @@ func (reqst *Request) AddResource(resource ...string) {
 
 			var currsrs []*Resource = reqst.resources
 
-			prersrs = currsrs[:lastrdri]
-			postrsrs = currsrs[lastrdri:]
+			prersrs = currsrs[:lastrsri]
+			postrsrs = currsrs[lastrsri:]
 			var nextrsrs = append(append(prersrs, rsrc), postrsrs...)
 			reqst.resources = nil
 			reqst.resources = nextrsrs[:]
