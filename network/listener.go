@@ -89,7 +89,10 @@ func (lstnr *Listener) ListenAndServer(host string) {
 		}
 		var srvmutex = http.NewServeMux()
 		srvmutex.Handle("/", lstnr)
-		var server = &http.Server{Addr: host, Handler: srvmutex}
+		var server = &http.Server{
+			ReadHeaderTimeout:10 *time.Second,
+			Addr: host, 
+			Handler: srvmutex}
 		lstnr.servers[host] = server
 		go func(srvr *http.Server) {
 			srvr.ListenAndServe()
