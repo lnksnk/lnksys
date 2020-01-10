@@ -165,6 +165,9 @@ func (reqst *Request) AddResource(resource ...string) {
 							rsrs=append(rsrs,rs)
 						}
 					}
+					if res!="" {
+						rsrs=append(rsrs,rs)
+					}
 					if len(rsrs)>0 {
 						resource=append(resource,rsrs...)
 						continue
