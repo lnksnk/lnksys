@@ -194,7 +194,7 @@ func (reqst *Request) AddResource(resource ...string) {
 						nextrsrs = nil
 						lastrsri++
 					}
-					resource=resource[:1]
+					resource=resource[1:]
 				}
 			}
 		}
