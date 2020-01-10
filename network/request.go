@@ -189,9 +189,6 @@ func (reqst *Request) AddResource(resource ...string) {
 			postrsrs = nil
 			currsrs = nil
 			nextrsrs = nil
-			if reqst.currdr == nil {
-				reqst.currdr = rsrc
-			}
 		}
 	}
 }
