@@ -154,9 +154,8 @@ func (reqst *Request) AddResource(resource ...string) {
 		}
 		for len(resource)>0 {
 			var res=resource[0]
-			if res=="" {
-				resource=resource[1:]
-			} else {
+			resource=resource[1:]
+			if res!="" {
 				if strings.Index(res, "|") > 0 {
 					var rsrs=[]string{}
 					for strings.Index(res, "|") > 0 {
@@ -193,7 +192,6 @@ func (reqst *Request) AddResource(resource ...string) {
 						nextrsrs = nil
 						lastrsri++
 					}
-					resource=resource[1:]
 				}
 			}
 		}
