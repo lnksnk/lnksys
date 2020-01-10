@@ -539,9 +539,7 @@ func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shut
 		interuptRequest:      false,
 		shuttingdownHost:     shuttingDownHost,
 		canShutdownHost:      shuttingDownHost != nil,
-		shuttingdownListener: shuttingDownListener,
-		lastrdri:             -1,
-	}
+		shuttingdownListener: shuttingDownListener}
 	if canShutdownEnv {
 		reqst.shuttingdownEnv = func() {
 			ShutdownEnv()
