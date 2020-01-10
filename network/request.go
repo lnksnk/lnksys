@@ -511,6 +511,9 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 					rdclose.Close()
 					rdclose = nil
 				}
+				if len(reqst.resources)>0 {
+					err=nil
+				}
 				currdr = nil
 			}
 		}
