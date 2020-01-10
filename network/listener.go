@@ -17,28 +17,34 @@ type Listening interface {
 	QueueRequest(*Request)
 }
 
+type lstnrRW struct {
+	w http.ResponseWriter
+	r *http.Request
+}
+
 /*Listener - Listener
  */
 type Listener struct {
 	servers        map[string]*http.Server
 	servmutexes    map[string]*http.ServeMux
-	queuedRequests chan *Request
+	queuedRequests chan *lstnrRW
 	qrqstlck       *sync.Mutex
 }
 
-func (lstnr *Listener) QueueRequest(reqst *Request) {
+func (lstnr *Listener) QueueRW(w http.ResponseWriter, r *http.Request) {
 	lstnr.qrqstlck.Lock()
 	defer lstnr.qrqstlck.Unlock()
-	lstnr.queuedRequests <- reqst
+	lstnr.queuedRequests <- &lstnrRW{w:w,r:r}
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var reqst = NewRequest(lstnr, w, r, func() {
+	/*var reqst = NewRequest(lstnr, w, r, func() {
 		lstnr.Shutdown()
 	}, func() {
 		lstnr.ShutdownHost(r.Host)
 	}, true)
-	HttpRequestHandler(reqst).ServeHTTP(w, r)
+	HttpRequestHandler(reqst).ServeHTTP(w, r)*/
+	lstnr.QueueRW(w,r)
 }
 
 func (lstnr *Listener) Shutdown() {
@@ -112,9 +118,14 @@ func init() {
 		go func(qlstnr *Listener) {
 			for {
 				select {
-				case reqst := <-qlstnr.queuedRequests:
+				case rw := <-qlstnr.queuedRW:
 					go func() {
-						HttpRequestHandler(reqst).ServeHTTP(reqst.w, reqst.r)
+						var reqst = NewRequest(lstnr, w, r, func() {
+							lstnr.Shutdown()
+						}, func() {
+							lstnr.ShutdownHost(r.Host)
+						}, true)
+						HttpRequestHandler(reqst).ServeHTTP(w, r)
 					}()
 				}
 			}
