@@ -99,18 +99,6 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	<-reqst.done
 }
 
-var qrqstlck *sync.Mutex
-
-func queryRequest(reqst *Request) {
-	if reqst.listener == nil {
-		qrqstlck.Lock()
-		defer qrqstlck.Unlock()
-		reqstsQueue <- reqst
-	} else {
-		reqst.listener.QueueRequest(reqst)
-	}
-}
-
 func (reqst *Request) Interupted() bool {
 	return reqst.interuptRequest
 }
@@ -578,22 +566,6 @@ func ShutdownEnv() {
 }
 
 func init() {
-	if reqstsQueue == nil {
-		qrqstlck = &sync.Mutex{}
-		reqstsQueue = make(chan *Request, runtime.NumCPU()*4)
-		go func() {
-			for {
-				select {
-				case reqst := <-reqstsQueue:
-					go func() {
-						reqst.ExecuteRequest()
-						reqst.done <- true
-					}()
-				}
-			}
-		}()
-	}
-
 	active.MapGlobals("MAPRoots", func(a ...string) {
 		MapRoots(a...)
 	})

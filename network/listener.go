@@ -14,7 +14,6 @@ import (
 type Listening interface {
 	Shutdown()
 	ShutdownHost(string)
-	QueueRequest(*Request)
 }
 
 type lstnrRW struct {
@@ -34,7 +33,7 @@ type Listener struct {
 func (lstnr *Listener) QueueRW(w http.ResponseWriter, r *http.Request) {
 	lstnr.qrqstlck.Lock()
 	defer lstnr.qrqstlck.Unlock()
-	lstnr.queuedRequests <- &lstnrRW{w:w,r:r}
+	lstnr.queuedRW <- &lstnrRW{w:w,r:r}
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
