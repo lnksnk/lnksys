@@ -36,7 +36,6 @@ type Request struct {
 	resourcesOffset  int64
 	resourcesSize    int64
 	currdr           *Resource
-	lastrdri         int
 	resources        []*Resource
 	preCurrentBytes  []byte
 	preCurrentBytesl int
@@ -450,10 +449,10 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 		return
 	}
 	if reqst.currdr == nil {
-		if reqst.lastrdri > -1 {
-			reqst.currdr = reqst.resources[reqst.lastrdri]
+		if len(reqst.resources) > 0 {
+			reqst.currdr = reqst.resources[0]
 			if len(reqst.resources) > 0 {
-				reqst.resources = reqst.resources[reqst.lastrdri+1:]
+				reqst.resources = reqst.resources[1:]
 			}
 		}
 		if reqst.currdr == nil {
@@ -488,13 +487,6 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 				if reqst.currdr.activeInverse {
 					if reqst.currdr.activeEnd {
 						if len(reqst.resources) > 0 {
-							reqst.resources[reqst.lastrdri] = nil
-							reqst.resources = reqst.resources[reqst.lastrdri+1:]
-							if len(reqst.resources) == 0 {
-								reqst.lastrdri = -1
-							}
-						}
-						if len(reqst.resources) > 0 {
 							n = copy(p[n:], []byte("\r\n"))
 						}
 						reqst.currdr.activeEnd = false
@@ -510,28 +502,11 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 				}
 			} else {
 				if len(reqst.resources) > 0 {
-					reqst.resources[reqst.lastrdri] = nil
-					reqst.resources = reqst.resources[reqst.lastrdri+1:]
-					if len(reqst.resources) == 0 {
-						reqst.lastrdri = -1
-					}
-				}
-				if len(reqst.resources) > 0 {
 					n = copy(p[n:], []byte("\r\n"))
 				}
 			}
 			if err == io.EOF {
-				if reqst.lastrdri > -1 {
-					reqst.currdr = reqst.resources[reqst.lastrdri]
-					reqst.resources = reqst.resources[reqst.lastrdri+1:]
-					err = nil
-					if len(reqst.resources) == 0 {
-						reqst.resources = nil
-						reqst.lastrdri = -1
-					}
-				} else {
-					reqst.currdr = nil
-				}
+				reqst.currdr = nil
 				if rdclose, rdcloseok := currdr.(io.ReadCloser); rdcloseok {
 					rdclose.Close()
 					rdclose = nil
