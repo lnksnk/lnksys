@@ -148,56 +148,55 @@ func (reqst *Request) DbQuery(alias string, query string, args ...interface{}) (
 }
 
 func (reqst *Request) AddResource(resource ...string) {
-	var lastresi=0
-	var lastrsri=0
-	if len(reqst.resources)>0 {
-		lastrsri=len(reqst.resources)-1
-	}
-	for len(resource)>0 && lastresi<len(resource) {
-		var res=resource[lastresi]
-		if res=="" {
-			resource=append(resource[:lastresi],resource[lastresi+1:]...)
-		} else {
-			if strings.Index(res, "|") > 0 {
-				var rsrs=[]string{}
-				for strings.Index(res, "|") > 0 {
-					var rs=res[:strings.Index(res, "|")]
-					res=res[strings.Index(res, "|")+1:] 
-					if rs!="" {
-						rsrs=append(rsrs,rs)
-					}
-				}
-				if len(rsrs)>0 {
-					resource=append(resource[:lastresi],rsrs...)
-					lastresi+=len(rsrs)
-				}
-			} else {
-				lastresi++
-			}
+	if len(resource)>0 {
+		var lastrsri=0
+		if len(reqst.resources)>0 {
+			lastrsri=len(reqst.resources)-1
 		}
-	}
-
-	for _, res := range resource {
-		if rsrc := reqst.NewResource(res); rsrc != nil {
-			reqst.resourcesSize = reqst.resourcesSize + rsrc.size
-			if len(reqst.resources) == 0 {
-				reqst.resources = []*Resource{}
+		for len(resource)>0 {
+			var res=resource[0]
+			if res=="" {
+				resource=resource[1:]
+			} else {
+				if strings.Index(res, "|") > 0 {
+					var rsrs=[]string{}
+					for strings.Index(res, "|") > 0 {
+						var rs=res[:strings.Index(res, "|")]
+						res=res[strings.Index(res, "|")+1:] 
+						if rs!="" {
+							rsrs=append(rsrs,rs)
+						}
+					}
+					if len(rsrs)>0 {
+						resource=append(resource,rsrs...)
+						continue
+					}
+				} else {
+					if rsrc := reqst.NewResource(res); rsrc != nil {
+						reqst.resourcesSize = reqst.resourcesSize + rsrc.size
+						if len(reqst.resources) == 0 {
+							reqst.resources = []*Resource{}
+						}
+			
+						var prersrs []*Resource
+						var postrsrs []*Resource
+			
+						var currsrs []*Resource = reqst.resources
+			
+						prersrs = currsrs[:lastrsri]
+						postrsrs = currsrs[lastrsri:]
+						var nextrsrs = append(append(prersrs, rsrc), postrsrs...)
+						reqst.resources = nil
+						reqst.resources = nextrsrs[:]
+						prersrs = nil
+						postrsrs = nil
+						currsrs = nil
+						nextrsrs = nil
+						lastrsri++
+					}
+					resource=resource[:1]
+				}
 			}
-
-			var prersrs []*Resource
-			var postrsrs []*Resource
-
-			var currsrs []*Resource = reqst.resources
-
-			prersrs = currsrs[:lastrsri]
-			postrsrs = currsrs[lastrsri:]
-			var nextrsrs = append(append(prersrs, rsrc), postrsrs...)
-			reqst.resources = nil
-			reqst.resources = nextrsrs[:]
-			prersrs = nil
-			postrsrs = nil
-			currsrs = nil
-			nextrsrs = nil
 		}
 	}
 }
