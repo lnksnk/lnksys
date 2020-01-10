@@ -114,8 +114,7 @@ func init() {
 				select {
 				case reqst := <-qlstnr.queuedRequests:
 					go func() {
-						reqst.ExecuteRequest()
-						reqst.done <- true
+						HttpRequestHandler(reqst).ServeHTTP(reqst.w, reqst.r)
 					}()
 				}
 			}
