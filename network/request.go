@@ -588,7 +588,7 @@ func init() {
 	if reqstsQueue == nil {
 		qrqstlck = &sync.Mutex{}
 		reqstsQueue = make(chan *Request, runtime.NumCPU()*4)
-		go func() {
+		func() {
 			var nmcpus=runtime.NumCPU()
 			for nmcpus>0 {
 				nmcpus--

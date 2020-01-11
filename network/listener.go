@@ -110,7 +110,7 @@ func InvokeListener(host string) {
 func init() {
 	if lstnr == nil {
 		lstnr = &Listener{queuedRequests: make(chan *Request, runtime.NumCPU()*4), qrqstlck: &sync.Mutex{}}
-		go func(qlstnr *Listener) {
+		func(qlstnr *Listener) {
 			var nmcpus = runtime.NumCPU()
 			for nmcpus > 0 {
 				nmcpus--
