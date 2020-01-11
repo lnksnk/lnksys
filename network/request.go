@@ -92,7 +92,7 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}(w.(http.CloseNotifier).CloseNotify(), r.Context())
 	}
 
-	ExecutedQueuedRequest(rqst)
+	ExecuteQueuedRequest(reqst)
 }
 
 var qrqstlck *sync.Mutex
