@@ -28,8 +28,6 @@ type Listener struct {
 }
 
 func (lstnr *Listener) QueueRequest(reqst *Request) {
-	lstnr.qrqstlck.Lock()
-	defer lstnr.qrqstlck.Unlock()
 	lstnr.queuedRequests <- reqst
 }
 
