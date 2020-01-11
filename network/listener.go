@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"net/http"
+	"runtime"
 	"sync"
 	"time"
 
@@ -108,13 +109,19 @@ func InvokeListener(host string) {
 
 func init() {
 	if lstnr == nil {
-		lstnr = &Listener{queuedRequests: make(chan *Request), qrqstlck: &sync.Mutex{}}
+		lstnr = &Listener{queuedRequests: make(chan *Request, runtime.NumCPU()*4), qrqstlck: &sync.Mutex{}}
 		go func(qlstnr *Listener) {
-			for {
-				select {
-				case reqst := <-qlstnr.queuedRequests:
-					ExecuteQueuedRequest(reqst)
-				}
+			var nmcpus = runtime.NumCPU()
+			for nmcpus > 0 {
+				nmcpus--
+				go func() {
+					for {
+						select {
+						case reqst := <-qlstnr.queuedRequests:
+							ExecuteQueuedRequest(reqst)
+						}
+					}
+				}()
 			}
 		}(lstnr)
 	}

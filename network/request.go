@@ -589,11 +589,17 @@ func init() {
 		qrqstlck = &sync.Mutex{}
 		reqstsQueue = make(chan *Request, runtime.NumCPU()*4)
 		go func() {
-			for {
-				select {
-				case reqst := <-reqstsQueue:
-					ExecuteQueuedRequest(reqst)
-				}
+			var nmcpus=runtime.NumCPU()
+			for nmcpus>0 {
+				nmcpus--
+				go func() {
+					for {
+						select {
+						case reqst := <-reqstsQueue:
+							ExecuteQueuedRequest(reqst)
+						}
+					}
+				}()
 			}
 		}()
 	}
