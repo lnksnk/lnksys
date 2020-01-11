@@ -108,7 +108,6 @@ func queryRequest(reqst *Request) {
 
 func QueuedRequestToExecute(reqst *Request) {
 	queryRequest(reqst)
-	
 	<-reqst.done
 }
 
@@ -592,6 +591,12 @@ func init() {
 		go func() {
 			for {
 				select {
+				case reqst := <-reqstsQueue:
+					ExecuteQueuedRequest(reqst)
+				case reqst := <-reqstsQueue:
+					ExecuteQueuedRequest(reqst)
+				case reqst := <-reqstsQueue:
+					ExecuteQueuedRequest(reqst)
 				case reqst := <-reqstsQueue:
 					ExecuteQueuedRequest(reqst)
 				}
