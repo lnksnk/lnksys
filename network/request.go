@@ -92,11 +92,7 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}(w.(http.CloseNotifier).CloseNotify(), r.Context())
 	}
 
-	go func(rqst *Request) {
-		rqst.ExecuteRequest()
-		rqst.done <- true
-	}(reqst)
-	<-reqst.done
+	ExecutedQueuedRequest(rqst)
 }
 
 var qrqstlck *sync.Mutex
@@ -109,6 +105,19 @@ func queryRequest(reqst *Request) {
 	} else {
 		reqst.listener.QueueRequest(reqst)
 	}
+}
+
+func QueuedRequestToExecute(reqst *Request) {
+	queryRequest(reqst)
+	
+	<-reqst.done
+}
+
+func ExecuteQueuedRequest(reqst*Request) {
+	go func(rqst *Request) {
+		rqst.ExecuteRequest()
+		rqst.done <- true
+	}(reqst)
 }
 
 func (reqst *Request) Interupted() bool {
@@ -585,10 +594,7 @@ func init() {
 			for {
 				select {
 				case reqst := <-reqstsQueue:
-					go func() {
-						reqst.ExecuteRequest()
-						reqst.done <- true
-					}()
+					ExecuteQueuedRequest(reqst)
 				}
 			}
 		}()

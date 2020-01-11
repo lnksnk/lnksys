@@ -90,9 +90,9 @@ func (lstnr *Listener) ListenAndServer(host string) {
 		var srvmutex = http.NewServeMux()
 		srvmutex.Handle("/", lstnr)
 		var server = &http.Server{
-			ReadHeaderTimeout:20 *time.Second,
-			Addr: host, 
-			Handler: srvmutex}
+			ReadHeaderTimeout: 20 * time.Second,
+			Addr:              host,
+			Handler:           srvmutex}
 		lstnr.servers[host] = server
 		go func(srvr *http.Server) {
 			srvr.ListenAndServe()
@@ -113,10 +113,7 @@ func init() {
 			for {
 				select {
 				case reqst := <-qlstnr.queuedRequests:
-					go func() {
-						reqst.ExecuteRequest()
-						reqst.done <- true
-					}()
+					ExecuteQueuedRequest(reqst)
 				}
 			}
 		}(lstnr)
