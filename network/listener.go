@@ -114,12 +114,6 @@ func init() {
 				select {
 				case reqst := <-qlstnr.queuedRequests:
 					ExecuteQueuedRequest(reqst)
-				case reqst := <-qlstnr.queuedRequests:
-					ExecuteQueuedRequest(reqst)
-				case reqst := <-qlstnr.queuedRequests:
-					ExecuteQueuedRequest(reqst)
-				case reqst := <-qlstnr.queuedRequests:
-					ExecuteQueuedRequest(reqst)
 				}
 			}
 		}(lstnr)

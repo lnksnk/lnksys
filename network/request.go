@@ -593,12 +593,6 @@ func init() {
 				select {
 				case reqst := <-reqstsQueue:
 					ExecuteQueuedRequest(reqst)
-				case reqst := <-reqstsQueue:
-					ExecuteQueuedRequest(reqst)
-				case reqst := <-reqstsQueue:
-					ExecuteQueuedRequest(reqst)
-				case reqst := <-reqstsQueue:
-					ExecuteQueuedRequest(reqst)
 				}
 			}
 		}()
