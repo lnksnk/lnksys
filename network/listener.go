@@ -8,6 +8,8 @@ import (
 	"time"
 
 	active "github.com/efjoubert/lnksys/iorw/active"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 )
 
 /*Listening interface
@@ -18,11 +20,47 @@ type Listening interface {
 	QueueRequest(*Request)
 }
 
+type lstnrserver struct {
+	httpsvr  *http.Server
+	http2svr *http2.Server
+	srvmx    *http.ServeMux
+}
+
+func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
+	var srvmutex = http.NewServeMux()
+	srvmutex.Handle("/", hdnlr)
+	var serverh2 = &http2.Server{}
+	var server = &http.Server{
+		ReadHeaderTimeout: 20 * time.Second,
+		Addr:              host,
+		Handler:           h2c.NewHandler(srvmutex, serverh2)}
+	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2, srvmx: srvmutex}
+	return
+}
+
+func (lstnrsvr *lstnrserver) listenAndServe() {
+	go func(srvr *http.Server) {
+		srvr.ListenAndServe()
+	}(lstnrsvr.httpsvr)
+}
+
+func (lstnrsvr *lstnrserver) Shutdown() (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer func() {
+		cancel()
+	}()
+	err = lstnrsvr.httpsvr.Shutdown(ctx)
+	lstnrsvr.httpsvr.Close()
+	lstnrsvr.httpsvr = nil
+	lstnrsvr.http2svr = nil
+	lstnrsvr.srvmx = nil
+	return
+}
+
 /*Listener - Listener
  */
 type Listener struct {
-	servers        map[string]*http.Server
-	servmutexes    map[string]*http.ServeMux
+	servers        map[string]*lstnrserver
 	queuedRequests chan *Request
 	qrqstlck       *sync.Mutex
 }
@@ -57,17 +95,8 @@ func (lstnr *Listener) ShutdownHost(host string) {
 		if len(lstnr.servers) > 0 {
 			if srv, srvok := lstnr.servers[host]; srvok {
 				func() {
-					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-					defer func() {
-						cancel()
-					}()
-					if err := srv.Shutdown(ctx); err != nil {
-
-					}
+					srv.Shutdown()
 					delete(lstnr.servers, host)
-					lstnr.servmutexes[host] = nil
-					delete(lstnr.servmutexes, host)
-					srv.Close()
 				}()
 				srv = nil
 			}
@@ -78,24 +107,15 @@ func (lstnr *Listener) ShutdownHost(host string) {
 func (lstnr *Listener) ListenAndServer(host string) {
 	if host != "" {
 		if len(lstnr.servers) == 0 {
-			lstnr.servers = map[string]*http.Server{}
-		}
-		if len(lstnr.servmutexes) == 0 {
-			lstnr.servmutexes = map[string]*http.ServeMux{}
+			lstnr.servers = map[string]*lstnrserver{}
 		}
 		if _, hssrv := lstnr.servers[host]; hssrv {
 			return
 		}
-		var srvmutex = http.NewServeMux()
-		srvmutex.Handle("/", lstnr)
-		var server = &http.Server{
-			ReadHeaderTimeout: 20 * time.Second,
-			Addr:              host,
-			Handler:           srvmutex}
+		var server = newLstnrServer(host, lstnr)
+		server.listenAndServe()
 		lstnr.servers[host] = server
-		go func(srvr *http.Server) {
-			srvr.ListenAndServe()
-		}(server)
+
 	}
 }
 
