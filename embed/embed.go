@@ -78,6 +78,8 @@ func RemoveCachedEmbedResource(embedfindjs string) (rmvd bool) {
 		cachedrw.Close()
 		cachedResources = nil
 		rmvd = true
+	} else {
+		rmvd = true
 	}
 	return
 }
@@ -87,6 +89,12 @@ func CacheEmbedResource(embedfindjs string, embedjs io.Reader) io.Reader {
 	var buf = make([]byte, 81920)
 	io.CopyBuffer(cachedRD, embedjs, buf)
 	if RemoveCachedEmbedResource(embedfindjs) {
+		func() {
+			chcdEmddLck.Lock()
+			defer chcdEmddLck.Unlock()
+			cachedResources[embedfindjs] = cachedRD
+		}()
+	} else {
 		func() {
 			chcdEmddLck.Lock()
 			defer chcdEmddLck.Unlock()
