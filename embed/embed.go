@@ -3,6 +3,7 @@ package emded
 import (
 	"io"
 	"strings"
+	"sync"
 
 	ace "github.com/efjoubert/lnksys/embed/ace"
 	babel "github.com/efjoubert/lnksys/embed/babel"
@@ -30,39 +31,53 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 		embedfindjs = embedfindjs[strings.LastIndex(embedfindjs, "/")+1:]
 	}
 	if embedjs = react.ReactFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = react.SchedulerFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = jquery.JQueryFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = require.RequireFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = bootstrap.BootstrapFindJSCSS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = fontawesome.FontawesomeFindJSCSS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = materialdb.MaterialDBFindJSCSS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = babel.BabelFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = babylon.BabylonFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = three.ThreeFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = jss.JSSFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = rxjs.RxJSFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = falcor.FalcorFindJS(embedfindjs); embedjs != nil {
-		return
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = video.VideoFindJSCSS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = jspanel.JSPanelFindJSCSS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = ace.AcsJSFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
 	} else if embedjs = chart.ChartFindJS(embedfindjs); embedjs != nil {
-		return 
+		return CacheEmbedResource(embedfindjs, embedjs)
+	}
+	return
+}
+
+var chcdEmddLck = &sync.Mutex{}
+
+func RemoveCachedEmbedResource(embedfindjs string) (rmvd bool) {
+	chcdEmddLck.Lock()
+	defer chcdEmddLck.Unlock()
+	if cachedrw, cachedrwok := cachedResources[embedfindjs]; cachedrwok {
+		delete(cachedResources, embedfindjs)
+		cachedrw.Close()
+		cachedResources = nil
+		rmvd = true
 	}
 	return
 }
@@ -71,16 +86,26 @@ func CacheEmbedResource(embedfindjs string, embedjs io.Reader) io.Reader {
 	var cachedRD *iorw.BufferedRW = iorw.NewBufferedRW(0, nil)
 	var buf = make([]byte, 81920)
 	io.CopyBuffer(cachedRD, embedjs, buf)
-	cachedResources[embedfindjs] = cachedRD
+	if RemoveCachedEmbedResource(embedfindjs) {
+		func() {
+			chcdEmddLck.Lock()
+			defer chcdEmddLck.Unlock()
+			cachedResources[embedfindjs] = cachedRD
+		}()
+	}
 	return FindChachedEmbed(embedfindjs)
 }
 
 func FindChachedEmbed(embedfindjs string) (cachedReader *iorw.BufferedRW) {
-	if strings.LastIndex(embedfindjs, "/") >= 0 {
-		embedfindjs = embedfindjs[strings.LastIndex(embedfindjs, "/")+1:]
-	}
-	if cachedrw, cachedrwok := cachedResources[embedfindjs]; cachedrwok {
-		cachedReader = iorw.NewBufferedRW(81920, cachedrw)
-	}
+	func() {
+		chcdEmddLck.Lock()
+		defer chcdEmddLck.Unlock()
+		if strings.LastIndex(embedfindjs, "/") >= 0 {
+			embedfindjs = embedfindjs[strings.LastIndex(embedfindjs, "/")+1:]
+		}
+		if cachedrw, cachedrwok := cachedResources[embedfindjs]; cachedrwok {
+			cachedReader = iorw.NewBufferedRW(81920, cachedrw)
+		}
+	}()
 	return
 }
