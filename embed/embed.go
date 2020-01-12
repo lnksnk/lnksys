@@ -26,7 +26,7 @@ import (
 
 var cachedResources map[string]*iorw.BufferedRW
 
-func cachedRsrs() map[string]*iorw.BufferedRW (){
+func cachedRsrs() map[string]*iorw.BufferedRW {
 	if cachedResources == nil {
 		cachedResources = map[string]*iorw.BufferedRW{}
 	}
@@ -80,8 +80,8 @@ var chcdEmddLck = &sync.Mutex{}
 func RemoveCachedEmbedResource(embedfindjs string) (rmvd bool) {
 	chcdEmddLck.Lock()
 	defer chcdEmddLck.Unlock()
-	if cachedResources==nil {
-		rmvd=false
+	if cachedResources == nil {
+		rmvd = false
 	} else {
 		if cachedrw, cachedrwok := cachedRsrs()[embedfindjs]; cachedrwok {
 			delete(cachedRsrs(), embedfindjs)
@@ -103,7 +103,7 @@ func CacheEmbedResource(embedfindjs string, embedjs io.Reader) io.Reader {
 		func() {
 			chcdEmddLck.Lock()
 			defer chcdEmddLck.Unlock()
-			
+
 			cachedRsrs()[embedfindjs] = cachedRD
 		}()
 	} else {
@@ -123,7 +123,7 @@ func FindChachedEmbed(embedfindjs string) (cachedReader *iorw.BufferedRW) {
 		if strings.LastIndex(embedfindjs, "/") >= 0 {
 			embedfindjs = embedfindjs[strings.LastIndex(embedfindjs, "/")+1:]
 		}
-		if cachedResources==nil {
+		if cachedResources == nil {
 			return
 		} else if cachedrw, cachedrwok := cachedRsrs()[embedfindjs]; cachedrwok {
 			cachedReader = iorw.NewBufferedRW(81920, cachedrw)
