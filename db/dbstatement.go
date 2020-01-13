@@ -39,8 +39,80 @@ func (stmnt *DbStatement) Execute(query string, args ...interface{}) (lastInsert
 	if stmnt.tx == nil {
 		err = stmnt.Begin()
 	}
+
+	var validNames = []string{}
+
+	var mappedVals = map[string]interface{}{}
+	var ignoreCase = false
+	if len(args) == 1 {
+		if pargs, ispargs := args[0].(*parameters.Parameters); ispargs {
+			ignoreCase = true
+			for _, skey := range pargs.StandardKeys() {
+				validNames = append(validNames, skey)
+				mappedVals[skey] = strings.Join(pargs.Parameter(skey), "")
+			}
+		}
+	}
+	var parseQry = stmnt.cn.ParseQuery(query, ignoreCase, validNames...)
+	var txtArgs = []interface{}{}
+	var qry = ""
+
+	var parseParam = func() {
+		if stmnt.cn.schema == "sqlserver" {
+			qry += ("@p" + fmt.Sprintf("%d", len(txtArgs)))
+		} else if stmnt.cn.schema == "postgres" {
+			qry += ("$" + fmt.Sprintf("%d", len(txtArgs)))
+		} else {
+			qry += "?"
+		}
+	}
+
+	var foundPrm = false
+	if len(parseQry) > 0 {
+		if len(args) > 0 {
+			for _, prm := range parseQry {
+				if len(prm) > 2 && prm[0] == '@' && prm[len(prm)-1] == '@' {
+					var prmtest = prm[1 : len(prm)-1]
+					foundPrm = false
+					var prmval interface{} = nil
+					if ignoreCase {
+						prmtest = strings.ToUpper(prmtest)
+					}
+					if mpdval, mapdvalok := mappedVals[prmtest]; mapdvalok {
+						prmval = mpdval
+						txtArgs = append(txtArgs, prmval)
+						parseParam()
+
+						foundPrm = true
+					} else {
+						for _, d := range args {
+							if prms, prmsok := d.(*parameters.Parameters); prmsok {
+								if prms.ContainsParameter(prmtest) {
+									prmval = strings.Join(prms.Parameter(prmtest), "")
+									mappedVals[prmtest] = prmval
+									txtArgs = append(txtArgs, prmval)
+									parseParam()
+									foundPrm = true
+									break
+								}
+							}
+						}
+					}
+					if !foundPrm {
+						txtArgs = append(txtArgs, prm)
+					}
+				} else {
+					qry += prm
+				}
+			}
+		} else {
+			for _, prm := range parseQry {
+				qry += prm
+			}
+		}
+	}
 	if err == nil {
-		if r, rerr := stmnt.tx.Exec(query, args...); rerr == nil {
+		if r, rerr := stmnt.tx.Exec(qry, txtArgs...); rerr == nil {
 			lastInsertID, err = r.LastInsertId()
 			rowsAffected, err = r.RowsAffected()
 			r = nil
