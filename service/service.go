@@ -30,7 +30,7 @@ func (svr *Service) Start(s service.Service) error {
 	if svr.start != nil {
 		if svr.isService {
 			go svr.start(svr, svr.args...)
-		} else if svr.isConsole || svr.isConsole {
+		} else if svr.isConsole || svr.isBroker {
 			svr.start(svr, svr.args...)
 		}
 	}
