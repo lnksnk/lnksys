@@ -154,23 +154,23 @@ func (svr *Service) Execute(args ...string) (err error) {
 	
 	var argi=0;
 	var svccmd=""
-	for argi<len(svr.args)  {
-		var arg = svr.args[argi] 
+	for argi<len(args)  {
+		var arg = args[argi] 
 		
 		if strings.Index(",console,", ","+arg+",") > -1 {
 			svccmd=arg
 			svr.isConsole = true
-			svr.args=append(svr.args[0:argi],svr.args[argi+1:]...)
+			svr.args=append(args[0:argi],args[argi+1:]...)
 			break
 		} else if strings.Index(",broker,", ","+arg+",") > -1 {
 			svccmd=arg
 			svr.isBroker = true
-			svr.args=append(svr.args[0:argi],svr.args[argi+1:]...)
+			svr.args=append(args[0:argi],args[argi+1:]...)
 			break
 		} else if strings.Index(",start,stop,restart,install,uninstall,", ","+arg+",") > -1 {
 			svccmd=arg
 			svr.isService = true
-			svr.args=append(svr.args[0:argi],svr.args[argi+1:]...)
+			svr.args=append(args[0:argi],args[argi+1:]...)
 			if arg=="install" {
 				if len(svr.args)>0 {
 					svr.svcConfig.Arguments=svr.args[:]
