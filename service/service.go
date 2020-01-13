@@ -193,11 +193,11 @@ func (svr *Service) Execute(args ...string) (err error) {
 			}
 		}
 	} else if svr.isConsole {
-		svr.Start(s)
-		svr.Stop(s)
+		svr.Start(nil)
+		svr.Stop(nil)
 	} else if svr.isBroker {
-		svr.Start(s)
-		svr.Stop(s)
+		svr.Start(nil)
+		svr.Stop(nil)
 	}
 
 	if err != nil {
