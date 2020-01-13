@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link href="/fontawesome.css" rel="stylesheet">
+    <link rel='stylesheet' type='text/css' href='/bootstrap.css'>
+    <link rel='stylesheet' type='text/css' href='/mdb.css'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <script src="/fontawesome.js"></script>
+    <script src="/jquery.js"></script>
+    <script src="/bootstrap.js"></script>
+    <script src="/mdb.js"></script>
+    <script src='main.js'></script>
+</head>
+<body>
+    <@ out.Print("HI DAAR BRA"); @>
+    <@ for (var j=0;j<10;j++) { var r = DBQuery("lnks","select now() as thedate,@theparam@ as prm where 'test' like @theparam@;",Parameters());
+        if (r!=undefined) {
+          @><table><tr><@
+          r.Columns().forEach(function(col){
+              @><td><@ out.Print(col); @></td><@
+          });
+          @></tr><@
+          while(r.Next()) {
+            @><tr><@
+            r.Data().forEach(function(d){
+              @><td><@ out.Print(d); @></td><@
+            });
+            @></tr><@
+          }
+          @></table><@
+      }
+    }
+    @>
+    <@ out.Print("HELLO"); @><@ out.Print("HELLO"); @>
+    <table>
+    <@ Parameters().StandardKeys().forEach(function(b,bi){
+      Parameters().Parameter(b).forEach(function(v,vi){
+       @><tr><td><@out.Print(b);@></td><td><@out.Print(v);@></td></tr><@ 
+    });
+    });  @></table>
+    <@ for(var i=0;i<10;i++) { @>
+    <!--Navbar-->
+<nav class="navbar navbar-light light-blue lighten-4">
+
+    <!-- Navbar brand -->
+    <a class="navbar-brand" href="#">Navbar</a>
+  
+    <!-- Collapse button -->
+    <button class="navbar-toggler toggler-example" type="button" data-toggle="collapse" data-target="#navbarSupportedContent1"
+      aria-controls="navbarSupportedContent1" aria-expanded="false" aria-label="Toggle navigation"><span class="dark-blue-text"><i
+          class="fas fa-bars fa-1x"></i></span></button>
+  
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent1">
+  
+      <!-- Links -->
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Features</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Pricing</a>
+        </li>
+      </ul>
+      <!-- Links -->
+  
+    </div>
+    <!-- Collapsible content -->
+  
+  </nav>
+  <!--/.Navbar-->
+  <@ } @>
+  <!--Facebook-->
+<button type="button" class="btn btn-lg btn-fb"><i class="fab fa-facebook-f pr-1"></i> Facebook</button>
+<!--Facebook-->
+<button type="button" class="btn btn-fb"><i class="fab fa-facebook-f pr-1"></i> Facebook</button>
+<!--Facebook-->
+<button type="button" class="btn btn-md btn-fb"><i class="fab fa-facebook-f pr-1"></i> Facebook</button>
+<!--Facebook-->
+<button type="button" class="btn btn-sm btn-fb"><i class="fab fa-facebook-f pr-1"></i> Facebook</button>
+</body>
+</html>
