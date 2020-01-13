@@ -154,6 +154,9 @@ func (svr *Service) Execute(args ...string) (err error) {
 	
 	var argi=0;
 	var svccmd=""
+	if len(args)>0 {
+		args=args[1:]
+	}
 	for argi<len(args)  {
 		var arg = args[argi] 
 		
