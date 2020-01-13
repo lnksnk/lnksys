@@ -584,7 +584,31 @@ func ShutdownEnv() {
 	}
 }
 
+func MapActiveExtension(a...string) {
+	for len(a)>0 {
+		if a[0]!="" {
+			a[0]=filepath.Ext(a[0])
+			if a[0]!="" && a[0]!="."  {
+				if hsatvext,atvextok:=atvExtns[a[0]]; atvextok && !hsatvext {
+					atvExtns[a[0]]=true
+				} else {
+					atvExtns[a[0]]=true
+				}
+			} else {
+				break
+			}
+		} else {
+			break
+		}
+		a=a[1:]
+	}
+}
+
 func init() {
+	if acvExtns==nil {
+		acvExtns=map[string]bool{}
+		MapActiveExtension(strings.Split(".html,.htm,.xml,.svg,.css,.js,.json,.txt",","))
+	}
 	if reqstsQueue == nil {
 		qrqstlck = &sync.Mutex{}
 		reqstsQueue = make(chan *Request, runtime.NumCPU()*4)
@@ -606,6 +630,10 @@ func init() {
 
 	active.MapGlobals("MAPRoots", func(a ...string) {
 		MapRoots(a...)
+	})
+
+	active.MapGlobals("MAPActiveExtensions", func(a ...string) {
+		MapActiveExtension(a...)
 	})
 }
 
@@ -717,9 +745,13 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 }
 func (rsrc *Resource) IsActiveContent() (active bool) {
 	var ext = filepath.Ext(rsrc.path)
-	active = strings.Index(",.html,.htm,.xml,.svg,.css,.js,.json,", ","+ext+",") > -1
+	if atvExtns!=nil {
+		active,_=atvExtns[ext]
+	}
 	return
 }
+
+var atvExtns = map[string]bool
 
 func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 
