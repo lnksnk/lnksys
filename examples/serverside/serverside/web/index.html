@@ -17,7 +17,7 @@
 </head>
 <body>
     <@ out.Print("HI DAAR BRA"); @>
-    <@ for (var j=0;j<10;j++) { var r = DBQuery("lnks","select now() as thedate,@theparam@ as prm where 'test' like @theparam@;",Parameters());
+    <@ for (var j=0;j<10;j++) { var r = DBQuery("lnks","select now() as thedate;");
         if (r!=undefined) {
           @><table><tr><@
           r.Columns().forEach(function(col){
