@@ -751,7 +751,7 @@ func (rsrc *Resource) IsActiveContent() (active bool) {
 	return
 }
 
-var atvExtns = map[string]bool
+var atvExtns map[string]bool
 
 func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 
