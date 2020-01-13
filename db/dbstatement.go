@@ -1,9 +1,9 @@
 package db
 
 import (
-	parameters "github.com/efjoubert/lnksys/parameters"
 	"database/sql"
 	"fmt"
+	parameters "github.com/efjoubert/lnksys/parameters"
 	"strings"
 )
 
@@ -66,12 +66,14 @@ func (stmnt *DbStatement) Query(query string, args ...interface{}) (rset *DbResu
 
 	var mappedVals = map[string]interface{}{}
 	var ignoreCase = false
-	if len(args) == 1 {
-		if pargs, ispargs := args[0].(*parameters.Parameters); ispargs {
-			ignoreCase = true
-			for _, skey := range pargs.StandardKeys() {
-				validNames = append(validNames, skey)
-				mappedVals[skey] = strings.Join(pargs.Parameter(skey), "")
+	if args != nil {
+		if len(args) == 1 {
+			if pargs, ispargs := args[0].(*parameters.Parameters); ispargs {
+				ignoreCase = true
+				for _, skey := range pargs.StandardKeys() {
+					validNames = append(validNames, skey)
+					mappedVals[skey] = strings.Join(pargs.Parameter(skey), "")
+				}
 			}
 		}
 	}
