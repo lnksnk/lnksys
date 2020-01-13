@@ -605,9 +605,9 @@ func MapActiveExtension(a...string) {
 }
 
 func init() {
-	if acvExtns==nil {
-		acvExtns=map[string]bool{}
-		MapActiveExtension(strings.Split(".html,.htm,.xml,.svg,.css,.js,.json,.txt",","))
+	if atvExtns==nil {
+		atvExtns=map[string]bool{}
+		MapActiveExtension(strings.Split(".html,.htm,.xml,.svg,.css,.js,.json,.txt",",")...)
 	}
 	if reqstsQueue == nil {
 		qrqstlck = &sync.Mutex{}
