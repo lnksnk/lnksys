@@ -30,11 +30,10 @@ func (svr *Service) Start(s service.Service) error {
 	if svr.start != nil {
 		if svr.isService {
 			go svr.start(svr, svr.args...)
-		} else if svr.isConsole {
+		} else if svr.isConsole || svr.isConsole {
 			svr.start(svr, svr.args...)
 		}
 	}
-
 	if svr.isService {
 		go svr.exec()
 	} else if svr.isConsole {
@@ -152,71 +151,53 @@ var logger service.Logger
 //called in main() func of golang app,
 //args - args from os gets passed into here
 func (svr *Service) Execute(args ...string) (err error) {
-	svcargs := []string{}
-	canappendargs := false
-	if len(args) > 0 {
-		if len(args[1:]) > 0 {
-			for _, arg := range args[1:] {
-				if arg == "install" {
-					canappendargs = true
-				} else if strings.Index(",start,stop,restart,install,uninstall,console,", ","+arg+",") > -1 {
-					canappendargs = false
-					break
-				} else {
-					svcargs = append(svcargs, arg)
+	
+	var argi=0;
+	var svccmd=""
+	for argi<len(svr.args)  {
+		var arg = svr.args[argi] 
+		
+		if strings.Index(",console,", ","+arg+",") > -1 {
+			svccmd=arg
+			svr.isConsole = true
+			svr.args=append(svr.args[0:argi],svr.args[argi+1:])
+			break
+		} else if strings.Index(",broker,", ","+arg+",") > -1 {
+			svccmd=arg
+			svr.isBroker = true
+			svr.args=append(svr.args[0:argi],svr.args[argi+1:])
+			break
+		} else if strings.Index(",start,stop,restart,install,uninstall,", ","+arg+",") > -1 {
+			svccmd=arg
+			svr.isService = true
+			svr.args=append(svr.args[0:argi],svr.args[argi+1:])
+			if arg=="install" {
+				if len(svr.args)>0 {
+					svr.svcConfig.Arguments=svr.args[:]
 				}
 			}
-		} else {
-			//svr.isConsole = true
+			break
 		}
+		argi++			
 	}
-	if len(svcargs) > 0 {
-		if canappendargs {
-			svr.svcConfig.Arguments = svcargs
-		} else {
-			svr.isConsole = true
-		}
+	if svccmd=="" && !svr.isBroker && !svr.isConsole && !svr.isService {
+		svr.isService=true
 	}
 
-	if s, serr := service.New(svr, svr.svcConfig); serr == nil {
-		if logger, err = s.Logger(nil); err == nil {
-			argFound := ""
-			svr.args = args[:]
-			for _, arg := range svr.args {
-				if strings.Index(",start,stop,restart,install,uninstall,", ","+arg+",") > -1 {
-					argFound = arg
-					svr.isService = true
-					if err = service.Control(s, argFound); err == nil {
-						break
-					}
-				} else if strings.Index(",console,", ","+arg+",") > -1 {
-					svr.isConsole = true
-					break
-				} else if strings.Index(",broker,", ","+arg+",") > -1 {
-					svr.isBroker = true
-					break
-				}
-				if err != nil {
-					break
-				}
-			}
-			if err == nil && argFound == "" {
-				if !svr.isService {
-					svr.isService = !svr.isConsole
-				}
-				if svr.isService {
-					err = s.Run()
-				} else if svr.isConsole {
-					svr.Start(s)
-					svr.Stop(s)
-				} else if svr.isBroker {
-					svr.Start(s)
-					svr.Stop(s)
-				}
+	if svr.isService {
+		if s, serr := service.New(svr, svr.svcConfig); serr == nil {
+			if svccmd=="" {
+				err = s.Run()
+			} else {
+				err = service.Control(s, svccmd)
 			}
 		}
-	} else {
-		err = serr
+	} else if svr.isConsole {
+		svr.Start(s)
+		svr.Stop(s)
+	} else if svr.isBroker {
+		svr.Start(s)
+		svr.Stop(s)
 	}
 
 	if err != nil {
