@@ -36,7 +36,7 @@ func (svr *Service) Start(s service.Service) error {
 	}
 	if svr.isService {
 		go svr.exec()
-	} else if svr.isConsole {
+	} else if svr.isConsole || svr.isBroker {
 		svr.exec()
 	}
 	return nil
