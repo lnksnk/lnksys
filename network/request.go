@@ -224,8 +224,8 @@ func (reqst *Request) ExecuteRequest() {
 		reqst.PopulateParameters()
 	}
 	if isAtv {
-		if rqst.rstContent==nil {
-			rqst.rstContent=iorw.NewBufferedRW(rqst.r.Body,maxbufsize)
+		if reqst.rstContent==nil {
+			reqst.rstContent=iorw.NewBufferedRW(rqst.r.Body,maxbufsize)
 		}
 	}
 	var mimedetails = mime.FindMimeTypeByExt(reqst.r.URL.Path, ".txt", "text/plain")
