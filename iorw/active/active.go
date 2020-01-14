@@ -156,6 +156,16 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	return
 }
 
+func cPrint(a...interface{}) {
+	if len(a)>0 {
+		var cbuf=iorw.NewBufferedRW(8192, nil)
+		cbuf.Print(a...)
+		fmt.Print(cbuf.String())
+		cbuf.Close()
+		cbuf=nil
+	}
+}
+
 func (atvprsr *activeParser) ACommit() (acerr error) {
 	if atvprsr.atvrdr != nil {
 		atvprsr.lck.RLock()
@@ -169,6 +179,9 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 						atvprsr.atv.vm = goja.New()
 					}
 					atvprsr.atv.vm.Set("out", atvprsr.atv)
+					atvprsr.atv.vm.Set("CPrint",func(a...interface{}) {
+						cPrint(a...)
+					});
 					atvprsr.atv.vm.Set("_atvprsr", atvprsr)
 					if len(atvprsr.atv.activeMap) > 0 {
 						for k, v := range atvprsr.atv.activeMap {
