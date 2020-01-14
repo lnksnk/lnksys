@@ -468,6 +468,14 @@ func (bufRW *BufferedRW) Close() (err error) {
 func (bufRW *BufferedRW) Seek(offset int64, whence int) (n int64, err error) {
 	if bufRW.altRW != nil {
 		n, err = bufRW.altRW.Seek(offset, whence)
+	} else if bufRW.altBufRW != nil && bufRW.isCursor {
+		if whence == io.SeekStart {
+
+		} else if whence == io.SeekEnd {
+
+		} else if whence == io.SeekCurrent {
+
+		}
 	} else {
 		if bufRW.bytesi > 0 && bufRW.bytesi < bufRW.bytesl {
 			if len(bufRW.wbytes) == 0 {
