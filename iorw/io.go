@@ -204,6 +204,7 @@ func NewBufferedRW(maxBufferSize int64, altRW ReaderWriter) (bufRW *BufferedRW) 
 		if altRWBuf, altRWBufOk := altRW.(*BufferedRW); altRWBufOk && !altRWBuf.isCursor {
 			bufRW.altBufRW = altRWBuf
 			bufRW.altRW = nil
+			bufRW.isCursor = true
 		}
 	}
 	return
