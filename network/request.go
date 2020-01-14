@@ -29,6 +29,7 @@ type Request struct {
 	rqstlck          *sync.Mutex
 	bufRW            *iorw.BufferedRW
 	rw               *iorw.RW
+	rstContent       *iorw.BufferedRW
 	listener         Listening
 	w                http.ResponseWriter
 	r                *http.Request
@@ -212,6 +213,7 @@ func (reqst *Request) AddResource(resource ...string) {
 }
 
 func (reqst *Request) ExecuteRequest() {
+	var isAtv=reqst.IsActiveContent(reqst.r.URL.Path)
 	var reqstContentType = reqst.r.Header.Get("Content-Type")
 	if reqst.bufRW == nil {
 		reqst.bufRW = iorw.NewBufferedRW(int64(maxbufsize), reqst)
@@ -221,11 +223,17 @@ func (reqst *Request) ExecuteRequest() {
 	} else {
 		reqst.PopulateParameters()
 	}
+	if isAtv {
+		if rqst.rstContent==nil {
+			rqst.rstContent=iorw.NewBufferedRW(rqst.r.Body,maxbufsize)
+		}
+	}
 	var mimedetails = mime.FindMimeTypeByExt(reqst.r.URL.Path, ".txt", "text/plain")
 	reqst.AddResource(reqst.r.URL.Path)
 	var contentencoding = ""
+	
 	reqst.w.Header().Set("Cache-Control", "no-store")
-	if reqst.IsActiveContent(reqst.r.URL.Path) {
+	if isAtv {
 		contentencoding = "; charset=UTF-8"
 		reqst.w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
 		reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
@@ -561,6 +569,7 @@ func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shut
 	}
 	return
 }
+
 
 func (reqst *Request) PopulateParameters() {
 	parameters.LoadParametersFromHTTPRequest(reqst.params, reqst.r)
