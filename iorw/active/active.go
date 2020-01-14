@@ -182,6 +182,10 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 					atvprsr.atv.vm.Set("CPrint",func(a...interface{}) {
 						cPrint(a...)
 					});
+					atvprsr.atv.vm.Set("CPrintln",func(a...interface{}) {
+						cPrint(a...)
+						cPrint("\r\n")
+					});
 					atvprsr.atv.vm.Set("_atvprsr", atvprsr)
 					if len(atvprsr.atv.activeMap) > 0 {
 						for k, v := range atvprsr.atv.activeMap {
