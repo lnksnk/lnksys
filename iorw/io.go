@@ -146,7 +146,7 @@ func (rw *RW) Close() (err error) {
 	return
 }
 
-func FPrint(w io.Writer, a ...interface{}) (err error){
+func FPrint(w io.Writer, a ...interface{}) (err error) {
 	for _, d := range a {
 		if r, rok := d.(io.Reader); rok {
 			io.Copy(w, r)
@@ -154,7 +154,7 @@ func FPrint(w io.Writer, a ...interface{}) (err error){
 			for {
 				if rne, rnsize, rnerr := rnrdr.ReadRune(); rnerr == nil {
 					if rnsize > 0 {
-						fmt.Fprint(w,string(rne))
+						fmt.Fprint(w, string(rne))
 					}
 				} else {
 					if rnerr != io.EOF {
@@ -178,6 +178,12 @@ func FPrint(w io.Writer, a ...interface{}) (err error){
 
 type BufferedRW struct {
 	altRW         ReaderWriter
+	altBufRW      *BufferedRW
+	isCursor      bool
+	lastCurpos    int64
+	cbufi         int
+	cbytes        []byte
+	cbytesi       int
 	runeRdr       *bufio.Reader
 	buffer        [][]byte
 	bytes         []byte
@@ -193,7 +199,13 @@ type BufferedRW struct {
 }
 
 func NewBufferedRW(maxBufferSize int64, altRW ReaderWriter) (bufRW *BufferedRW) {
-	bufRW = &BufferedRW{altRW: altRW, maxBufferSize: maxBufferSize, bufRWActn: bufRWNoAction, bufRWActnDone: make(chan bool, 1)}
+	bufRW = &BufferedRW{altRW: altRW, maxBufferSize: maxBufferSize, bufRWActn: bufRWNoAction, bufRWActnDone: make(chan bool, 1), isCursor: false, lastCurpos: 0, cbufi: 0, cbytesi: 0}
+	if altRW != nil {
+		if altRWBuf, altRWBufOk := altRW.(*BufferedRW); altRWBufOk && !altRWBuf.isCursor {
+			bufRW.altBufRW = altRWBuf
+			bufRW.altRW = nil
+		}
+	}
 	return
 }
 
@@ -222,14 +234,82 @@ func (bufRW *BufferedRW) Size() (n int64) {
 	return n
 }
 
-func queueNextBufRWAction(bufRWActn bufRWAction, bufRW *BufferedRW) {
+func queueNextBufRWAction(bufRWActn bufRWAction, bufRW *BufferedRW) (err error) {
 	bufRW.bufRWActn = bufRWActn
 	//bufRWQueue <- bufRW
 	//<-bufRW.bufRWActnDone
 	if bufRW.bufRWActn == bufRWCopyRead {
-		io.CopyN(bufRW, bufRW.altRW, bufRW.maxBufferSize)
+		_, err = copyN(bufRW, bufRW, bufRW.altBufRW, bufRW.altRW, bufRW.maxBufferSize)
 		bufRW.bufRWActn = bufRWNoAction
 	}
+	return
+}
+
+func copyN(dst io.Writer, bufDst *BufferedRW, bufSrc *BufferedRW, src io.Reader, buffSize int64) (written int64, err error) {
+	if dst != nil && src != nil && bufDst == nil && bufSrc == nil {
+		written, err = io.CopyN(dst, src, buffSize)
+	} else if bufDst != nil && bufSrc != nil {
+		if bufSrc.isCursor {
+			written, err = io.CopyN(bufDst, bufSrc, buffSize)
+		} else {
+			written, err = bufSrc.copyN(bufDst, buffSize)
+		}
+	}
+	return
+}
+
+func (bufRW *BufferedRW) copyN(bufDst *BufferedRW, buffSize int64) (written int64, err error) {
+	var size = bufRW.Size()
+	var cachedData = false
+	var wn = int(0)
+	for bufDst.lastCurpos < size {
+		if bufDst.lastCurpos < size {
+			if len(bufDst.cbytes) == 0 || (len(bufDst.cbytes) > 0 && len(bufDst.cbytes) == bufDst.cbufi) {
+				if bufDst.cbufi < len(bufRW.buffer) {
+					bufDst.cbytes = bufRW.buffer[bufDst.cbufi]
+					bufDst.cbufi++
+				} else if bufRW.wbytesi > 0 {
+					if len(bufDst.cbytes) > 0 && len(bufDst.cbytes) == bufDst.cbufi {
+						break
+					}
+					bufDst.cbytes = bufRW.wbytes[0:bufRW.wbytesi]
+				}
+			}
+			if bufDst.cbytes != nil {
+				var cbl = len(bufDst.cbytes)
+				if buffSize > 0 {
+					if buffSize < int64(cbl-bufDst.cbufi) {
+						wn, err = bufDst.Write(bufDst.cbytes[bufDst.cbufi : bufDst.cbufi+(cbl-bufDst.cbufi)])
+						if wn > 0 {
+							bufDst.cbufi += wn
+							cachedData = true
+							bufDst.lastCurpos += int64(wn)
+							buffSize -= int64(wn)
+						}
+					} else {
+						wn, err = bufDst.Write(bufDst.cbytes)
+						if wn > 0 {
+							bufDst.cbufi += wn
+							cachedData = true
+							bufDst.lastCurpos += int64(wn)
+							buffSize -= int64(wn)
+						}
+					}
+					if buffSize == 0 {
+						break
+					}
+				} else {
+					break
+				}
+			}
+		} else {
+			if !cachedData {
+				err = io.EOF
+			}
+			break
+		}
+	}
+	return
 }
 
 func (bufRW *BufferedRW) String() (s string) {
@@ -316,12 +396,12 @@ func (bufRW *BufferedRW) Read(p []byte) (n int, err error) {
 }
 
 func (bufRW *BufferedRW) Println(a ...interface{}) {
-	FPrint(bufRW,a...)
-	FPrint(bufRW,"\r\n")
+	FPrint(bufRW, a...)
+	FPrint(bufRW, "\r\n")
 }
 
 func (bufRW *BufferedRW) Print(a ...interface{}) {
-	FPrint(bufRW,a...)
+	FPrint(bufRW, a...)
 }
 
 func (bufRW *BufferedRW) Write(p []byte) (n int, err error) {
