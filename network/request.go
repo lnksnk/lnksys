@@ -29,7 +29,7 @@ type Request struct {
 	rqstlck          *sync.Mutex
 	bufRW            *iorw.BufferedRW
 	rw               *iorw.RW
-	rstContent       *iorw.BufferedRW
+	rqstContent       *iorw.BufferedRW
 	listener         Listening
 	w                http.ResponseWriter
 	r                *http.Request
@@ -212,6 +212,10 @@ func (reqst *Request) AddResource(resource ...string) {
 	}
 }
 
+func (reqst*Request) RequestContent() *iorw.BufferedRW {
+	return reqst.rqstContent
+}
+
 func (reqst *Request) ExecuteRequest() {
 	var isAtv=reqst.IsActiveContent(reqst.r.URL.Path)
 	var reqstContentType = reqst.r.Header.Get("Content-Type")
@@ -224,8 +228,11 @@ func (reqst *Request) ExecuteRequest() {
 		reqst.PopulateParameters()
 	}
 	if isAtv {
-		if reqst.rstContent==nil {
-			reqst.rstContent=iorw.NewBufferedRW(int64(maxbufsize),reqst.r.Body)
+		if reqst.rqstContent==nil {
+			reqst.rqstContent=iorw.NewBufferedRW(int64(maxbufsize),nil)
+			if reqst.r.Body!=nil {
+				reqst.rqstContent.Print(reqst.r.Body)
+			}
 		}
 	}
 	var mimedetails = mime.FindMimeTypeByExt(reqst.r.URL.Path, ".txt", "text/plain")
@@ -709,6 +716,10 @@ func (reqst *Request) Close() (err error) {
 			reqst.resources = reqst.resources[1:]
 		}
 		reqst.resources = nil
+	}
+	if reqst.rqstContent!=nil {
+		reqst.rqstContent.Close()
+		reqst.rqstContent=nil
 	}
 	return
 }
