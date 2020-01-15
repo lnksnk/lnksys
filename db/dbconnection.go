@@ -277,7 +277,7 @@ func (dbcn *DbConnection) Query(query string, args ...interface{}) (rset *DbResu
 	defer func() {
 		dbcn.UnlockDBCN()
 	}()
-	stmnt := &DbStatement{cn: cn}
+	stmnt := &DbStatement{cn: dbcn}
 	rset, err = stmnt.Query(query, args...)
 	return rset, err
 }
