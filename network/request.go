@@ -232,7 +232,7 @@ func (reqst *Request) AddResource(resource ...string) (err error) {
 		for len(reqst.resources)>0 {
 			var rsrd = reqst.resources[0]
 			reqst.resources=reqst.resources[1:]
-			rest.busyForcing=true
+			reqst.busyForcing=true
 			if rsrd.activeInverse {
 				if err = reqst.Active.APrint("<@",rsrd,"@>"); err == nil {
 					err = reqst.Active.ACommit()
@@ -242,7 +242,7 @@ func (reqst *Request) AddResource(resource ...string) (err error) {
 					err = reqst.Active.ACommit()
 				}
 			}
-			rest.busyForcing=false
+			reqst.busyForcing=false
 			if err!=nil {
 				break
 			}
