@@ -67,6 +67,8 @@ type Request struct {
 	canShutdownListener  bool
 	shuttingdownEnv      func()
 	canShutdownEnv       bool
+	forceRead bool
+	busyForcing bool
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -154,14 +156,14 @@ func (reqst *Request) DbQuery(alias string, query string, args ...interface{}) (
 	return
 }
 
-func (reqst *Request) AddResource(resource ...string) {
+func (reqst *Request) AddResource(resource ...string) (err error) {
 	if len(resource)>0 {
 		var lastrsri=0
 		if len(reqst.resources)>0 {
 			lastrsri=len(reqst.resources)-1
 		}
 		var finalresource=[]string{}
-		for len(finalresource)>0 || len(resource)>0  {
+		for (len(finalresource)>0 || len(resource)>0) && err==nil {
 			if len(resource)>0 {
 				var res=resource[0]
 				resource=resource[1:]
@@ -187,29 +189,66 @@ func (reqst *Request) AddResource(resource ...string) {
 				finalresource=finalresource[1:]
 				if rsrc := reqst.NewResource(fres); rsrc != nil {
 					reqst.resourcesSize = reqst.resourcesSize + rsrc.size
-					if len(reqst.resources) == 0 {
-						reqst.resources = []*Resource{}
+					if reqst.forceRead && !rest.busyForcing {
+						rest.busyForcing=true
+						if rsrc.activeInverse {
+							if err = reqst.Active.APrint("<@",rsrc,"@>"); fnerr == nil {
+								err = reqst.Active.ACommit()
+							}
+						} else {
+							if err = reqst.Active.APrint(rsrc); fnerr == nil {
+								err = reqst.Active.ACommit()
+							}
+						}
+						rest.busyForcing=false
+						if err!=nil {
+							break
+						}
+					} else {
+						if len(reqst.resources) == 0 {
+							reqst.resources = []*Resource{}
+						}
+						var prersrs []*Resource
+						var postrsrs []*Resource
+			
+						var currsrs []*Resource = reqst.resources
+			
+						prersrs = currsrs[:lastrsri]
+						postrsrs = currsrs[lastrsri:]
+						var nextrsrs = append(append(prersrs, rsrc), postrsrs...)
+						reqst.resources = nil
+						reqst.resources = nextrsrs[:]
+						prersrs = nil
+						postrsrs = nil
+						currsrs = nil
+						nextrsrs = nil
 					}
-		
-					var prersrs []*Resource
-					var postrsrs []*Resource
-		
-					var currsrs []*Resource = reqst.resources
-		
-					prersrs = currsrs[:lastrsri]
-					postrsrs = currsrs[lastrsri:]
-					var nextrsrs = append(append(prersrs, rsrc), postrsrs...)
-					reqst.resources = nil
-					reqst.resources = nextrsrs[:]
-					prersrs = nil
-					postrsrs = nil
-					currsrs = nil
-					nextrsrs = nil
 					lastrsri++
 				}
 			}			
 		}
 	}
+	if err==nil && if reqst.forceRead && !rest.busyForcing {
+		for len(reqst.resources)>0 {
+			var rsrd = reqst.resources[0]
+			reqst.resources[1:]
+			rest.busyForcing=true
+			if rsrd.activeInverse {
+				if err = reqst.Active.APrint("<@",rsrd,"@>"); fnerr == nil {
+					err = reqst.Active.ACommit()
+				}
+			} else {
+				if err = reqst.Active.APrint(rsrd); fnerr == nil {
+					err = reqst.Active.ACommit()
+				}
+			}
+			rest.busyForcing=false
+			if err!=nil {
+				break
+			}
+		}
+	}
+	return
 }
 
 func (reqst*Request) RequestContent() *iorw.BufferedRW {
@@ -234,9 +273,10 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.rqstContent.Print(reqst.r.Body)
 			}
 		}
+		reqst.forceRead=isAtv
 	}
 	var mimedetails = mime.FindMimeTypeByExt(reqst.r.URL.Path, ".txt", "text/plain")
-	reqst.AddResource(reqst.r.URL.Path)
+	
 	var contentencoding = ""
 	
 	reqst.w.Header().Set("Cache-Control", "no-store")
@@ -270,6 +310,7 @@ func (reqst *Request) ExecuteRequest() {
 		}
 
 		if atverr := func() (fnerr error) {
+			reqst.AddResource(reqst.r.URL.Path)
 			// fnerr = reqst.Active.ExecuteActive(81920);
 			if fnerr = reqst.Active.APrint(reqst); fnerr == nil {
 				fnerr = reqst.Active.ACommit()
@@ -279,6 +320,7 @@ func (reqst *Request) ExecuteRequest() {
 			fmt.Print(atverr)
 		}
 	} else {
+		reqst.AddResource(reqst.r.URL.Path)
 		reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
 		http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), reqst.bufRW)
 	}
@@ -568,7 +610,9 @@ func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shut
 		interuptRequest:      false,
 		shuttingdownHost:     shuttingDownHost,
 		canShutdownHost:      shuttingDownHost != nil,
-		shuttingdownListener: shuttingDownListener}
+		shuttingdownListener: shuttingDownListener,
+		forceRead:false,
+		busyForcing:false}
 	if canShutdownEnv {
 		reqst.shuttingdownEnv = func() {
 			ShutdownEnv()
