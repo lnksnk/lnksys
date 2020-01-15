@@ -189,18 +189,18 @@ func (reqst *Request) AddResource(resource ...string) (err error) {
 				finalresource=finalresource[1:]
 				if rsrc := reqst.NewResource(fres); rsrc != nil {
 					reqst.resourcesSize = reqst.resourcesSize + rsrc.size
-					if reqst.forceRead && !rest.busyForcing {
-						rest.busyForcing=true
+					if reqst.forceRead && !reqst.busyForcing {
+						reqst.busyForcing=true
 						if rsrc.activeInverse {
-							if err = reqst.Active.APrint("<@",rsrc,"@>"); fnerr == nil {
+							if err = reqst.Active.APrint("<@",rsrc,"@>"); err == nil {
 								err = reqst.Active.ACommit()
 							}
 						} else {
-							if err = reqst.Active.APrint(rsrc); fnerr == nil {
+							if err = reqst.Active.APrint(rsrc); err == nil {
 								err = reqst.Active.ACommit()
 							}
 						}
-						rest.busyForcing=false
+						reqst.busyForcing=false
 						if err!=nil {
 							break
 						}
@@ -228,17 +228,17 @@ func (reqst *Request) AddResource(resource ...string) (err error) {
 			}			
 		}
 	}
-	if err==nil && reqst.forceRead && !rest.busyForcing {
+	if err==nil && reqst.forceRead && !reqst.busyForcing {
 		for len(reqst.resources)>0 {
 			var rsrd = reqst.resources[0]
-			reqst.resources[1:]
+			reqst.resources=reqst.resources[1:]
 			rest.busyForcing=true
 			if rsrd.activeInverse {
-				if err = reqst.Active.APrint("<@",rsrd,"@>"); fnerr == nil {
+				if err = reqst.Active.APrint("<@",rsrd,"@>"); err == nil {
 					err = reqst.Active.ACommit()
 				}
 			} else {
-				if err = reqst.Active.APrint(rsrd); fnerr == nil {
+				if err = reqst.Active.APrint(rsrd); err == nil {
 					err = reqst.Active.ACommit()
 				}
 			}
