@@ -228,7 +228,7 @@ func (reqst *Request) AddResource(resource ...string) (err error) {
 			}			
 		}
 	}
-	if err==nil && if reqst.forceRead && !rest.busyForcing {
+	if err==nil && reqst.forceRead && !rest.busyForcing {
 		for len(reqst.resources)>0 {
 			var rsrd = reqst.resources[0]
 			reqst.resources[1:]
