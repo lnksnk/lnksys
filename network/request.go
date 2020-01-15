@@ -310,11 +310,11 @@ func (reqst *Request) ExecuteRequest() {
 		}
 
 		if atverr := func() (fnerr error) {
-			reqst.AddResource(reqst.r.URL.Path)
+			fnerr=reqst.AddResource(reqst.r.URL.Path)
 			// fnerr = reqst.Active.ExecuteActive(81920);
-			if fnerr = reqst.Active.APrint(reqst); fnerr == nil {
-				fnerr = reqst.Active.ACommit()
-			}
+			//if fnerr = reqst.Active.APrint(reqst); fnerr == nil {
+			//	fnerr = reqst.Active.ACommit()
+			//}
 			return
 		}(); atverr != nil {
 			fmt.Print(atverr)
