@@ -283,6 +283,7 @@ func (reqst *Request) ExecuteRequest() {
 					reqst.resources=[]*Resource{}
 				}
 				reqst.resources=append(reqst.resources,nxtrs)
+				reqst.resourcesSize = reqst.resourcesSize + nxtrs.size
 			}
 		}
 	}
