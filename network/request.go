@@ -159,11 +159,9 @@ func (reqst *Request) DbQuery(alias string, query string, args ...interface{}) (
 
 func (reqst *Request) AddResource(resource ...string) {
 	if len(resource)>0 {
-		var lastrsri=0
-		if len(reqst.resourcepaths)>0 {
-			lastrsri=len(reqst.resourcepaths)-1
-		}
-		var resi=0;
+		var lastrsri=lastrsri=len(reqst.resourcepaths)
+		var resi=0
+
 		for len(resource)>0 {
 			var res=resource[0]
 			resi=0
@@ -182,7 +180,11 @@ func (reqst *Request) AddResource(resource ...string) {
 						resource=append(append(resource[:resi],res),resource[resi:]...)
 					}
 				} else {
-					reqst.resourcepaths=append(append(reqst.resourcepaths[:lastrsri],res),reqst.resourcepaths[lastrsri:]...)
+					if len(reqst.resourcepaths)==0 {
+
+					} else {
+						reqst.resourcepaths=append(append(reqst.resourcepaths[:lastrsri],res),reqst.resourcepaths[lastrsri:]...)
+					}
 					lastrsri++
 				}
 			}
