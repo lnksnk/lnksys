@@ -159,7 +159,7 @@ func (reqst *Request) DbQuery(alias string, query string, args ...interface{}) (
 
 func (reqst *Request) AddResource(resource ...string) {
 	if len(resource)>0 {
-		var lastrsri=lastrsri=len(reqst.resourcepaths)
+		var lastrsri=len(reqst.resourcepaths)
 		var resi=0
 
 		for len(resource)>0 {
