@@ -55,7 +55,7 @@ func (atvprsr *activeParser) activeCode(atvcdelvl int) *iorw.BufferedRW {
 		atvprsr.curAtvCde = []*iorw.BufferedRW{}
 	}
 	if len(atvprsr.curAtvCde) < atvcdelvl+1 {
-		atvprsr.curAtvCde = append(atvprsr.curAtvCde)
+		atvprsr.curAtvCde = append(atvprsr.curAtvCde, iorw.NewBufferedRW(81920, nil))
 	}
 	return atvprsr.curAtvCde[atvcdelvl]
 }
