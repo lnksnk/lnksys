@@ -26,7 +26,8 @@ type activeParser struct {
 	//
 	passiveRune             []rune
 	passiveRunei            int
-	passiveBuffer           [][]rune
+	passiveBuffer           [][][]rune
+	passiveBufferi          int
 	passiveBufferOffset     int64
 	lastPassiveBufferOffset int64
 	//
@@ -156,46 +157,93 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	return
 }
 
-func cPrint(a...interface{}) {
-	if len(a)>0 {
-		var cbuf=iorw.NewBufferedRW(8192, nil)
+func cPrint(a ...interface{}) {
+	if len(a) > 0 {
+		var cbuf = iorw.NewBufferedRW(8192, nil)
 		cbuf.Print(a...)
 		fmt.Print(cbuf.String())
 		cbuf.Close()
-		cbuf=nil
+		cbuf = nil
 	}
 }
 
-func wrapupPrepping(atvprsr*activeParser) {
+func preppingActiveParsing(atvprsr *activeParser) {
 	flushPassiveContent(atvprsr, true)
+	atvprsr.passiveBufferi++
 	if atvprsr.foundCode {
-		
+		flushActiveCode(atvprsr)
 	} else {
 
+	}
+	if atvprsr.runesToParsei > 0 {
+		atvprsr.runesToParsei = 0
+	}
+	if atvprsr.runesToParse != nil {
+		atvprsr.runesToParse = nil
+	}
+	if len(atvprsr.runeLabelI) == 2 {
+		atvprsr.runeLabelI[0] = 0
+		atvprsr.runeLabelI[1] = 0
+	}
+	if len(atvprsr.runePrvR) == 1 {
+		atvprsr.runePrvR[0] = 0
+	}
+	if atvprsr.passiveRune != nil {
+		atvprsr.passiveRune = nil
+	}
+	if atvprsr.passiveRunei > 0 {
+		atvprsr.passiveRunei = 0
+	}
+	if len(atvprsr.psvLabelI) == 2 {
+		atvprsr.psvLabelI[0] = 0
+		atvprsr.psvLabelI[1] = 0
+	}
+	if len(atvprsr.psvPrvR) == 1 {
+		atvprsr.psvPrvR[0] = 0
+	}
+}
+
+func wrappingupActiveParsing(atvprsr *activeParser) {
+	if atvprsr.passiveBufferi > 0 {
+		atvprsr.passiveBufferi--
+		for len(atvprsr.passiveBuffer) > atvprsr.passiveBufferi {
+			var psvbufi = len(atvprsr.passiveBuffer) - 1
+			for len(atvprsr.passiveBuffer[psvbufi]) > 0 {
+				atvprsr.passiveBuffer[psvbufi][0] = nil
+				atvprsr.passiveBuffer[psvbufi] = atvprsr.passiveBuffer[psvbufi][1:]
+			}
+			atvprsr.passiveBuffer[atvprsr.passiveBufferi] = nil
+			if atvprsr.passiveBufferi > 0 {
+				atvprsr.passiveBuffer = atvprsr.passiveBuffer[:atvprsr.passiveBufferi]
+			} else {
+				atvprsr.passiveBuffer = nil
+			}
+		}
 	}
 }
 
 func (atvprsr *activeParser) ACommit() (acerr error) {
 	if atvprsr.atvrdr != nil {
 		atvprsr.lck.RLock()
-		defer atvprsr.lck.RUnlock()
-		
-		wrapupPrepping(atvprsr)
+		defer func() {
+			wrappingupActiveParsing(atvprsr)
+			atvprsr.lck.RUnlock()
+		}()
+		preppingActiveParsing(atvprsr)
 		if atvprsr.foundCode {
-			flushActiveCode(atvprsr)
 			func() {
 				if atvprsr.atv != nil {
 					if atvprsr.atv.vm == nil {
 						atvprsr.atv.vm = goja.New()
 					}
 					atvprsr.atv.vm.Set("out", atvprsr.atv)
-					atvprsr.atv.vm.Set("CPrint",func(a...interface{}) {
+					atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
 						cPrint(a...)
-					});
-					atvprsr.atv.vm.Set("CPrintln",func(a...interface{}) {
+					})
+					atvprsr.atv.vm.Set("CPrintln", func(a ...interface{}) {
 						cPrint(a...)
 						cPrint("\r\n")
-					});
+					})
 					atvprsr.atv.vm.Set("_atvprsr", atvprsr)
 					if len(atvprsr.atv.activeMap) > 0 {
 						for k, v := range atvprsr.atv.activeMap {
@@ -347,7 +395,7 @@ func (atvprsr *activeParser) ExecuteActive(maxbufsize int) (atverr error) {
 	return
 }
 
-func (atvprsr *activeParser) PassivePrint(fromOffset int64, toOffset int64) {
+func (atvprsr *activeParser) PassivePrint(psvbuflvl int, fromOffset int64, toOffset int64) {
 
 	if len(atvprsr.passiveBuffer) > 0 {
 		if fromOffset >= 0 && toOffset <= atvprsr.passiveBufferOffset {
@@ -367,14 +415,14 @@ func (atvprsr *activeParser) PassivePrint(fromOffset int64, toOffset int64) {
 					}
 					if pto <= toOffset {
 						pei = int(pl - (pto - toOffset))
-						atvprsr.atv.Print(string(psvb[psi:pei]))
+						atvprsr.atv.Print(string(psvb[psvbuflvl][psi:pei]))
 						if pto == toOffset {
 							break
 						}
 					} else if toOffset < pto {
 						if pto-toOffset > 0 {
 							pei = int(pl - (pto - toOffset))
-							atvprsr.atv.Print(string(psvb[psi:pei]))
+							atvprsr.atv.Print(string(psvb[psvbuflvl][psi:pei]))
 						}
 						break
 					}
@@ -462,9 +510,12 @@ func capturePassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
 					var psvRunes = make([]rune, atvprsr.passiveRunei)
 					copy(psvRunes, atvprsr.passiveRune[0:atvprsr.passiveRunei])
 					if len(atvprsr.passiveBuffer) == 0 {
-						atvprsr.passiveBuffer = [][]rune{}
+						atvprsr.passiveBuffer = [][][]rune{}
 					}
-					atvprsr.passiveBuffer = append(atvprsr.passiveBuffer, psvRunes)
+					if len(atvprsr.passiveBuffer) < atvprsr.passiveBufferi {
+						atvprsr.passiveBuffer = append(atvprsr.passiveBuffer, [][]rune{})
+					}
+					atvprsr.passiveBuffer[atvprsr.passiveBufferi] = append(atvprsr.passiveBuffer[atvprsr.passiveBufferi], psvRunes)
 					psvRunes = nil
 					atvprsr.passiveRunei = 0
 				}
@@ -495,16 +546,19 @@ func flushPassiveContent(atvprsr *activeParser, force bool) {
 				var psvRunes = make([]rune, atvprsr.passiveRunei)
 				copy(psvRunes, atvprsr.passiveRune[0:atvprsr.passiveRunei])
 				if len(atvprsr.passiveBuffer) == 0 {
-					atvprsr.passiveBuffer = [][]rune{}
+					atvprsr.passiveBuffer = [][][]rune{}
 				}
-				atvprsr.passiveBuffer = append(atvprsr.passiveBuffer, psvRunes)
+				if len(atvprsr.passiveBuffer) < atvprsr.passiveBufferi {
+					atvprsr.passiveBuffer = append(atvprsr.passiveBuffer, [][]rune{})
+				}
+				atvprsr.passiveBuffer[atvprsr.passiveBufferi] = append(atvprsr.passiveBuffer[atvprsr.passiveBufferi], psvRunes)
 				psvRunes = nil
 				atvprsr.passiveRunei = 0
 			}
 		}
 
 		if atvprsr.lastPassiveBufferOffset < atvprsr.passiveBufferOffset {
-			for _, arune := range []rune(fmt.Sprintf("_atvprsr.PassivePrint(%d,%d);", atvprsr.lastPassiveBufferOffset, atvprsr.passiveBufferOffset)) {
+			for _, arune := range []rune(fmt.Sprintf("_atvprsr.PassivePrint(%d,%d,%d);", atvprsr.passiveBufferi, atvprsr.lastPassiveBufferOffset, atvprsr.passiveBufferOffset)) {
 				if len(atvprsr.runesToParse) == 0 {
 					atvprsr.runesToParse = make([]rune, 81920)
 				}
@@ -520,9 +574,9 @@ func flushPassiveContent(atvprsr *activeParser, force bool) {
 	}
 }
 
-func (atv *Active) PassivePrint(fromOffset int64, toOffset int64) {
+func (atv *Active) PassivePrint(psvbuflvl int, fromOffset int64, toOffset int64) {
 	if atv.atvprsr != nil {
-		atv.atvprsr.PassivePrint(fromOffset, toOffset)
+		atv.atvprsr.PassivePrint(psvbuflvl, fromOffset, toOffset)
 	}
 }
 
