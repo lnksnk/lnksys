@@ -281,6 +281,7 @@ func (reqst *Request) ExecuteRequest() {
 						return
 					}(nxtrs); atverr != nil {
 						fmt.Print(atverr)
+						break
 					}
 				} else {
 					if reqst.resources==nil {
