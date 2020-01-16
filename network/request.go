@@ -259,7 +259,7 @@ func (reqst *Request) ExecuteRequest() {
 	for len(reqst.resourcepaths)>0 {
 		var nextrs=reqst.resourcepaths[0]
 		reqst.resourcepaths=reqst.resourcepaths[1:]
-		if  nxtrs:=reqst.nextResource(nextrs); nxtrs!=nil {
+		if  nxtrs:=nextResource(reqst,nextrs); nxtrs!=nil {
 			if isAtv {
 				if atverr := func(nxtrs*Resource) (fnerr error) {
 					defer func(){
