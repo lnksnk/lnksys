@@ -178,7 +178,7 @@ func (reqst *Request) AddResource(resource ...string) {
 						}
 					}
 					if res!="" {
-						resource=append(append(resource[:resi],rs),resource[:resi+1]...)
+						resource=append(append(resource[:resi],res),resource[:resi+1]...)
 					}
 				} else {
 					reqst.resourcepaths=append(append(reqst.resourcepaths[:lastrsri],res),reqst.resourcepaths[lastrsri+1:]...)
