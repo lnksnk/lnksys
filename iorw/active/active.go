@@ -166,11 +166,21 @@ func cPrint(a...interface{}) {
 	}
 }
 
+func wrapupPrepping(atvprsr*activeParser) {
+	flushPassiveContent(atvprsr, true)
+	if atvprsr.foundCode {
+		
+	} else {
+
+	}
+}
+
 func (atvprsr *activeParser) ACommit() (acerr error) {
 	if atvprsr.atvrdr != nil {
 		atvprsr.lck.RLock()
 		defer atvprsr.lck.RUnlock()
-		flushPassiveContent(atvprsr, true)
+		
+		wrapupPrepping(atvprsr)
 		if atvprsr.foundCode {
 			flushActiveCode(atvprsr)
 			func() {
@@ -203,7 +213,6 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 					}
 					var code = atvprsr.activeCode().String()
 					var coderdr = strings.NewReader(code)
-					fmt.Println(code)
 					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
 					if parsedprgmerr == nil {
 						var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
