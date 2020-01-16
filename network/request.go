@@ -174,12 +174,12 @@ func (reqst *Request) AddResource(resource ...string) {
 						var rs=res[:strings.Index(res, "|")]
 						res=res[strings.Index(res, "|")+1:] 
 						if rs!="" {
-							resource=append(append(resource[:resi],rs),resource[:resi]...)
+							resource=append(append(resource[:resi],rs),resource[resi:]...)
 							resi++
 						}
 					}
 					if res!="" {
-						resource=append(append(resource[:resi],res),resource[:resi]...)
+						resource=append(append(resource[:resi],res),resource[resi:]...)
 					}
 				} else {
 					reqst.resourcepaths=append(append(reqst.resourcepaths[:lastrsri],res),reqst.resourcepaths[lastrsri:]...)
