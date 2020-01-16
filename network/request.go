@@ -186,98 +186,14 @@ func (reqst *Request) AddResource(resource ...string) {
 				}
 			}
 		}
-		/*var finalresource=[]string{}
-		for (len(finalresource)>0 || len(resource)>0) && err==nil {
-			if len(resource)>0 {
-				var res=resource[0]
-				resource=resource[1:]
-				if res!="" {
-					if strings.Index(res, "|") > 0 {
-						for strings.Index(res, "|") > 0 {
-							var rs=res[:strings.Index(res, "|")]
-							res=res[strings.Index(res, "|")+1:] 
-							if rs!="" {
-								finalresource=append(finalresource,rs)
-							}
-						}
-						if res!="" {
-							finalresource=append(finalresource,res)
-						}
-					} else {
-						finalresource=append(finalresource,res)
-					}
-				}
-			}
-			for len(finalresource)>0 {
-				var fres=finalresource[0]
-				finalresource=finalresource[1:]
-				if rsrc := reqst.NewResource(fres); rsrc != nil {
-					reqst.resourcesSize = reqst.resourcesSize + rsrc.size
-					if reqst.forceRead && !reqst.busyForcing {
-						reqst.busyForcing=true
-						if rsrc.activeInverse {
-							if err = reqst.Active.APrint("<@",rsrc,"@>"); err == nil {
-								err = reqst.Active.ACommit()
-							}
-						} else {
-							if err = reqst.Active.APrint(rsrc); err == nil {
-								err = reqst.Active.ACommit()
-							}
-						}
-						reqst.busyForcing=false
-						if err!=nil {
-							break
-						}
-					} else {
-						if len(reqst.resources) == 0 {
-							reqst.resources = []*Resource{}
-						}
-						var prersrs []*Resource
-						var postrsrs []*Resource
-			
-						var currsrs []*Resource = reqst.resources
-			
-						prersrs = currsrs[:lastrsri]
-						postrsrs = currsrs[lastrsri:]
-						var nextrsrs = append(append(prersrs, rsrc), postrsrs...)
-						reqst.resources = nil
-						reqst.resources = nextrsrs[:]
-						prersrs = nil
-						postrsrs = nil
-						currsrs = nil
-						nextrsrs = nil
-					}
-					lastrsri++
-				}
-			}			
-		}
 	}
-	if err==nil && reqst.forceRead && !reqst.busyForcing {
-		for len(reqst.resources)>0 {
-			var rsrd = reqst.resources[0]
-			reqst.resources=reqst.resources[1:]
-			reqst.busyForcing=true
-			if rsrd.activeInverse {
-				if err = reqst.Active.APrint("<@",rsrd,"@>"); err == nil {
-					err = reqst.Active.ACommit()
-				}
-			} else {
-				if err = reqst.Active.APrint(rsrd); err == nil {
-					err = reqst.Active.ACommit()
-				}
-			}
-			reqst.busyForcing=false
-			if err!=nil {
-				break
-			}
-		}
-	}
-	*/
 	return
 }
 
-func(reqst*Request) nextResource(nxtrspath string) (nxtrs*Resource) {
-	nxtrs=reqst.NewResource(nxtrspath)
+func nextResource(reqst*Request , nxtrspath string) (nxtrs*Resource) {
+	if nxtrspath!="" {
+		nxtrs=reqst.NewResource(nxtrspath)
+	}
 	return nxtrs
 }
 
