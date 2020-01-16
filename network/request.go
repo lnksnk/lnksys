@@ -253,8 +253,6 @@ func (reqst *Request) ExecuteRequest() {
 				if reqst.shuttingdownListener != nil {
 					reqst.canShutdownListener = true
 				}
-			},"request.AddResource": func(nxtrequest string){
-				reqst.AddResource(nxtrequest)
 			}})
 		} else {
 			reqst.Active.Reset()
