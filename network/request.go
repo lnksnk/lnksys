@@ -181,7 +181,7 @@ func (reqst *Request) AddResource(resource ...string) {
 					}
 				} else {
 					if len(reqst.resourcepaths)==0 {
-
+						reqst.resourcepaths=append(reqst.resourcepaths,res)
 					} else {
 						reqst.resourcepaths=append(append(reqst.resourcepaths[:lastrsri],res),reqst.resourcepaths[lastrsri:]...)
 					}
