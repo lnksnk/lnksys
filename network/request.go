@@ -167,7 +167,7 @@ func (reqst *Request) AddResource(resource ...string) {
 		for len(resource)>0 {
 			var res=resource[0]
 			resi=0
-			resource=resource[:1]
+			resource=resource[1:]
 			if res!="" {
 				if strings.Index(res, "|") > 0 {
 					for strings.Index(res, "|") > 0 {
