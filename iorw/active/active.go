@@ -204,7 +204,6 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 					var code = atvprsr.activeCode().String()
 					var coderdr = strings.NewReader(code)
 					fmt.Println(code)
-					atvprsr.activeCode().Close()
 					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
 					if parsedprgmerr == nil {
 						var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
