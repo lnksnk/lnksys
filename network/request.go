@@ -38,6 +38,7 @@ type Request struct {
 	resourcesSize    int64
 	currdr           *Resource
 	resources        []*Resource
+	resourcepaths    []string
 	preCurrentBytes  []byte
 	preCurrentBytesl int
 	preCurrentBytesi int
@@ -156,13 +157,36 @@ func (reqst *Request) DbQuery(alias string, query string, args ...interface{}) (
 	return
 }
 
-func (reqst *Request) AddResource(resource ...string) (err error) {
+func (reqst *Request) AddResource(resource ...string) {
 	if len(resource)>0 {
 		var lastrsri=0
-		if len(reqst.resources)>0 {
-			lastrsri=len(reqst.resources)-1
+		if len(reqst.resourcepaths)>0 {
+			lastrsri=len(reqst.resourcepaths)-1
 		}
-		var finalresource=[]string{}
+		var resi=0;
+		for len(resource)>0 {
+			var res=resource[0]
+			resi=0
+			resource=resource[:1]
+			if res!="" {
+				if strings.Index(res, "|") > 0 {
+					for strings.Index(res, "|") > 0 {
+						var rs=res[:strings.Index(res, "|")]
+						res=res[strings.Index(res, "|")+1:] 
+						if rs!="" {
+							resource=append(append(resource[:resi],rs),resource[:resi+1]...)
+						}
+					}
+					if res!="" {
+						resource=append(append(resource[:resi],rs),resource[:resi+1]...)
+					}
+				} else {
+					reqst.resourcepaths=append(append(reqst.resourcepaths[:lastrsri],res),reqst.resourcepaths[lastrsri+1:]...)
+					lastrsri++
+				}
+			}
+		}
+		/*var finalresource=[]string{}
 		for (len(finalresource)>0 || len(resource)>0) && err==nil {
 			if len(resource)>0 {
 				var res=resource[0]
@@ -248,7 +272,13 @@ func (reqst *Request) AddResource(resource ...string) (err error) {
 			}
 		}
 	}
+	*/
 	return
+}
+
+func(reqst*Request) nextResource(nxtrspath string) (nxtrs*Resource) {
+	nxtrs=reqst.NewResource(nxtrspath)
+	return nxtrs
 }
 
 func (reqst*Request) RequestContent() *iorw.BufferedRW {
@@ -280,12 +310,12 @@ func (reqst *Request) ExecuteRequest() {
 	var contentencoding = ""
 	
 	reqst.w.Header().Set("Cache-Control", "no-store")
+	reqst.AddResource(reqst.r.URL.Path)
 	if isAtv {
 		contentencoding = "; charset=UTF-8"
 		reqst.w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
 		reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
 		reqst.w.WriteHeader(200)
-
 		if reqst.Active == nil {
 			reqst.Active = active.NewActive(int64(maxbufsize), reqst, map[string]interface{}{"DBMS": db.DBMSManager, "Parameters": func() *parameters.Parameters {
 				return reqst.Parameters()
@@ -308,15 +338,39 @@ func (reqst *Request) ExecuteRequest() {
 		} else {
 			reqst.Active.Reset()
 		}
-
-		if atverr := func() (fnerr error) {
-			fnerr=reqst.AddResource(reqst.r.URL.Path)
-			return
-		}(); atverr != nil {
-			fmt.Print(atverr)
+	} 
+	
+	for len(reqst.resourcepaths)>0 {
+		var nextrs=reqst.resourcepaths[0]
+		reqst.resourcepaths=reqst.resourcepaths[1:]
+		if  nxtrs:=reqst.nextResource(nextrs); nxtrs!=nil {
+			if isAtv {
+				if atverr := func(nxtrs*Resource) (fnerr error) {
+					defer func(){
+						nxtrs.Close()
+					}()
+					if nxtrs.activeInverse {
+						if fnerr=reqst.Active.APrint("<@",nxtrs,"@>"); fnerr==nil {
+							fnerr=reqst.Active.ACommit();
+						}
+					} else {
+						if fnerr=reqst.Active.APrint(nxtrs); fnerr==nil {
+							fnerr=reqst.Active.ACommit();
+						}
+					}
+					return
+				}(nxtrs); atverr != nil {
+					fmt.Print(atverr)
+				}
+			} else {
+				if reqst.resources==nil {
+					reqst.resources=[]*Resource{}
+				}
+				reqst.resources=append(reqst.resources,nxtrs)
+			}
 		}
-	} else {
-		reqst.AddResource(reqst.r.URL.Path)
+	}
+	if !isAtv {
 		reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
 		http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), reqst.bufRW)
 	}
