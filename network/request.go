@@ -257,35 +257,39 @@ func (reqst *Request) ExecuteRequest() {
 		}
 	} 
 	
-	for len(reqst.resourcepaths)>0 {
-		var nextrs=reqst.resourcepaths[0]
-		reqst.resourcepaths=reqst.resourcepaths[1:]
-		if  nxtrs:=nextResource(reqst,nextrs); nxtrs!=nil {
-			if isAtv {
-				if atverr := func(nxtrs*Resource) (fnerr error) {
-					defer func(){
-						nxtrs.Close()
-					}()
-					if nxtrs.activeInverse {
-						if fnerr=reqst.Active.APrint("<@",nxtrs,"@>"); fnerr==nil {
-							fnerr=reqst.Active.ACommit();
+	for {
+		if len(reqst.resourcepaths)>0 {
+			var nextrs=reqst.resourcepaths[0]
+			reqst.resourcepaths=reqst.resourcepaths[1:]
+			if  nxtrs:=nextResource(reqst,nextrs); nxtrs!=nil {
+				if isAtv {
+					if atverr := func(nxtrs*Resource) (fnerr error) {
+						defer func(){
+							nxtrs.Close()
+						}()
+						if nxtrs.activeInverse {
+							if fnerr=reqst.Active.APrint("<@",nxtrs,"@>"); fnerr==nil {
+								fnerr=reqst.Active.ACommit();
+							}
+						} else {
+							if fnerr=reqst.Active.APrint(nxtrs); fnerr==nil {
+								fnerr=reqst.Active.ACommit();
+							}
 						}
-					} else {
-						if fnerr=reqst.Active.APrint(nxtrs); fnerr==nil {
-							fnerr=reqst.Active.ACommit();
-						}
+						return
+					}(nxtrs); atverr != nil {
+						fmt.Print(atverr)
 					}
-					return
-				}(nxtrs); atverr != nil {
-					fmt.Print(atverr)
+				} else {
+					if reqst.resources==nil {
+						reqst.resources=[]*Resource{}
+					}
+					reqst.resources=append(reqst.resources,nxtrs)
+					reqst.resourcesSize = reqst.resourcesSize + nxtrs.size
 				}
-			} else {
-				if reqst.resources==nil {
-					reqst.resources=[]*Resource{}
-				}
-				reqst.resources=append(reqst.resources,nxtrs)
-				reqst.resourcesSize = reqst.resourcesSize + nxtrs.size
 			}
+		} else {
+			break
 		}
 	}
 	if !isAtv {
