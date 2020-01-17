@@ -676,8 +676,7 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	if maxBufSize < 81920 {
 		maxBufSize = 81920
 	}
-	atv = &Active{atvxctrDone:make(chan bool,1),
-		atvprsr: &activeParser{
+	atv = &Active{atvprsr: &activeParser{
 		maxBufSize: maxBufSize, lck: &sync.RWMutex{},
 		runesToParse:     make([]rune, maxBufSize),
 		runeLabel:        [][]rune{[]rune("<@"), []rune("@>")},
