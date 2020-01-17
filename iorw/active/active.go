@@ -326,7 +326,8 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 }
 
 func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
-	func() {
+	go func(done chan) {
+		defer done<-true
 		if atv != nil {
 			if atv.vm == nil {
 				atv.vm = goja.New()
@@ -382,7 +383,8 @@ func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
 			parsedprgm = nil
 			atv.vm = nil
 		}
-	}()
+	}(atv.atvxctrDone)
+	<-atvxctrDone
 	return acerr
 }
 
@@ -403,6 +405,7 @@ type Active struct {
 	atvprsr   *activeParser
 	vm        *goja.Runtime
 	activeMap map[string]interface{}
+	atvxctrDone chan bool
 }
 
 /*type activeRune struct {
@@ -678,7 +681,8 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	if maxBufSize < 81920 {
 		maxBufSize = 81920
 	}
-	atv = &Active{atvprsr: &activeParser{
+	atv = &Active{atvxctrDone:make(chan bool,1),
+		atvprsr: &activeParser{
 		maxBufSize: maxBufSize, lck: &sync.RWMutex{},
 		runesToParse:     make([]rune, maxBufSize),
 		runeLabel:        [][]rune{[]rune("<@"), []rune("@>")},
@@ -735,6 +739,9 @@ func (atv *Active) Close() {
 	}
 	if atv.vm != nil {
 		atv.vm = nil
+	}
+	if atv.atvxctrDone!=nil {
+		close(atv.atvxctrDone)
 	}
 }
 
