@@ -129,7 +129,6 @@ func(atvprsr *activeParser) atvxctor(prsnglvl int) (atvxctr*activeExecutor) {
 	if atvprsr.atvxctr==nil {
 		atvprsr.atvxctr=[]*activeExecutor{}
 	}
-	var atvxctrok=false
 	if len(atvprsr.atvxctr)<prsnglvl+1 {
 		atvprsr.atvxctr=append(atvprsr.atvxctr,newActiveExecutor())
 	}
