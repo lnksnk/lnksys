@@ -480,7 +480,8 @@ func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
 			if atvprsr.passiveRunei > 0 {
 				var psvRunes = make([]rune, atvprsr.passiveRunei)
 				copy(psvRunes, atvprsr.passiveRune[0:atvprsr.passiveRunei])
-				atvprsr.atvxctor(psvlvl).passiveBuf()=append(atvprsr.atvxctor(atvprsr.parsingLevel).passiveBuf(), psvRunes)
+				atvprsr.atvxctor(psvlvl).passiveBuf()
+				atvprsr.atvxctor(psvlvl).passiveBuffer=append(atvprsr.atvxctor(atvprsr.parsingLevel).passiveBuffer, psvRunes)
 				psvRunes = nil
 				atvprsr.passiveRunei = 0
 			}
@@ -616,7 +617,7 @@ func processUnparsedActiveCode(processlvl int, atvprsr *activeParser, p []rune) 
 				if strings.TrimSpace(string(arune)) != "" {
 					if !atvprsr.foundCode {
 						flushPassiveContent(processlvl, atvprsr, false)
-						atvprsr.atvxctor(psvlvl).foundCode=true
+						atvprsr.atvxctor(processlvl).foundCode=true
 						atvprsr.foundCode = true
 					} else {
 						flushPassiveContent(processlvl, atvprsr, false)
