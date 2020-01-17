@@ -56,7 +56,7 @@ func (atvprsr *activeParser) activeCode(atvcdelvl int) *iorw.BufferedRW {
 	}
 
 	if cdeCode,cdeCodeok := atvprsr.curAtvCde[atvcdelvl]; cdeCodeok {
-		return cdeCodeok
+		return cdeCode
 	} 
 	atvprsr.curAtvCde[atvcdelvl]=iorw.NewBufferedRW(81920, nil) 
 	return atvprsr.curAtvCde[atvcdelvl]
@@ -134,10 +134,17 @@ func (atvprsr *activeParser) Close() {
 	}
 	//
 	if atvprsr.curAtvCde != nil {
-		for len(atvprsr.curAtvCde) > 0 {
-			atvprsr.curAtvCde[0].Close()
-			atvprsr.curAtvCde[0] = nil
-			atvprsr.curAtvCde = atvprsr.curAtvCde[1:]
+		if len(atvprsr.curAtvCde) > 0 {
+			var cdekeys = []int{}
+			for n:=range atvprsr.curAtvCde {
+				atvprsr.curAtvCde[n].Close()
+				atvprsr.curAtvCde[n] = nil
+				cdekeys=append(cdekeys,n) 
+			} 
+			for _,n:=range cdekeys {
+				delete(atvprsr.curAtvCde,n)
+			}
+			cdekeys=nil
 		}
 		atvprsr.curAtvCde = nil
 	}
