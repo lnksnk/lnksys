@@ -326,62 +326,60 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 }
 
 func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
-	func(){
-		if atv != nil {
-		if atv.vm == nil {
-			atv.vm = goja.New()
-		}
-		atv.vm.Set("out", atv)
-		atv.vm.Set("CPrint", func(a ...interface{}) {
-			cPrint(a...)
-		})
-		atv.vm.Set("CPrintln", func(a ...interface{}) {
-			cPrint(a...)
-			cPrint("\r\n")
-		})
-		atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64){
-			atvxctr.PassivePrint(atv,fromOffset,toOffset)
-		})
-		if len(atv.activeMap) > 0 {
-			for k, v := range atv.activeMap {
-				if atv.vm.Get(k) != v {
-					atv.vm.Set(k, v)
-				}
+	if atv != nil {
+	if atv.vm == nil {
+		atv.vm = goja.New()
+	}
+	atv.vm.Set("out", atv)
+	atv.vm.Set("CPrint", func(a ...interface{}) {
+		cPrint(a...)
+	})
+	atv.vm.Set("CPrintln", func(a ...interface{}) {
+		cPrint(a...)
+		cPrint("\r\n")
+	})
+	atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64){
+		atvxctr.PassivePrint(atv,fromOffset,toOffset)
+	})
+	if len(atv.activeMap) > 0 {
+		for k, v := range atv.activeMap {
+			if atv.vm.Get(k) != v {
+				atv.vm.Set(k, v)
 			}
 		}
-		if len(activeGlobalMap) > 0 {
-			for k, v := range activeGlobalMap {
-				if atv.vm.Get(k) != v {
-					atv.vm.Set(k, v)
-				}
+	}
+	if len(activeGlobalMap) > 0 {
+		for k, v := range activeGlobalMap {
+			if atv.vm.Get(k) != v {
+				atv.vm.Set(k, v)
 			}
 		}
-		var code = atvxctr.activeCode().String()
-		var coderdr = strings.NewReader(code)
-		var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
-		if parsedprgmerr == nil {
-			var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
-			if prgmerr == nil {
-				var _, vmerr = atv.vm.RunProgram(prgm)
-				if vmerr != nil {
-					fmt.Println(vmerr)
-					fmt.Println(code)
-					acerr = vmerr
-				}
-			} else {
-				fmt.Println(prgmerr)
+	}
+	var code = atvxctr.activeCode().String()
+	var coderdr = strings.NewReader(code)
+	var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
+	if parsedprgmerr == nil {
+		var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
+		if prgmerr == nil {
+			var _, vmerr = atv.vm.RunProgram(prgm)
+			if vmerr != nil {
+				fmt.Println(vmerr)
 				fmt.Println(code)
-				acerr = prgmerr
+				acerr = vmerr
 			}
-			prgm = nil
 		} else {
-			fmt.Println(parsedprgmerr)
+			fmt.Println(prgmerr)
 			fmt.Println(code)
-			acerr = parsedprgmerr
+			acerr = prgmerr
 		}
-		parsedprgm = nil
-		atv.vm = nil
-	}()
+		prgm = nil
+	} else {
+		fmt.Println(parsedprgmerr)
+		fmt.Println(code)
+		acerr = parsedprgmerr
+	}
+	parsedprgm = nil
+	atv.vm = nil
 	return acerr
 }
 
