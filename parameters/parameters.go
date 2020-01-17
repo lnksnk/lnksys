@@ -3,7 +3,7 @@ package parameters
 import (
 	"io"
 	"mime/multipart"
-	"net/http"
+	http "net/http"
 	"strings"
 )
 
@@ -226,6 +226,7 @@ func NewParameters() *Parameters {
 }
 
 func LoadParametersFromHTTPRequest(params *Parameters, r *http.Request) {
+	
 	if err := r.ParseMultipartForm(0); err == nil {
 		if r.MultipartForm != nil {
 			for pname, pvalue := range r.MultipartForm.Value {
