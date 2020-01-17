@@ -18,6 +18,7 @@ type activeExecutor struct {
 
 func newActiveExecutor() (atvxctr*activeExecutor) {
 	atvxctr=&activeExecutor{}
+	return
 }
 
 func(atvxctr *activeExecutor) passiveBuf() [][]rune{
@@ -35,8 +36,8 @@ func (atvxctr *activeExecutor) activeCode() *iorw.BufferedRW {
 }
 
 func (atvxctr *activeExecutor) close() {
-	if atvprsr.passiveBuffer!=nil {
-		for len(atvxctr.passiveBuffer) {
+	if atvxctr.passiveBuffer!=nil {
+		for len(atvxctr.passiveBuffer)>0 {
 			atvxctr.passiveBuffer[0]=nil
 			atvxctr.passiveBuffer=atvxctr.passiveBuffer[1:]
 		}
@@ -51,7 +52,7 @@ func (atvxctr *activeExecutor) close() {
 func (atvxctr *activeExecutor) passivePrint(atv *Active, fromOffset int64, toOffset int64) {
 
 	if len(atvxctr.passiveBuffer) > 0 {
-		if fromOffset >= 0 && toOffset <= atvprsr.passiveBufferOffset {
+		if fromOffset >= 0 && toOffset <= atvxctr.passiveBufferOffset {
 			var psi = int(0)
 			var pei = int(0)
 			var pfrom = int64(0)
@@ -69,7 +70,7 @@ func (atvxctr *activeExecutor) passivePrint(atv *Active, fromOffset int64, toOff
 					if pto <= toOffset {
 						pei = int(pl - (pto - toOffset))
 						if atv!=nil {
-							atv.Print(string(psvb[psvbuflvl][psi:pei]))
+							atv.Print(string(psvb[psi:pei]))
 						}
 						if pto == toOffset {
 							break
@@ -125,13 +126,13 @@ type activeParser struct {
 
 func(atvprsr *activeParser) atvxctor(prsnglvl int) (atvxctr*activeExecutor) {
 	if atvprsr.atvxctr==nil {
-		atvprsr.atvxctr=map[int]*activeExecutor{}
+		atvprsr.atvxctr=[]*activeExecutor{}
 	}
 	var atvxctrok=false
-	if atvxctr,atvxctrok = atvprsr.atvxctr[prsnglvl]; !atvxctrok {
-		atvprsr.atvxctr[prsnglvl] = iorw.NewBufferedRW(81920,nil)
-		atvxctr = atvprsr.atvxctr[prsnglvl]
+	if len(atvprsr.atvxctr)<prsnglvl+1 {
+		atvprsr.atvxctr=append(atvprsr.atvxctr,newActiveExecutor())
 	}
+	atvxctr=atvprsr.atvxctr[prsnglvl]
 	return
 }
 
@@ -213,7 +214,7 @@ func (atvprsr *activeParser) Close() {
 	//
 	if atvprsr.atvxctr!=nil {
 		for len(atvprsr.atvxctr)>0 {
-			atvprsr.atvxctr[0].cose()
+			atvprsr.atvxctr[0].close()
 			atvprsr.atvxctr[0]=nil
 			atvprsr.atvxctr=atvprsr.atvxctr[1:]
 		}
