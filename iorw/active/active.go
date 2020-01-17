@@ -66,6 +66,9 @@ func (atvxctr *activeExecutor) close() {
 	if atvxctr.atv!=nil {
 		atvxctr.atv=nil
 	}
+	if atvxctr.doneExeCode!=nil {
+		close(atvxctr.doneExeCode)
+	}
 }
 
 func (atvxctr *activeExecutor) passivePrint(atv *Active, fromOffset int64, toOffset int64) {
