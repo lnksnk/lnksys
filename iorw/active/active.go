@@ -354,7 +354,7 @@ func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
 				cPrint(a...)
 				cPrint("\r\n")
 			})
-			atv.vm.Set("_atvprsr", atvprsr)
+			atv.vm.Set("_atvprsr", atvxctr)
 			if len(atv.activeMap) > 0 {
 				for k, v := range atv.activeMap {
 					if atv.vm.Get(k) != v {
@@ -375,7 +375,7 @@ func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
 			if parsedprgmerr == nil {
 				var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
 				if prgmerr == nil {
-					var _, vmerr = atvprsr.atv.vm.RunProgram(prgm)
+					var _, vmerr = atv.vm.RunProgram(prgm)
 					if vmerr != nil {
 						fmt.Println(vmerr)
 						fmt.Println(code)
@@ -393,26 +393,26 @@ func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
 				acerr = parsedprgmerr
 			}
 			parsedprgm = nil
-			atvprsr.atv.vm = nil
+			atv.vm = nil
 		}
 	}()
 }
 
-var atvExecutors chan *activeExecutors
+var atvExecutors chan *activeExecutor
 var atvExctrslck *sync.Mutex
 func init() {
 	if atvExctrslck==nil {
 		atvExctrslck=&sync.Mutex{}
 	}
 	if atvExecutors==nil {
-		atvExecutors=make(chan *activeExecutors)
+		atvExecutors=make(chan *activeExecutor)
 		func() {
 			atvExctrslck.Lock()
 			defer atvExctrslck.Unlock()
 			go func() {
 				for {
 					select{
-					case nxtatvxctr:<-atvExecutors
+					case nxtatvxctr:=<-atvExecutors
 						go func(){
 							nxtatvxctr.executeActive()
 							nxtatvxctr=nil
