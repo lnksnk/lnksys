@@ -144,7 +144,7 @@ func(atvprsr *activeParser) atvxctor(prsnglvl int) (atvxctr*activeExecutor) {
 		atvprsr.atvxctr=[]*activeExecutor{}
 	}
 	if len(atvprsr.atvxctr)<prsnglvl+1 {
-		atvprsr.atvxctr=append(atvprsr.atvxctr,newActiveExecutor())
+		atvprsr.atvxctr=append(atvprsr.atvxctr,newActiveExecutor(atvprsr.atv))
 	}
 	atvxctr=atvprsr.atvxctr[prsnglvl]
 	return
@@ -332,9 +332,7 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 		}()
 		if atvxctr:=preppingActiveParsing(atvprsr); atvxctr!=nil && atvxctr.foundCode {
 			atvExecutors<-atvxctr
-
-			<-atvxctr.doneExeCode
-			
+			<-atvxctr.doneExeCode	
 		}
 	}
 	return
