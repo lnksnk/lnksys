@@ -323,7 +323,7 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 				if atvprsr.atv.vm == nil {
 					atvprsr.atv.vm = goja.New()
 				}
-				atvprsr.atv.vm.Set("out", atv)
+				atvprsr.atv.vm.Set("out", atvprsr.atv)
 				atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
 					cPrint(a...)
 				})
@@ -332,12 +332,12 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 					cPrint("\r\n")
 				})
 				atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64){
-					atvxctr.PassivePrint(atv,fromOffset,toOffset)
+					atvxctr.PassivePrint(atvprsr.atv,fromOffset,toOffset)
 				})
 				if len(atvprsr.atv.activeMap) > 0 {
 					for k, v := range atvprsr.atv.activeMap {
-						if atv.vm.Get(k) != v {
-							atv.vm.Set(k, v)
+						if atvprsr.atv.vm.Get(k) != v {
+							atvprsr.atv.vm.Set(k, v)
 						}
 					}
 				}
