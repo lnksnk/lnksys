@@ -386,32 +386,6 @@ func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
 	return acerr
 }
 
-var atvExecutors chan *activeExecutor
-var atvExctrslck *sync.Mutex
-func init() {
-	if atvExctrslck==nil {
-		atvExctrslck=&sync.Mutex{}
-	}
-	if atvExecutors==nil {
-		atvExecutors=make(chan *activeExecutor)
-		func() {
-			atvExctrslck.Lock()
-			defer atvExctrslck.Unlock()
-			go func() {
-				for {
-					select{
-					case nxtatvxctr:=<-atvExecutors:
-						go func(){
-							nxtatvxctr.executeActive()
-							nxtatvxctr=nil
-						}()
-					}
-				}
-			}()
-		}()
-	}
-}
-
 func (atvprsr *activeParser) PassivePrint(psvbuflvl int, fromOffset int64, toOffset int64) {
 	if len(atvprsr.atvxctr) > psvbuflvl {
 		atvprsr.atvxctr[psvbuflvl].PassivePrint(atvprsr.atv,fromOffset,toOffset)	
