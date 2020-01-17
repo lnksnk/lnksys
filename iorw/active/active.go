@@ -329,10 +329,11 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 		defer func() {
 			wrappingupActiveParsing(atvprsr)
 			atvprsr.lck.RUnlock()
-		}()
+		}
 		if atvxctr:=preppingActiveParsing(atvprsr); atvxctr!=nil && atvxctr.foundCode {
 			atvExecutors<-atvxctr
 			<-atvxctr.doneExeCode	
+			acerr=atvxctr.acerr
 		}
 	}
 	return
