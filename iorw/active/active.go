@@ -412,7 +412,7 @@ func init() {
 			go func() {
 				for {
 					select{
-					case nxtatvxctr:=<-atvExecutors
+					case nxtatvxctr:=<-atvExecutors:
 						go func(){
 							nxtatvxctr.executeActive()
 							nxtatvxctr=nil
