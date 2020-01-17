@@ -10,6 +10,86 @@ import (
 	"sync"
 )
 
+type activeExecutor struct {
+	passiveBuffer           [][]rune
+	curAtvCde *iorw.BufferedRW
+	foundCode bool
+}
+
+func newActiveExecutor() (atvxctr*activeExecutor) {
+	atvxctr=&activeExecutor{}
+}
+
+func(atvxctr *activeExecutor) passiveBuf() [][]rune{
+	if atvxctr.passiveBuffer==nil {
+		atvxctr.passiveBuffer=[][]rune{}
+	}
+	return atvxctr.passiveBuffer
+}
+
+func (atvxctr *activeExecutor) activeCode() *iorw.BufferedRW {
+	if atvxctr.curAtvCde==nil {
+		atvxctr.curAtvCde=iorw.NewBufferedRW(81920,nil)
+	}
+	return atvxctr.curAtvCde
+}
+
+func (atvxctr *activeExecutor) close() {
+	if atvprsr.passiveBuffer!=nil {
+		for len(atvxctr.passiveBuffer) {
+			atvxctr.passiveBuffer[0]=nil
+			atvxctr.passiveBuffer=atvxctr.passiveBuffer[1:]
+		}
+		atvxctr.passiveBuffer=nil
+	}
+	if atvxctr.curAtvCde!=nil {
+		atvxctr.curAtvCde.Close()
+		atvxctr.curAtvCde=nil
+	}
+}
+
+func (atvxctr *activeExecutor) passivePrint(atv *Active, fromOffset int64, toOffset int64) {
+
+	if len(atvxctr.passiveBuffer) > 0 {
+		if fromOffset >= 0 && toOffset <= atvprsr.passiveBufferOffset {
+			var psi = int(0)
+			var pei = int(0)
+			var pfrom = int64(0)
+			var pto = int64(0)
+			var pl = int64(0)
+			for _, psvb := range atvxctr.passiveBuffer {
+				pl = int64(len(psvb))
+				pto = pl + pfrom
+				if fromOffset < pto {
+					if fromOffset < pfrom {
+						psi = int(pfrom - fromOffset)
+					} else {
+						psi = int(fromOffset - pfrom)
+					}
+					if pto <= toOffset {
+						pei = int(pl - (pto - toOffset))
+						if atv!=nil {
+							atv.Print(string(psvb[psvbuflvl][psi:pei]))
+						}
+						if pto == toOffset {
+							break
+						}
+					} else if toOffset < pto {
+						if pto-toOffset > 0 {
+							pei = int(pl - (pto - toOffset))
+							if atv!=nil {
+								atv.Print(string(psvb[psvbuflvl][psi:pei]))
+							}
+						}
+						break
+					}
+				}
+				pfrom += pto
+			}
+		}
+	}
+}
+
 type activeParser struct {
 	atv        *Active
 	atvrdr     *iorw.BufferedRW
@@ -26,7 +106,7 @@ type activeParser struct {
 	//
 	passiveRune             []rune
 	passiveRunei            int
-	passiveBuffer           [][][]rune
+	
 	parsingLevel          int
 	passiveBufferOffset     int64
 	lastPassiveBufferOffset int64
@@ -40,7 +120,19 @@ type activeParser struct {
 	hasCode   bool
 	foundCode bool
 
-	curAtvCde map[int]*iorw.BufferedRW
+	atvxctr [int]*activeExecutor
+}
+
+func(atvprsr *activeParser) atvxctor(prsnglvl int) (atvxctr*activeExecutor) {
+	if atvprsr.atvxctr==nil {
+		atvprsr.atvxctr=map[int]*activeExecutor{}
+	}
+	var atvxctrok=false
+	if atvxctr,atvxctrok = atvprsr.atvxctr[prsnglvl] !atvxctrok {
+		atvprsr.atvxctr[prsnglvl] = iorw.NewBufferedRW(81920,nil)
+		atvxctr = atvprsr.atvxctr[prsnglvl]
+	}
+	return
 }
 
 func (atvprsr *activeParser) atvbufrdr() *iorw.BufferedRW {
@@ -51,15 +143,7 @@ func (atvprsr *activeParser) atvbufrdr() *iorw.BufferedRW {
 }
 
 func (atvprsr *activeParser) activeCode(atvcdelvl int) *iorw.BufferedRW {
-	if atvprsr.curAtvCde == nil {
-		atvprsr.curAtvCde = map[int]*iorw.BufferedRW{}
-	}
-
-	if cdeCode,cdeCodeok := atvprsr.curAtvCde[atvcdelvl]; cdeCodeok {
-		return cdeCode
-	} 
-	atvprsr.curAtvCde[atvcdelvl]=iorw.NewBufferedRW(81920, nil) 
-	return atvprsr.curAtvCde[atvcdelvl]
+	return atvprsr.atvxctor(atvcdelvl).activeCode()
 }
 
 func (atvprsr *activeParser) Reset() {
@@ -112,13 +196,7 @@ func (atvprsr *activeParser) Close() {
 	if atvprsr.passiveRune != nil {
 		atvprsr.passiveRune = nil
 	}
-	if atvprsr.passiveBuffer != nil {
-		for len(atvprsr.passiveBuffer) > 0 {
-			atvprsr.passiveBuffer[0] = nil
-			atvprsr.passiveBuffer = atvprsr.passiveBuffer[1:]
-		}
-		atvprsr.passiveBuffer = nil
-	}
+	
 	//
 	if atvprsr.psvRunesToParse != nil {
 		atvprsr.psvRunesToParse = nil
@@ -133,20 +211,13 @@ func (atvprsr *activeParser) Close() {
 		atvprsr.psvPrvR = nil
 	}
 	//
-	if atvprsr.curAtvCde != nil {
-		if len(atvprsr.curAtvCde) > 0 {
-			var cdekeys = []int{}
-			for n:=range atvprsr.curAtvCde {
-				atvprsr.curAtvCde[n].Close()
-				atvprsr.curAtvCde[n] = nil
-				cdekeys=append(cdekeys,n) 
-			} 
-			for _,n:=range cdekeys {
-				delete(atvprsr.curAtvCde,n)
-			}
-			cdekeys=nil
+	if atvprsr.atvxctr!=nil {
+		for len(atvprsr.atvxctr)>0 {
+			atvprsr.atvxctr[0].cose()
+			atvprsr.atvxctr[0]=nil
+			atvprsr.atvxctr=atvprsr.atvxctr[1:]
 		}
-		atvprsr.curAtvCde = nil
+		atvprsr.atvxctr=nil
 	}
 	if atvprsr.atv != nil {
 		atvprsr.atv = nil
@@ -188,8 +259,6 @@ func preppingActiveParsing(atvprsr *activeParser) {
 	atvprsr.parsingLevel++
 	if atvprsr.foundCode {
 		flushActiveCode(atvprsr.parsingLevel-1, atvprsr)
-	} else {
-
 	}
 	if atvprsr.runesToParsei > 0 {
 		atvprsr.runesToParsei = 0
@@ -222,25 +291,11 @@ func preppingActiveParsing(atvprsr *activeParser) {
 func wrappingupActiveParsing(atvprsr *activeParser) {
 	if atvprsr.parsingLevel > 0 {
 		atvprsr.parsingLevel--
-		for len(atvprsr.passiveBuffer) > atvprsr.parsingLevel {
-			var psvbufi = len(atvprsr.passiveBuffer) - 1
-
-			if curAtvCde,curAtvCdeok:=atvprsr.curAtvCde[psvbufi]; curAtvCdeok {
-				curAtvCde.Close()
-				atvprsr.curAtvCde[psvbufi] = nil
-				delete(atvprsr.curAtvCde,psvbufi)
-			}
-
-			for len(atvprsr.passiveBuffer[psvbufi]) > 0 {
-				atvprsr.passiveBuffer[psvbufi][0] = nil
-				atvprsr.passiveBuffer[psvbufi] = atvprsr.passiveBuffer[psvbufi][1:]
-			}
-			atvprsr.passiveBuffer[atvprsr.parsingLevel] = nil
-			if atvprsr.parsingLevel > 0 {
-				atvprsr.passiveBuffer = atvprsr.passiveBuffer[:atvprsr.parsingLevel]
-			} else {
-				atvprsr.passiveBuffer = nil
-			}
+		for len(atvprsr.atvxctr) > atvprsr.parsingLevel {
+			var psvbufi = len(tvprsr.atvxctr) - 1
+			atvprsr.atvxctr[psvbufi].close()
+			atvprsr.atvxctr[psvbufi]=nil
+			atvprsr.atvxctr=atvprsr.atvxctr[:psvbufi]
 		}
 		if atvprsr.foundCode {
 			atvprsr.foundCode=false
@@ -318,40 +373,8 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 }
 
 func (atvprsr *activeParser) PassivePrint(psvbuflvl int, fromOffset int64, toOffset int64) {
-
-	if len(atvprsr.passiveBuffer) > 0 {
-		if fromOffset >= 0 && toOffset <= atvprsr.passiveBufferOffset {
-			var psi = int(0)
-			var pei = int(0)
-			var pfrom = int64(0)
-			var pto = int64(0)
-			var pl = int64(0)
-			for _, psvb := range atvprsr.passiveBuffer {
-				pl = int64(len(psvb))
-				pto = pl + pfrom
-				if fromOffset < pto {
-					if fromOffset < pfrom {
-						psi = int(pfrom - fromOffset)
-					} else {
-						psi = int(fromOffset - pfrom)
-					}
-					if pto <= toOffset {
-						pei = int(pl - (pto - toOffset))
-						atvprsr.atv.Print(string(psvb[psvbuflvl][psi:pei]))
-						if pto == toOffset {
-							break
-						}
-					} else if toOffset < pto {
-						if pto-toOffset > 0 {
-							pei = int(pl - (pto - toOffset))
-							atvprsr.atv.Print(string(psvb[psvbuflvl][psi:pei]))
-						}
-						break
-					}
-				}
-				pfrom += pto
-			}
-		}
+	if len(atvprsr.atvxctr) > psvbuflvl {
+		atvprsr.atvxctr[psvbuflvl].passivePrint(atvprsr.atv,fromOffset,toOffset)	
 	}
 }
 
@@ -424,13 +447,7 @@ func capturePassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
 				if len(atvprsr.passiveRune) == atvprsr.passiveRunei {
 					var psvRunes = make([]rune, atvprsr.passiveRunei)
 					copy(psvRunes, atvprsr.passiveRune[0:atvprsr.passiveRunei])
-					if len(atvprsr.passiveBuffer) == 0 {
-						atvprsr.passiveBuffer = [][][]rune{}
-					}
-					if len(atvprsr.passiveBuffer) < atvprsr.parsingLevel {
-						atvprsr.passiveBuffer = append(atvprsr.passiveBuffer, [][]rune{})
-					}
-					atvprsr.passiveBuffer[atvprsr.parsingLevel] = append(atvprsr.passiveBuffer[atvprsr.parsingLevel], psvRunes)
+					atvprsr.atvxctor(atvprsr.parsingLevel).passiveBuf()=append(atvprsr.atvxctor(atvprsr.parsingLevel).passiveBuf(), psvRunes)
 					psvRunes = nil
 					atvprsr.passiveRunei = 0
 				}
@@ -460,13 +477,7 @@ func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
 			if atvprsr.passiveRunei > 0 {
 				var psvRunes = make([]rune, atvprsr.passiveRunei)
 				copy(psvRunes, atvprsr.passiveRune[0:atvprsr.passiveRunei])
-				if len(atvprsr.passiveBuffer) == 0 {
-					atvprsr.passiveBuffer = [][][]rune{}
-				}
-				if len(atvprsr.passiveBuffer) < atvprsr.parsingLevel {
-					atvprsr.passiveBuffer = append(atvprsr.passiveBuffer, [][]rune{})
-				}
-				atvprsr.passiveBuffer[atvprsr.parsingLevel] = append(atvprsr.passiveBuffer[atvprsr.parsingLevel], psvRunes)
+				atvprsr.atvxctor(atvprsr.parsingLevel).passiveBuf()=append(atvprsr.atvxctor(atvprsr.parsingLevel).passiveBuf(), psvRunes)
 				psvRunes = nil
 				atvprsr.passiveRunei = 0
 			}
@@ -575,7 +586,7 @@ func processRune(rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []i
 func captureActiveCode(atvcdelvl int, atvprsr *activeParser, p []rune) (n int, err error) {
 	var pl = len(p)
 	for n < pl {
-		atvprsr.activeCode(atvcdelvl).Print(string(p[n : n+(pl-n)]))
+		atvprsr.atvxctor(atvcdelvl).activeCode().Print(string(p[n : n+(pl-n)]))
 		n += pl
 	}
 	return
