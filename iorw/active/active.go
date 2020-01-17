@@ -357,7 +357,7 @@ func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
 				cPrint("\r\n")
 			})
 			atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64){
-				atvxctr.PassivePrint(fromOffset,toOffset)
+				atvxctr.PassivePrint(atv,fromOffset,toOffset)
 			})
 			if len(atv.activeMap) > 0 {
 				for k, v := range atv.activeMap {
