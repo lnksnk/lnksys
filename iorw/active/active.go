@@ -20,7 +20,7 @@ type activeExecutor struct {
 }
 
 func newActiveExecutor() (atvxctr*activeExecutor) {
-	atvxctr=&activeExecutor{foundCode:false,passiveBufferOffset:0,lastPassiveBufferOffset:0}
+	atvxctr=&activeExecutor{foundCode:false,hasCode:false,passiveBufferOffset:0,lastPassiveBufferOffset:0}
 	return
 }
 
@@ -256,7 +256,7 @@ func cPrint(a ...interface{}) {
 func preppingActiveParsing(atvprsr *activeParser) {
 	flushPassiveContent(atvprsr.parsingLevel, atvprsr, true)
 	atvprsr.parsingLevel++
-	if atvprsr.foundCode {
+	if atvprsr.atvxctor(processlvl).foundCode {
 		flushActiveCode(atvprsr.parsingLevel-1, atvprsr)
 	}
 	if atvprsr.runesToParsei > 0 {
@@ -290,15 +290,15 @@ func preppingActiveParsing(atvprsr *activeParser) {
 func wrappingupActiveParsing(atvprsr *activeParser) {
 	if atvprsr.parsingLevel > 0 {
 		atvprsr.parsingLevel--
+		if atvprsr.atvxctor(processlvl).foundCode {
+			atvprsr.atvxctor(processlvl).foundCode=false
+		}
 		for len(atvprsr.atvxctr) > atvprsr.parsingLevel {
 			var psvbufi = len(atvprsr.atvxctr) - 1
 			atvprsr.atvxctr[psvbufi].close()
 			atvprsr.atvxctr[psvbufi]=nil
 			atvprsr.atvxctr=atvprsr.atvxctr[:psvbufi]
-		}
-		if atvprsr.foundCode {
-			atvprsr.foundCode=false
-		}
+		}		
 	}
 }
 
@@ -310,7 +310,7 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 			atvprsr.lck.RUnlock()
 		}()
 		preppingActiveParsing(atvprsr)
-		if atvprsr.foundCode {
+		if atvprsr.atvxctor(atvprsr.parsingLevel).foundCode {
 			func() {
 				if atvprsr.atv != nil {
 					if atvprsr.atv.vm == nil {
@@ -427,7 +427,7 @@ func (atv *Active) APrintln(a ...interface{}) {
 func capturePassiveContent(psvcntlvl int, atvprsr *activeParser, p []rune) (n int, err error) {
 	var pl = len(p)
 	for n < pl {
-		if atvprsr.foundCode {
+		if atvprsr.atvxctor(psvcntlvl).foundCode {
 			if len(atvprsr.passiveRune) == 0 {
 				atvprsr.passiveRune = make([]rune, 81920)
 			}
@@ -472,7 +472,7 @@ func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
 		capturePassiveContent(psvlvl, atvprsr, atvprsr.psvRunesToParse[0:atvprsr.psvRunesToParsei])
 		atvprsr.psvRunesToParsei = 0
 	}
-	if atvprsr.foundCode {
+	if atvprsr.atvxctor(psvlvl).foundCode {
 		if force {
 			if atvprsr.passiveRunei > 0 {
 				var psvRunes = make([]rune, atvprsr.passiveRunei)
@@ -540,7 +540,7 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 		if runelbl[0][runelbli[0]] == rne {
 			runelbli[0]++
 			if len(runelbl[0]) == runelbli[0] {
-				atvprsr.hasCode = false
+				atvprsr.atvxctor(processlvl).hasCode = false
 			} else {
 				runePrvR[0] = rne
 			}
@@ -568,7 +568,7 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 				runePrvR[0] = rune(0)
 				runelbli[0] = 0
 				runelbli[1] = 0
-				atvprsr.hasCode = false
+				atvprsr.atvxctor(processlvl).hasCode = false
 				atvprsr.atvxctor(processlvl).lastPassiveBufferOffset = atvprsr.atvxctor(processlvl).passiveBufferOffset
 			} else {
 				runePrvR[0] = rne
@@ -603,7 +603,7 @@ func flushActiveCode(atvcdelvl int, atvprsr *activeParser) {
 func processUnparsedActiveCode(processlvl int, atvprsr *activeParser, p []rune) (err error) {
 	if len(p) > 0 {
 		for _, arune := range p {
-			if atvprsr.hasCode {
+			if atvprsr.atvxctor(processlvl).hasCode {
 				atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 				atvprsr.runesToParsei++
 				if atvprsr.runesToParsei == len(atvprsr.runesToParse) {
@@ -612,14 +612,13 @@ func processUnparsedActiveCode(processlvl int, atvprsr *activeParser, p []rune) 
 				}
 			} else {
 				if strings.TrimSpace(string(arune)) != "" {
-					if !atvprsr.foundCode {
+					if !atvprsr.atvxctor(processlvl).foundCode {
 						flushPassiveContent(processlvl, atvprsr, false)
-						atvprsr.atvxctor(processlvl).foundCode=true
-						atvprsr.foundCode = true
+						atvprsr.atvxctor(processlvl).foundCode = true
 					} else {
 						flushPassiveContent(processlvl, atvprsr, false)
 					}
-					atvprsr.hasCode = true
+					atvprsr.atvxctor(processlvl).hasCode = true
 					if len(atvprsr.runesToParse) == 0 {
 						atvprsr.runesToParse = make([]rune, 81920)
 					}
