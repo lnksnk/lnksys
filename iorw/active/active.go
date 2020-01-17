@@ -128,7 +128,7 @@ func(atvprsr *activeParser) atvxctor(prsnglvl int) (atvxctr*activeExecutor) {
 		atvprsr.atvxctr=map[int]*activeExecutor{}
 	}
 	var atvxctrok=false
-	if atvxctr,atvxctrok = atvprsr.atvxctr[prsnglvl] !atvxctrok {
+	if atvxctr,atvxctrok = atvprsr.atvxctr[prsnglvl]; !atvxctrok {
 		atvprsr.atvxctr[prsnglvl] = iorw.NewBufferedRW(81920,nil)
 		atvxctr = atvprsr.atvxctr[prsnglvl]
 	}
