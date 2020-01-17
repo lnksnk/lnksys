@@ -13,6 +13,7 @@ import (
 type activeExecutor struct {
 	passiveBuffer           [][]rune
 	curAtvCde 				*iorw.BufferedRW
+	hasCode   				bool
 	foundCode 				bool
 	passiveBufferOffset     int64
 	lastPassiveBufferOffset int64
@@ -118,9 +119,6 @@ type activeParser struct {
 	psvLabel         [][]rune
 	psvLabelI        []int
 	psvPrvR          []rune
-	//
-	hasCode   bool
-	foundCode bool
 
 	atvxctr []*activeExecutor
 }
