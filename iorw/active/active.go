@@ -19,7 +19,7 @@ type activeExecutor struct {
 }
 
 func newActiveExecutor() (atvxctr*activeExecutor) {
-	atvxctr=&activeExecutor{foundCode:false,passiveBufferOffset:0,lastpassiveBufferOffset:0}
+	atvxctr=&activeExecutor{foundCode:false,passiveBufferOffset:0,lastPassiveBufferOffset:0}
 	return
 }
 
@@ -81,7 +81,7 @@ func (atvxctr *activeExecutor) passivePrint(atv *Active, fromOffset int64, toOff
 						if pto-toOffset > 0 {
 							pei = int(pl - (pto - toOffset))
 							if atv!=nil {
-								atv.Print(string(psvb[psvbuflvl][psi:pei]))
+								atv.Print(string(psvb[psi:pei]))
 							}
 						}
 						break
@@ -233,7 +233,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	for {
 		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 			if rnsize > 0 {
-				processRune(rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+				processRune(atvprsr.parsingLevel, rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
 			}
 		} else {
 			if rnerr != io.EOF {
@@ -294,7 +294,7 @@ func wrappingupActiveParsing(atvprsr *activeParser) {
 	if atvprsr.parsingLevel > 0 {
 		atvprsr.parsingLevel--
 		for len(atvprsr.atvxctr) > atvprsr.parsingLevel {
-			var psvbufi = len(tvprsr.atvxctr) - 1
+			var psvbufi = len(atvprsr.atvxctr) - 1
 			atvprsr.atvxctr[psvbufi].close()
 			atvprsr.atvxctr[psvbufi]=nil
 			atvprsr.atvxctr=atvprsr.atvxctr[:psvbufi]
@@ -393,7 +393,7 @@ type Active struct {
 	activeMap map[string]interface{}
 }
 
-type activeRune struct {
+/*type activeRune struct {
 	rne     rune
 	rnesize int
 	reerr   error
@@ -406,7 +406,7 @@ func (atvRne *activeRune) process() {
 
 func (atvRne *activeRune) close() {
 	atvRne.atvprsr = nil
-}
+}*/
 
 func (atv *Active) APrint(a ...interface{}) (err error) {
 	if atv.atvprsr != nil {
@@ -449,7 +449,8 @@ func capturePassiveContent(psvcntlvl int, atvprsr *activeParser, p []rune) (n in
 				if len(atvprsr.passiveRune) == atvprsr.passiveRunei {
 					var psvRunes = make([]rune, atvprsr.passiveRunei)
 					copy(psvRunes, atvprsr.passiveRune[0:atvprsr.passiveRunei])
-					atvprsr.atvxctor(psvcntlvl).passiveBuf()=append(atvprsr.atvxctor(psvcntlvl).passiveBuf(), psvRunes)
+					atvprsr.atvxctor(psvcntlvl).passiveBuf()
+					atvprsr.atvxctor(psvcntlvl).passiveBuffer=append(atvprsr.atvxctor(psvcntlvl).passiveBuffer, psvRunes)
 					psvRunes = nil
 					atvprsr.passiveRunei = 0
 				}
@@ -497,7 +498,7 @@ func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
 					atvprsr.runesToParsei = 0
 				}
 			}
-			atvprsr.atvxctor(psvlvl).lastPassiveBufferOffset = atvprsr.passiveBufferOffset
+			atvprsr.atvxctor(psvlvl).lastPassiveBufferOffset = atvprsr.atvxctor(psvlvl).passiveBufferOffset
 		}
 	}
 }
@@ -524,7 +525,7 @@ func processUnparsedPassiveContent(psvlvl int, atvprsr *activeParser, p []rune) 
 			atvprsr.psvRunesToParsei += cl
 		}
 		if atvprsr.psvRunesToParsei > 0 && atvprsr.psvRunesToParsei == len(atvprsr.psvRunesToParse) {
-			capturePassiveContent(atvprsr, atvprsr.psvRunesToParse[0:atvprsr.psvRunesToParsei])
+			capturePassiveContent(psvlvl, atvprsr, atvprsr.psvRunesToParse[0:atvprsr.psvRunesToParsei])
 			atvprsr.psvRunesToParsei = 0
 		}
 	}
@@ -570,7 +571,7 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 				runelbli[0] = 0
 				runelbli[1] = 0
 				atvprsr.hasCode = false
-				atvprsr.atvxctor(psvlvl).lastPassiveBufferOffset = atvprsr.atvxctor(psvlvl).passiveBufferOffset
+				atvprsr.atvxctor(processlvl).lastPassiveBufferOffset = atvprsr.atvxctor(processlvl).passiveBufferOffset
 			} else {
 				runePrvR[0] = rne
 			}
