@@ -18,12 +18,10 @@ type activeExecutor struct {
 	passiveBufferOffset     int64
 	lastPassiveBufferOffset int64
 	atv *Active
-	doneExeCode chan bool
-	acerr error
 }
 
 func newActiveExecutor(atv*Active) (atvxctr*activeExecutor) {
-	atvxctr=&activeExecutor{atv:atv,foundCode:false,hasCode:false,passiveBufferOffset:0,lastPassiveBufferOffset:0,doneExeCode:make(chan bool,1)}
+	atvxctr=&activeExecutor{atv:atv,foundCode:false,hasCode:false,passiveBufferOffset:0,lastPassiveBufferOffset:0}
 	return
 }
 
@@ -41,16 +39,6 @@ func (atvxctr *activeExecutor) activeCode() *iorw.BufferedRW {
 	return atvxctr.curAtvCde
 }
 
-func(atvxctr *activeExecutor) executeActive(){
-	if atvxctr.atv!=nil {
-		atvxctr.acerr=commitActiveExecutor(atvxctr.atv,atvxctr)
-	}
-	defer func(){
-		atvxctr.doneExeCode<-true
-	}()
-	
-}
-
 func (atvxctr *activeExecutor) close() {
 	if atvxctr.passiveBuffer!=nil {
 		for len(atvxctr.passiveBuffer)>0 {
@@ -65,9 +53,6 @@ func (atvxctr *activeExecutor) close() {
 	}
 	if atvxctr.atv!=nil {
 		atvxctr.atv=nil
-	}
-	if atvxctr.doneExeCode!=nil {
-		close(atvxctr.doneExeCode)
 	}
 }
 
@@ -334,9 +319,7 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 			atvprsr.lck.RUnlock()
 		}()
 		if atvxctr:=preppingActiveParsing(atvprsr); atvxctr!=nil && atvxctr.foundCode {
-			atvExecutors<-atvxctr
-			<-atvxctr.doneExeCode	
-			acerr=atvxctr.acerr
+			acerr=commitActiveExecutor(atvprsr.atv,atvxctr)
 		}
 	}
 	return
@@ -460,7 +443,7 @@ func (atvRne *activeRune) process() {
 }
 
 func (atvRne *activeRune) close() {
-	atvRne.atvprsr = nil
+	atvRne.atvprsr = nilmmit
 }*/
 
 func (atv *Active) APrint(a ...interface{}) (err error) {
