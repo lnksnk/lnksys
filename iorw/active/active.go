@@ -27,7 +27,7 @@ type activeParser struct {
 	passiveRune             []rune
 	passiveRunei            int
 	passiveBuffer           [][][]rune
-	passiveBufferi          int
+	parsingLevel          int
 	passiveBufferOffset     int64
 	lastPassiveBufferOffset int64
 	//
@@ -40,7 +40,7 @@ type activeParser struct {
 	hasCode   bool
 	foundCode bool
 
-	curAtvCde []*iorw.BufferedRW
+	curAtvCde map[int]*iorw.BufferedRW
 }
 
 func (atvprsr *activeParser) atvbufrdr() *iorw.BufferedRW {
@@ -52,11 +52,13 @@ func (atvprsr *activeParser) atvbufrdr() *iorw.BufferedRW {
 
 func (atvprsr *activeParser) activeCode(atvcdelvl int) *iorw.BufferedRW {
 	if atvprsr.curAtvCde == nil {
-		atvprsr.curAtvCde = []*iorw.BufferedRW{}
+		atvprsr.curAtvCde = map[int]*iorw.BufferedRW{}
 	}
-	if len(atvprsr.curAtvCde) < atvcdelvl+1 {
-		atvprsr.curAtvCde = append(atvprsr.curAtvCde, iorw.NewBufferedRW(81920, nil))
-	}
+
+	if cdeCode,cdeCodeok := atvprsr.curAtvCde[atvcdelvl]; cdeCodeok {
+		return cdeCodeok
+	} 
+	atvprsr.curAtvCde[atvcdelvl]=iorw.NewBufferedRW(81920, nil) 
 	return atvprsr.curAtvCde[atvcdelvl]
 }
 
@@ -175,10 +177,10 @@ func cPrint(a ...interface{}) {
 }
 
 func preppingActiveParsing(atvprsr *activeParser) {
-	flushPassiveContent(atvprsr.passiveBufferi, atvprsr, true)
-	atvprsr.passiveBufferi++
+	flushPassiveContent(atvprsr.parsingLevel, atvprsr, true)
+	atvprsr.parsingLevel++
 	if atvprsr.foundCode {
-		flushActiveCode(atvprsr.passiveBufferi-1, atvprsr)
+		flushActiveCode(atvprsr.parsingLevel-1, atvprsr)
 	} else {
 
 	}
@@ -211,33 +213,30 @@ func preppingActiveParsing(atvprsr *activeParser) {
 }
 
 func wrappingupActiveParsing(atvprsr *activeParser) {
-	if atvprsr.passiveBufferi > 0 {
-		atvprsr.passiveBufferi--
-		for len(atvprsr.passiveBuffer) > atvprsr.passiveBufferi {
+	if atvprsr.parsingLevel > 0 {
+		atvprsr.parsingLevel--
+		for len(atvprsr.passiveBuffer) > atvprsr.parsingLevel {
 			var psvbufi = len(atvprsr.passiveBuffer) - 1
+
+			if curAtvCde,curAtvCdeok:=atvprsr.curAtvCde[psvbufi]; curAtvCdeok {
+				curAtvCde.Close()
+				atvprsr.curAtvCde[psvbufi] = nil
+				delete(atvprsr.curAtvCde,psvbufi)
+			}
+
 			for len(atvprsr.passiveBuffer[psvbufi]) > 0 {
 				atvprsr.passiveBuffer[psvbufi][0] = nil
 				atvprsr.passiveBuffer[psvbufi] = atvprsr.passiveBuffer[psvbufi][1:]
 			}
-			atvprsr.passiveBuffer[atvprsr.passiveBufferi] = nil
-			if atvprsr.passiveBufferi > 0 {
-				atvprsr.passiveBuffer = atvprsr.passiveBuffer[:atvprsr.passiveBufferi]
+			atvprsr.passiveBuffer[atvprsr.parsingLevel] = nil
+			if atvprsr.parsingLevel > 0 {
+				atvprsr.passiveBuffer = atvprsr.passiveBuffer[:atvprsr.parsingLevel]
 			} else {
 				atvprsr.passiveBuffer = nil
 			}
 		}
-
-		if len(atvprsr.curAtvCde) > 0 {
-			for len(atvprsr.passiveBuffer) > atvprsr.passiveBufferi {
-				var atvbufi = len(atvprsr.passiveBuffer) - 1
-				atvprsr.curAtvCde[atvbufi].Close()
-				atvprsr.curAtvCde[atvbufi] = nil
-				if atvprsr.passiveBufferi > 0 {
-					atvprsr.curAtvCde = atvprsr.curAtvCde[:atvprsr.passiveBufferi]
-				} else {
-					atvprsr.curAtvCde = nil
-				}
-			}
+		if atvprsr.foundCode {
+			atvprsr.foundCode
 		}
 	}
 }
@@ -279,7 +278,7 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 							}
 						}
 					}
-					var code = atvprsr.activeCode(atvprsr.passiveBufferi - 1).String()
+					var code = atvprsr.activeCode(atvprsr.parsingLevel - 1).String()
 					var coderdr = strings.NewReader(code)
 					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
 					if parsedprgmerr == nil {
@@ -421,10 +420,10 @@ func capturePassiveContent(atvprsr *activeParser, p []rune) (n int, err error) {
 					if len(atvprsr.passiveBuffer) == 0 {
 						atvprsr.passiveBuffer = [][][]rune{}
 					}
-					if len(atvprsr.passiveBuffer) < atvprsr.passiveBufferi {
+					if len(atvprsr.passiveBuffer) < atvprsr.parsingLevel {
 						atvprsr.passiveBuffer = append(atvprsr.passiveBuffer, [][]rune{})
 					}
-					atvprsr.passiveBuffer[atvprsr.passiveBufferi] = append(atvprsr.passiveBuffer[atvprsr.passiveBufferi], psvRunes)
+					atvprsr.passiveBuffer[atvprsr.parsingLevel] = append(atvprsr.passiveBuffer[atvprsr.parsingLevel], psvRunes)
 					psvRunes = nil
 					atvprsr.passiveRunei = 0
 				}
@@ -457,24 +456,24 @@ func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
 				if len(atvprsr.passiveBuffer) == 0 {
 					atvprsr.passiveBuffer = [][][]rune{}
 				}
-				if len(atvprsr.passiveBuffer) < atvprsr.passiveBufferi {
+				if len(atvprsr.passiveBuffer) < atvprsr.parsingLevel {
 					atvprsr.passiveBuffer = append(atvprsr.passiveBuffer, [][]rune{})
 				}
-				atvprsr.passiveBuffer[atvprsr.passiveBufferi] = append(atvprsr.passiveBuffer[atvprsr.passiveBufferi], psvRunes)
+				atvprsr.passiveBuffer[atvprsr.parsingLevel] = append(atvprsr.passiveBuffer[atvprsr.parsingLevel], psvRunes)
 				psvRunes = nil
 				atvprsr.passiveRunei = 0
 			}
 		}
 
 		if atvprsr.lastPassiveBufferOffset < atvprsr.passiveBufferOffset {
-			for _, arune := range []rune(fmt.Sprintf("_atvprsr.PassivePrint(%d,%d,%d);", atvprsr.passiveBufferi, atvprsr.lastPassiveBufferOffset, atvprsr.passiveBufferOffset)) {
+			for _, arune := range []rune(fmt.Sprintf("_atvprsr.PassivePrint(%d,%d,%d);", atvprsr.parsingLevel, atvprsr.lastPassiveBufferOffset, atvprsr.passiveBufferOffset)) {
 				if len(atvprsr.runesToParse) == 0 {
 					atvprsr.runesToParse = make([]rune, 81920)
 				}
 				atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 				atvprsr.runesToParsei++
 				if atvprsr.runesToParsei == len(atvprsr.runesToParse) {
-					captureActiveCode(atvprsr.passiveBufferi, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+					captureActiveCode(atvprsr.parsingLevel, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
 					atvprsr.runesToParsei = 0
 				}
 			}
@@ -515,7 +514,7 @@ func processUnparsedPassiveContent(psvlvl int, atvprsr *activeParser, p []rune) 
 func processRune(rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []int, runePrvR []rune) {
 	if runelbli[1] == 0 && runelbli[0] < len(runelbl[0]) {
 		if runelbli[0] > 0 && runelbl[0][runelbli[0]-1] == runePrvR[0] && runelbl[0][runelbli[0]] != rne {
-			processUnparsedPassiveContent(atvprsr.passiveBufferi, atvprsr, runelbl[0][0:runelbli[0]])
+			processUnparsedPassiveContent(atvprsr.parsingLevel, atvprsr, runelbl[0][0:runelbli[0]])
 			runelbli[0] = 0
 			runePrvR[0] = rune(0)
 		}
@@ -528,11 +527,11 @@ func processRune(rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []i
 			}
 		} else {
 			if runelbli[0] > 0 {
-				processUnparsedPassiveContent(atvprsr.passiveBufferi, atvprsr, runelbl[0][0:runelbli[0]])
+				processUnparsedPassiveContent(atvprsr.parsingLevel, atvprsr, runelbl[0][0:runelbli[0]])
 				runelbli[0] = 0
 			}
 			runePrvR[0] = rne
-			processUnparsedPassiveContent(atvprsr.passiveBufferi, atvprsr, runePrvR)
+			processUnparsedPassiveContent(atvprsr.parsingLevel, atvprsr, runePrvR)
 		}
 	} else if runelbli[0] == len(runelbl[0]) && runelbli[1] < len(runelbl[1]) {
 		if runelbli[1] > 0 && runelbl[1][runelbli[1]-1] == runePrvR[0] && runelbl[1][runelbli[1]] != rne {
@@ -544,7 +543,7 @@ func processRune(rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []i
 			runelbli[1]++
 			if runelbli[1] == len(runelbl[1]) {
 				if atvprsr.runesToParsei > 0 {
-					captureActiveCode(atvprsr.passiveBufferi, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+					captureActiveCode(atvprsr.parsingLevel, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
 					atvprsr.runesToParsei = 0
 				}
 				runePrvR[0] = rune(0)
@@ -589,16 +588,16 @@ func processUnparsedActiveCode(atvprsr *activeParser, p []rune) (err error) {
 				atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 				atvprsr.runesToParsei++
 				if atvprsr.runesToParsei == len(atvprsr.runesToParse) {
-					captureActiveCode(atvprsr.passiveBufferi, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+					captureActiveCode(atvprsr.parsingLevel, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
 					atvprsr.runesToParsei = 0
 				}
 			} else {
 				if strings.TrimSpace(string(arune)) != "" {
 					if !atvprsr.foundCode {
-						flushPassiveContent(atvprsr.passiveBufferi, atvprsr, false)
+						flushPassiveContent(atvprsr.parsingLevel, atvprsr, false)
 						atvprsr.foundCode = true
 					} else {
-						flushPassiveContent(atvprsr.passiveBufferi, atvprsr, false)
+						flushPassiveContent(atvprsr.parsingLevel, atvprsr, false)
 					}
 					atvprsr.hasCode = true
 					if len(atvprsr.runesToParse) == 0 {
@@ -607,7 +606,7 @@ func processUnparsedActiveCode(atvprsr *activeParser, p []rune) (err error) {
 					atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 					atvprsr.runesToParsei++
 					if atvprsr.runesToParsei == len(atvprsr.runesToParse) {
-						captureActiveCode(atvprsr.passiveBufferi, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+						captureActiveCode(atvprsr.parsingLevel, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
 						atvprsr.runesToParsei = 0
 					}
 				}
