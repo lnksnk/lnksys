@@ -243,7 +243,7 @@ func wrappingupActiveParsing(atvprsr *activeParser) {
 			}
 		}
 		if atvprsr.foundCode {
-			atvprsr.foundCode
+			atvprsr.foundCode=false
 		}
 	}
 }
