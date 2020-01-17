@@ -12,8 +12,8 @@ import (
 
 type activeExecutor struct {
 	passiveBuffer           [][]rune
-	curAtvCde *iorw.BufferedRW
-	foundCode bool
+	curAtvCde 				*iorw.BufferedRW
+	foundCode 				bool
 	passiveBufferOffset     int64
 	lastPassiveBufferOffset int64
 }
