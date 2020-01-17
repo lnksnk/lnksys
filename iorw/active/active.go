@@ -356,7 +356,9 @@ func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
 				cPrint(a...)
 				cPrint("\r\n")
 			})
-			atv.vm.Set("_atvprsr", atvxctr)
+			atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64){
+				atvxctr.PassivePrint(fromOffset,toOffset)
+			})
 			if len(atv.activeMap) > 0 {
 				for k, v := range atv.activeMap {
 					if atv.vm.Get(k) != v {
@@ -541,7 +543,7 @@ func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
 		}
 
 		if atvprsr.atvxctor(psvlvl).lastPassiveBufferOffset < atvprsr.atvxctor(psvlvl).passiveBufferOffset {
-			for _, arune := range []rune(fmt.Sprintf("_atvprsr.PassivePrint(%d,%d);", atvprsr.atvxctor(psvlvl).lastPassiveBufferOffset, atvprsr.atvxctor(psvlvl).passiveBufferOffset)) {
+			for _, arune := range []rune(fmt.Sprintf("PassivePrint(%d,%d);", atvprsr.atvxctor(psvlvl).lastPassiveBufferOffset, atvprsr.atvxctor(psvlvl).passiveBufferOffset)) {
 				if len(atvprsr.runesToParse) == 0 {
 					atvprsr.runesToParse = make([]rune, 81920)
 				}
