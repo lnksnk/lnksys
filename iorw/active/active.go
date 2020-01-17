@@ -398,6 +398,7 @@ func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
 			atv.vm = nil
 		}
 	}()
+	return acerr
 }
 
 var atvExecutors chan *activeExecutor
