@@ -343,7 +343,7 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 							}
 						}
 					}
-					var code = atvprsr.activeCode(atvprsr.parsingLevel - 1).String()
+					var code = atvxctr.activeCode().String()
 					var coderdr = strings.NewReader(code)
 					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
 					if parsedprgmerr == nil {
