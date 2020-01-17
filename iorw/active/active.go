@@ -253,12 +253,16 @@ func cPrint(a ...interface{}) {
 	}
 }
 
-func preppingActiveParsing(atvprsr *activeParser) {
+func preppingActiveParsing(atvprsr *activeParser) (atvxctr *activeExecutor){
 	flushPassiveContent(atvprsr.parsingLevel, atvprsr, true)
-	atvprsr.parsingLevel++
-	if atvprsr.atvxctor(atvprsr.parsingLevel).foundCode {
-		flushActiveCode(atvprsr.parsingLevel-1, atvprsr)
+	if len(atvprsr.atvxctr)>atvprsr.parsingLevel {
+		if atvprsr.atvxctr[atvprsr.parsingLevel].foundCode {
+			flushActiveCode(atvprsr.parsingLevel, atvprsr)
+		}
+		atvxctr=atvprsr.atvxctr[atvprsr.parsingLevel]
 	}
+	
+	atvprsr.parsingLevel++
 	if atvprsr.runesToParsei > 0 {
 		atvprsr.runesToParsei = 0
 	}
@@ -285,6 +289,7 @@ func preppingActiveParsing(atvprsr *activeParser) {
 	if len(atvprsr.psvPrvR) == 1 {
 		atvprsr.psvPrvR[0] = 0
 	}
+	return atvxctr
 }
 
 func wrappingupActiveParsing(atvprsr *activeParser) {
@@ -309,8 +314,7 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 			wrappingupActiveParsing(atvprsr)
 			atvprsr.lck.RUnlock()
 		}()
-		preppingActiveParsing(atvprsr)
-		if atvprsr.atvxctor(atvprsr.parsingLevel).foundCode {
+		if atvxctr:=preppingActiveParsing(atvprsr); atvxctr!=nil && atvxctr.foundCode {
 			func() {
 				if atvprsr.atv != nil {
 					if atvprsr.atv.vm == nil {
