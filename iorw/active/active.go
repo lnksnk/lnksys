@@ -326,7 +326,7 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 }
 
 func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
-	go func(done chan) {
+	go func(done chan bool) {
 		defer func(){ 
 			done<-true
 		}()
