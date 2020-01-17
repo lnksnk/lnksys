@@ -327,7 +327,9 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 
 func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
 	go func(done chan) {
-		defer done<-true
+		defer func(){ 
+			done<-true
+		}()
 		if atv != nil {
 			if atv.vm == nil {
 				atv.vm = goja.New()
@@ -384,7 +386,7 @@ func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
 			atv.vm = nil
 		}
 	}(atv.atvxctrDone)
-	<-atvxctrDone
+	<-atv.atvxctrDone
 	return acerr
 }
 
