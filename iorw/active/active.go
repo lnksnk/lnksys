@@ -256,7 +256,7 @@ func cPrint(a ...interface{}) {
 func preppingActiveParsing(atvprsr *activeParser) {
 	flushPassiveContent(atvprsr.parsingLevel, atvprsr, true)
 	atvprsr.parsingLevel++
-	if atvprsr.atvxctor(processlvl).foundCode {
+	if atvprsr.atvxctor(atvprsr.parsingLevel).foundCode {
 		flushActiveCode(atvprsr.parsingLevel-1, atvprsr)
 	}
 	if atvprsr.runesToParsei > 0 {
@@ -290,8 +290,8 @@ func preppingActiveParsing(atvprsr *activeParser) {
 func wrappingupActiveParsing(atvprsr *activeParser) {
 	if atvprsr.parsingLevel > 0 {
 		atvprsr.parsingLevel--
-		if atvprsr.atvxctor(processlvl).foundCode {
-			atvprsr.atvxctor(processlvl).foundCode=false
+		if atvprsr.atvxctor(atvprsr.parsingLevel).foundCode {
+			atvprsr.atvxctor(atvprsr.parsingLevel).foundCode=false
 		}
 		for len(atvprsr.atvxctr) > atvprsr.parsingLevel {
 			var psvbufi = len(atvprsr.atvxctr) - 1
