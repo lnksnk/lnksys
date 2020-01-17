@@ -17,10 +17,13 @@ type activeExecutor struct {
 	foundCode 				bool
 	passiveBufferOffset     int64
 	lastPassiveBufferOffset int64
+	atv *Active
+	doneExeCode chan bool
+	acerr error
 }
 
-func newActiveExecutor() (atvxctr*activeExecutor) {
-	atvxctr=&activeExecutor{foundCode:false,hasCode:false,passiveBufferOffset:0,lastPassiveBufferOffset:0}
+func newActiveExecutor(atv*Active) (atvxctr*activeExecutor) {
+	atvxctr=&activeExecutor{atv:atv,foundCode:false,hasCode:false,passiveBufferOffset:0,lastPassiveBufferOffset:0,doneExeCode:make(chan bool,1)}
 	return
 }
 
@@ -38,6 +41,16 @@ func (atvxctr *activeExecutor) activeCode() *iorw.BufferedRW {
 	return atvxctr.curAtvCde
 }
 
+func(atvxctr *activeExecutor) executeActive(){
+	if atvxctr.atv!=nil {
+		atvxctr.acerr=commitActiveExecutor(atvxctr.atv,atvxctr)
+	}
+	defer func(){
+		atvxctr.doneExeCode<-true
+	}()
+	
+}
+
 func (atvxctr *activeExecutor) close() {
 	if atvxctr.passiveBuffer!=nil {
 		for len(atvxctr.passiveBuffer)>0 {
@@ -49,6 +62,9 @@ func (atvxctr *activeExecutor) close() {
 	if atvxctr.curAtvCde!=nil {
 		atvxctr.curAtvCde.Close()
 		atvxctr.curAtvCde=nil
+	}
+	if atvxctr.atv!=nil {
+		atvxctr.atv=nil
 	}
 }
 
@@ -315,64 +331,97 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 			atvprsr.lck.RUnlock()
 		}()
 		if atvxctr:=preppingActiveParsing(atvprsr); atvxctr!=nil && atvxctr.foundCode {
-			func() {
-				if atvprsr.atv != nil {
-					if atvprsr.atv.vm == nil {
-						atvprsr.atv.vm = goja.New()
-					}
-					atvprsr.atv.vm.Set("out", atvprsr.atv)
-					atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
-						cPrint(a...)
-					})
-					atvprsr.atv.vm.Set("CPrintln", func(a ...interface{}) {
-						cPrint(a...)
-						cPrint("\r\n")
-					})
-					atvprsr.atv.vm.Set("_atvprsr", atvprsr)
-					if len(atvprsr.atv.activeMap) > 0 {
-						for k, v := range atvprsr.atv.activeMap {
-							if atvprsr.atv.vm.Get(k) != v {
-								atvprsr.atv.vm.Set(k, v)
-							}
-						}
-					}
-					if len(activeGlobalMap) > 0 {
-						for k, v := range activeGlobalMap {
-							if atvprsr.atv.vm.Get(k) != v {
-								atvprsr.atv.vm.Set(k, v)
-							}
-						}
-					}
-					var code = atvxctr.activeCode().String()
-					var coderdr = strings.NewReader(code)
-					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0) //goja.Compile("", code, false)
-					if parsedprgmerr == nil {
-						var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
-						if prgmerr == nil {
-							var _, vmerr = atvprsr.atv.vm.RunProgram(prgm)
-							if vmerr != nil {
-								fmt.Println(vmerr)
-								fmt.Println(code)
-								acerr = vmerr
-							}
-						} else {
-							fmt.Println(prgmerr)
-							fmt.Println(code)
-							acerr = prgmerr
-						}
-						prgm = nil
-					} else {
-						fmt.Println(parsedprgmerr)
-						fmt.Println(code)
-						acerr = parsedprgmerr
-					}
-					parsedprgm = nil
-					atvprsr.atv.vm = nil
-				}
-			}()
+			atvExecutors<-atvxctr
+
+			<-atvxctr.doneExeCode
+			
 		}
 	}
 	return
+}
+
+func commitActiveExecutor(atv*Active,atvxctr*activeExecutor) (acerr error) {
+	func() {
+		if atv != nil {
+			if atv.vm == nil {
+				atv.vm = goja.New()
+			}
+			atv.vm.Set("out", atv)
+			atv.vm.Set("CPrint", func(a ...interface{}) {
+				cPrint(a...)
+			})
+			atv.vm.Set("CPrintln", func(a ...interface{}) {
+				cPrint(a...)
+				cPrint("\r\n")
+			})
+			atv.vm.Set("_atvprsr", atvprsr)
+			if len(atv.activeMap) > 0 {
+				for k, v := range atv.activeMap {
+					if atv.vm.Get(k) != v {
+						atv.vm.Set(k, v)
+					}
+				}
+			}
+			if len(activeGlobalMap) > 0 {
+				for k, v := range activeGlobalMap {
+					if atv.vm.Get(k) != v {
+						atv.vm.Set(k, v)
+					}
+				}
+			}
+			var code = atvxctr.activeCode().String()
+			var coderdr = strings.NewReader(code)
+			var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
+			if parsedprgmerr == nil {
+				var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
+				if prgmerr == nil {
+					var _, vmerr = atvprsr.atv.vm.RunProgram(prgm)
+					if vmerr != nil {
+						fmt.Println(vmerr)
+						fmt.Println(code)
+						acerr = vmerr
+					}
+				} else {
+					fmt.Println(prgmerr)
+					fmt.Println(code)
+					acerr = prgmerr
+				}
+				prgm = nil
+			} else {
+				fmt.Println(parsedprgmerr)
+				fmt.Println(code)
+				acerr = parsedprgmerr
+			}
+			parsedprgm = nil
+			atvprsr.atv.vm = nil
+		}
+	}()
+}
+
+var atvExecutors chan *activeExecutors
+var atvExctrslck *sync.Mutex
+func init() {
+	if atvExctrslck==nil {
+		atvExctrslck=&sync.Mutex{}
+	}
+	if atvExecutors==nil {
+		atvExecutors=make(chan *activeExecutors)
+		func() {
+			atvExctrslck.Lock()
+			defer atvExctrslck.Unlock()
+			go func() {
+				for {
+					select{
+					case nxtatvxctr:=atvExecutors
+						go func(){
+							nxtatvxctr.executeActive()
+							nxtatvxctr=nil
+						}()
+					}
+				}
+			}()
+		}()
+	}
 }
 
 func (atvprsr *activeParser) PassivePrint(psvbuflvl int, fromOffset int64, toOffset int64) {
