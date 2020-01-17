@@ -120,7 +120,7 @@ type activeParser struct {
 	hasCode   bool
 	foundCode bool
 
-	atvxctr [int]*activeExecutor
+	atvxctr []*activeExecutor
 }
 
 func(atvprsr *activeParser) atvxctor(prsnglvl int) (atvxctr*activeExecutor) {
