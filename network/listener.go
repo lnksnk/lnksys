@@ -10,6 +10,8 @@ import (
 	active "github.com/efjoubert/lnksys/iorw/active"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+
+	"golang.org/x/time/rate"
 )
 
 /*Listening interface
@@ -24,17 +26,33 @@ type lstnrserver struct {
 	httpsvr  *http.Server
 	http2svr *http2.Server
 	srvmx    *http.ServeMux
+	lmtr     *rate.Limiter
 }
 
 func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 	var srvmutex = http.NewServeMux()
+
+	var lmtr = rate.NewLimiter(1, 3)
+	var lmtfnc = func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if lmtr.Allow() == false {
+				http.Error(w, http.StatusText(429), http.StatusTooManyRequests)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+
 	srvmutex.Handle("/", hdnlr)
+
 	var serverh2 = &http2.Server{}
+
 	var server = &http.Server{
 		ReadHeaderTimeout: 20 * time.Second,
 		Addr:              host,
-		Handler:           h2c.NewHandler(srvmutex, serverh2)}
-	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2, srvmx: srvmutex}
+		Handler:           h2c.NewHandler(lmtfnc(srvmutex), serverh2)}
+	lstnrsvr = &lstnrserver{lmtr: lmtr, httpsvr: server, http2svr: serverh2, srvmx: srvmutex}
 	return
 }
 
