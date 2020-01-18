@@ -32,12 +32,11 @@ type lstnrserver struct {
 func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 	var srvmutex = http.NewServeMux()
 
-	var lmtr = rate.NewLimiter(10, 1024)
-	var cntx = context.Background()
+	var lmtr = rate.NewLimiter(1, 3)
 	var lmtfnc = func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			for lmtr.Allow() == false {
-				lmtr.WaitN(cntx, 100)
+			if lmtr.Allow() == false {
+				lmtr.WaitN(context.Background(), 3)
 			}
 
 			next.ServeHTTP(w, r)
