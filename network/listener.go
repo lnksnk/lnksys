@@ -63,7 +63,7 @@ type Listener struct {
 	servers        map[string]*lstnrserver
 	queuedRequests chan *Request
 	qrqstlck       *sync.Mutex
-	sema :chan struct{}
+	sema 		   chan struct{}
 }
 
 func (lstnr *Listener) QueueRequest(reqst *Request) {
