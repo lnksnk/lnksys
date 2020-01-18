@@ -33,12 +33,11 @@ func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 	var srvmutex = http.NewServeMux()
 
 	var lmtr = rate.NewLimiter(10, 1024)
+	var cntx = context.Background()
 	var lmtfnc = func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if lmtr.Allow() == false {
-				var cntx = context.Background()
+			for lmtr.Allow() == false {
 				lmtr.WaitN(cntx, 100)
-				<-cntx.Done()
 			}
 
 			next.ServeHTTP(w, r)
