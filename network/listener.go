@@ -34,7 +34,7 @@ func newLstnrServer(host string, hdnlr http.Handler,enableh2c bool) (lstnrsvr *l
 	if enableh2c {
 		rqsthndlr=h2c.NewHandler(srvmutex, serverh2)
 	} else {
-		rqsthndlr:hdnlr
+		rqsthndlr=hdnlr
 	}
 	
 	var server = &http.Server{
