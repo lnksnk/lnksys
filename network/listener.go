@@ -69,6 +69,7 @@ type Listener struct {
 	servers        map[string]*lstnrserver
 	queuedRequests chan *Request
 	qrqstlck       *sync.Mutex
+	srvlck 		*sync.Mutex{
 }
 
 func (lstnr *Listener) QueueRequest(reqst *Request) {
@@ -76,12 +77,24 @@ func (lstnr *Listener) QueueRequest(reqst *Request) {
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var reqst = NewRequest(lstnr, w, r, func() {
+	
+	/*var reqst = NewRequest(lstnr, w, r, func() {
 		lstnr.Shutdown()
 	}, func() {
 		lstnr.ShutdownHost(r.Host)
-	}, true)
-	HttpRequestHandler(reqst).ServeHTTP(w, r)
+	}, true)*/
+	HttpRequestHandler(func() (rqst*Request){
+		lstnr.srvlck.Lock()
+		defer func(){
+			lstnr.srvlck.Unlock()
+		}()
+		rqst = NewRequest(lstnr, w, r, func() {
+			lstnr.Shutdown()
+		}, func() {
+			lstnr.ShutdownHost(r.Host)
+		}, true)
+		return
+	}).ServeHTTP(w, r)
 }
 
 func (lstnr *Listener) Shutdown() {
@@ -133,7 +146,7 @@ func InvokeListener(host string) {
 
 func init() {
 	if lstnr == nil {
-		lstnr = &Listener{queuedRequests: make(chan *Request, runtime.NumCPU()*4), qrqstlck: &sync.Mutex{}}
+		lstnr = &Listener{queuedRequests: make(chan *Request, runtime.NumCPU()*4), qrqstlck: &sync.Mutex{}, srvlck: &sync.Mutex{}}
 		func(qlstnr *Listener) {
 			var nmcpus = runtime.NumCPU()
 			for nmcpus > 0 {
