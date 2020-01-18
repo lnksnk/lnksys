@@ -38,7 +38,8 @@ func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 
 	var server = &http.Server{
 		ReadHeaderTimeout: 20 * time.Second,
-		WriteTimeout:      20 * time.Second,
+		ReadTimeout:       1 * time.Minute,
+		WriteTimeout:      2 * time.Minute,
 		Addr:              host,
 		Handler:           h2c.NewHandler(srvmutex, serverh2),
 		ConnContext: func(ctx context.Context, c net.Conn) (cntx context.Context) {
