@@ -69,7 +69,7 @@ type Listener struct {
 	servers        map[string]*lstnrserver
 	queuedRequests chan *Request
 	qrqstlck       *sync.Mutex
-	srvlck 		*sync.Mutex{
+	srvlck         *sync.Mutex
 }
 
 func (lstnr *Listener) QueueRequest(reqst *Request) {
@@ -77,15 +77,15 @@ func (lstnr *Listener) QueueRequest(reqst *Request) {
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	
+
 	/*var reqst = NewRequest(lstnr, w, r, func() {
 		lstnr.Shutdown()
 	}, func() {
 		lstnr.ShutdownHost(r.Host)
 	}, true)*/
-	HttpRequestHandler(func() (rqst*Request){
+	HttpRequestHandler(func() (rqst *Request) {
 		lstnr.srvlck.Lock()
-		defer func(){
+		defer func() {
 			lstnr.srvlck.Unlock()
 		}()
 		rqst = NewRequest(lstnr, w, r, func() {
