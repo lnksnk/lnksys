@@ -35,7 +35,7 @@ func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 	var lmtr = rate.NewLimiter(1, 3)
 	var lmtfnc = func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			for lmtr.Allow() == false {
+			if lmtr.Allow() == false {
 				time.Sleep(10 * time.Millisecond)
 			}
 
