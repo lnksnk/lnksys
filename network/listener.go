@@ -10,6 +10,7 @@ import (
 	active "github.com/efjoubert/lnksys/iorw/active"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
+	"net"
 )
 
 /*Listening interface
@@ -39,7 +40,10 @@ func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 		ReadHeaderTimeout: 20 * time.Second,
 		WriteTimeout:      20 * time.Second,
 		Addr:              host,
-		Handler:           h2c.NewHandler(srvmutex, serverh2)}
+		Handler:           h2c.NewHandler(srvmutex, serverh2),
+		ConnContext: func(ctx context.Context, c net.Conn) (cntx context.Context) {
+			return
+		}}
 	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2, srvmx: srvmutex}
 	return
 }
