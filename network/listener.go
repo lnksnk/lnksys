@@ -63,6 +63,7 @@ type Listener struct {
 	servers        map[string]*lstnrserver
 	queuedRequests chan *Request
 	qrqstlck       *sync.Mutex
+	sema :chan struct{}
 }
 
 func (lstnr *Listener) QueueRequest(reqst *Request) {
@@ -70,11 +71,10 @@ func (lstnr *Listener) QueueRequest(reqst *Request) {
 }
 
 const maxClients = 201
-     sema := make(chan struct{}, maxClients)
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	sema <- struct{}{}
-	defer func() { <-sema }()
+	lstnr.sema <- struct{}{}
+	defer func() { <-lstnr.sema }()
 
 	var reqst = NewRequest(lstnr, w, r, func() {
 		lstnr.Shutdown()
@@ -133,7 +133,7 @@ func InvokeListener(host string) {
 
 func init() {
 	if lstnr == nil {
-		lstnr = &Listener{queuedRequests: make(chan *Request, runtime.NumCPU()*4), qrqstlck: &sync.Mutex{}}
+		lstnr = &Listener{sema : make(chan struct{}, runtime.NumCPU()*10), queuedRequests: make(chan *Request, runtime.NumCPU()*11), qrqstlck: &sync.Mutex{}}
 		func(qlstnr *Listener) {
 			var nmcpus = runtime.NumCPU()
 			for nmcpus > 0 {
