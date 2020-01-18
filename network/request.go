@@ -29,7 +29,7 @@ type Request struct {
 	rqstlck          *sync.Mutex
 	bufRW            *iorw.BufferedRW
 	rw               *iorw.RW
-	rqstContent       *iorw.BufferedRW
+	rqstContent      *iorw.BufferedRW
 	listener         Listening
 	w                http.ResponseWriter
 	r                *http.Request
@@ -68,12 +68,16 @@ type Request struct {
 	canShutdownListener  bool
 	shuttingdownEnv      func()
 	canShutdownEnv       bool
-	forceRead bool
-	busyForcing bool
+	forceRead            bool
+	busyForcing          bool
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defer func() {
+		if err := recover(); err != nil {
+			rqsterr := fmt.Errorf("Panic: %+v\n", err)
+			fmt.Println(rqsterr)
+		}
 		reqst.rqstlck.Unlock()
 		reqst.Close()
 	}()
@@ -115,7 +119,7 @@ func QueuedRequestToExecute(reqst *Request) {
 	<-reqst.done
 }
 
-func ExecuteQueuedRequest(reqst*Request) {
+func ExecuteQueuedRequest(reqst *Request) {
 	go func(rqst *Request) {
 		rqst.ExecuteRequest()
 		rqst.done <- true
@@ -158,32 +162,32 @@ func (reqst *Request) DbQuery(alias string, query string, args ...interface{}) (
 }
 
 func (reqst *Request) AddResource(resource ...string) {
-	if len(resource)>0 {
-		var lastrsri=len(reqst.resourcepaths)
-		var resi=0
+	if len(resource) > 0 {
+		var lastrsri = len(reqst.resourcepaths)
+		var resi = 0
 
-		for len(resource)>0 {
-			var res=resource[0]
-			resi=0
-			resource=resource[1:]
-			if res!="" {
+		for len(resource) > 0 {
+			var res = resource[0]
+			resi = 0
+			resource = resource[1:]
+			if res != "" {
 				if strings.Index(res, "|") > 0 {
 					for strings.Index(res, "|") > 0 {
-						var rs=res[:strings.Index(res, "|")]
-						res=res[strings.Index(res, "|")+1:] 
-						if rs!="" {
-							resource=append(append(resource[:resi],rs),resource[resi:]...)
+						var rs = res[:strings.Index(res, "|")]
+						res = res[strings.Index(res, "|")+1:]
+						if rs != "" {
+							resource = append(append(resource[:resi], rs), resource[resi:]...)
 							resi++
 						}
 					}
-					if res!="" {
-						resource=append(append(resource[:resi],res),resource[resi:]...)
+					if res != "" {
+						resource = append(append(resource[:resi], res), resource[resi:]...)
 					}
 				} else {
-					if len(reqst.resourcepaths)==0 {
-						reqst.resourcepaths=append(reqst.resourcepaths,res)
+					if len(reqst.resourcepaths) == 0 {
+						reqst.resourcepaths = append(reqst.resourcepaths, res)
 					} else {
-						reqst.resourcepaths=append(append(reqst.resourcepaths[:lastrsri],res),reqst.resourcepaths[lastrsri:]...)
+						reqst.resourcepaths = append(append(reqst.resourcepaths[:lastrsri], res), reqst.resourcepaths[lastrsri:]...)
 					}
 					lastrsri++
 				}
@@ -193,19 +197,19 @@ func (reqst *Request) AddResource(resource ...string) {
 	return
 }
 
-func nextResource(reqst*Request , nxtrspath string) (nxtrs*Resource) {
-	if nxtrspath!="" {
-		nxtrs=reqst.NewResource(nxtrspath)
+func nextResource(reqst *Request, nxtrspath string) (nxtrs *Resource) {
+	if nxtrspath != "" {
+		nxtrs = reqst.NewResource(nxtrspath)
 	}
 	return nxtrs
 }
 
-func (reqst*Request) RequestContent() *iorw.BufferedRW {
+func (reqst *Request) RequestContent() *iorw.BufferedRW {
 	return reqst.rqstContent
 }
 
 func (reqst *Request) ExecuteRequest() {
-	var isAtv=reqst.IsActiveContent(reqst.r.URL.Path)
+	var isAtv = reqst.IsActiveContent(reqst.r.URL.Path)
 	var reqstContentType = reqst.r.Header.Get("Content-Type")
 	if reqst.bufRW == nil {
 		reqst.bufRW = iorw.NewBufferedRW(int64(maxbufsize), reqst)
@@ -216,18 +220,18 @@ func (reqst *Request) ExecuteRequest() {
 		reqst.PopulateParameters()
 	}
 	if isAtv {
-		if reqst.rqstContent==nil {
-			reqst.rqstContent=iorw.NewBufferedRW(int64(maxbufsize),nil)
-			if reqst.r.Body!=nil {
+		if reqst.rqstContent == nil {
+			reqst.rqstContent = iorw.NewBufferedRW(int64(maxbufsize), nil)
+			if reqst.r.Body != nil {
 				reqst.rqstContent.Print(reqst.r.Body)
 			}
 		}
-		reqst.forceRead=isAtv
+		reqst.forceRead = isAtv
 	}
 	var mimedetails = mime.FindMimeTypeByExt(reqst.r.URL.Path, ".txt", "text/plain")
-	
+
 	var contentencoding = ""
-	
+
 	reqst.w.Header().Set("Cache-Control", "no-store")
 	reqst.AddResource(reqst.r.URL.Path)
 	if isAtv {
@@ -257,25 +261,25 @@ func (reqst *Request) ExecuteRequest() {
 		} else {
 			reqst.Active.Reset()
 		}
-	} 
-	
+	}
+
 	for {
-		if len(reqst.resourcepaths)>0 {
-			var nextrs=reqst.resourcepaths[0]
-			reqst.resourcepaths=reqst.resourcepaths[1:]
-			if  nxtrs:=nextResource(reqst,nextrs); nxtrs!=nil {
+		if len(reqst.resourcepaths) > 0 {
+			var nextrs = reqst.resourcepaths[0]
+			reqst.resourcepaths = reqst.resourcepaths[1:]
+			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
 				if isAtv {
-					if atverr := func(nxtrs*Resource) (fnerr error) {
-						defer func(){
+					if atverr := func(nxtrs *Resource) (fnerr error) {
+						defer func() {
 							nxtrs.Close()
 						}()
 						if nxtrs.activeInverse {
-							if fnerr=reqst.Active.APrint("<@",nxtrs,"@>"); fnerr==nil {
-								fnerr=reqst.Active.ACommit();
+							if fnerr = reqst.Active.APrint("<@", nxtrs, "@>"); fnerr == nil {
+								fnerr = reqst.Active.ACommit()
 							}
 						} else {
-							if fnerr=reqst.Active.APrint(nxtrs); fnerr==nil {
-								fnerr=reqst.Active.ACommit();
+							if fnerr = reqst.Active.APrint(nxtrs); fnerr == nil {
+								fnerr = reqst.Active.ACommit()
 							}
 						}
 						return
@@ -284,10 +288,10 @@ func (reqst *Request) ExecuteRequest() {
 						break
 					}
 				} else {
-					if reqst.resources==nil {
-						reqst.resources=[]*Resource{}
+					if reqst.resources == nil {
+						reqst.resources = []*Resource{}
 					}
-					reqst.resources=append(reqst.resources,nxtrs)
+					reqst.resources = append(reqst.resources, nxtrs)
 					reqst.resourcesSize = reqst.resourcesSize + nxtrs.size
 				}
 			}
@@ -554,8 +558,8 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 					rdclose.Close()
 					rdclose = nil
 				}
-				if len(reqst.resources)>0 {
-					err=nil
+				if len(reqst.resources) > 0 {
+					err = nil
 				}
 				currdr = nil
 			}
@@ -586,8 +590,8 @@ func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shut
 		shuttingdownHost:     shuttingDownHost,
 		canShutdownHost:      shuttingDownHost != nil,
 		shuttingdownListener: shuttingDownListener,
-		forceRead:false,
-		busyForcing:false}
+		forceRead:            false,
+		busyForcing:          false}
 	if canShutdownEnv {
 		reqst.shuttingdownEnv = func() {
 			ShutdownEnv()
@@ -595,7 +599,6 @@ func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shut
 	}
 	return
 }
-
 
 func (reqst *Request) PopulateParameters() {
 	parameters.LoadParametersFromHTTPRequest(reqst.params, reqst.r)
@@ -619,15 +622,15 @@ func ShutdownEnv() {
 	}
 }
 
-func MapActiveExtension(a...string) {
-	for len(a)>0 {
-		if a[0]!="" {
-			a[0]=filepath.Ext(a[0])
-			if a[0]!="" && a[0]!="."  {
-				if hsatvext,atvextok:=atvExtns[a[0]]; atvextok && !hsatvext {
-					atvExtns[a[0]]=true
+func MapActiveExtension(a ...string) {
+	for len(a) > 0 {
+		if a[0] != "" {
+			a[0] = filepath.Ext(a[0])
+			if a[0] != "" && a[0] != "." {
+				if hsatvext, atvextok := atvExtns[a[0]]; atvextok && !hsatvext {
+					atvExtns[a[0]] = true
 				} else {
-					atvExtns[a[0]]=true
+					atvExtns[a[0]] = true
 				}
 			} else {
 				break
@@ -635,21 +638,21 @@ func MapActiveExtension(a...string) {
 		} else {
 			break
 		}
-		a=a[1:]
+		a = a[1:]
 	}
 }
 
 func init() {
-	if atvExtns==nil {
-		atvExtns=map[string]bool{}
-		MapActiveExtension(strings.Split(".html,.htm,.xml,.svg,.css,.js,.json,.txt",",")...)
+	if atvExtns == nil {
+		atvExtns = map[string]bool{}
+		MapActiveExtension(strings.Split(".html,.htm,.xml,.svg,.css,.js,.json,.txt", ",")...)
 	}
 	if reqstsQueue == nil {
 		qrqstlck = &sync.Mutex{}
 		reqstsQueue = make(chan *Request, runtime.NumCPU()*4)
 		func() {
-			var nmcpus=runtime.NumCPU()
-			for nmcpus>0 {
+			var nmcpus = runtime.NumCPU()
+			for nmcpus > 0 {
 				nmcpus--
 				go func() {
 					for {
@@ -736,9 +739,9 @@ func (reqst *Request) Close() (err error) {
 		}
 		reqst.resources = nil
 	}
-	if reqst.rqstContent!=nil {
+	if reqst.rqstContent != nil {
 		reqst.rqstContent.Close()
-		reqst.rqstContent=nil
+		reqst.rqstContent = nil
 	}
 	return
 }
@@ -784,8 +787,8 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 }
 func (rsrc *Resource) IsActiveContent() (active bool) {
 	var ext = filepath.Ext(rsrc.path)
-	if atvExtns!=nil {
-		active,_=atvExtns[ext]
+	if atvExtns != nil {
+		active, _ = atvExtns[ext]
 	}
 	return
 }
