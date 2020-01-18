@@ -8,6 +8,7 @@ import (
 	"time"
 
 	active "github.com/efjoubert/lnksys/iorw/active"
+	reuseport "github.com/kavu/go_reuseport"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -39,14 +40,19 @@ func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 		ReadHeaderTimeout: 20 * time.Second,
 		Addr:              host,
 		Handler:           h2c.NewHandler(srvmutex, serverh2)}
-	server.SetKeepAlivesEnabled(false)
 	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2, srvmx: srvmutex}
 	return
 }
 
 func (lstnrsvr *lstnrserver) listenAndServe() {
 	go func(srvr *http.Server) {
-		srvr.ListenAndServe()
+		listener, err := reuseport.NewReusablePortListener("tcp", srvr.Addr)
+		if err != nil {
+			panic(err)
+		}
+		defer listener.Close()
+
+		srvr.Serve(listener)
 	}(lstnrsvr.httpsvr)
 }
 
@@ -77,12 +83,6 @@ func (lstnr *Listener) QueueRequest(reqst *Request) {
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-	/*var reqst = NewRequest(lstnr, w, r, func() {
-		lstnr.Shutdown()
-	}, func() {
-		lstnr.ShutdownHost(r.Host)
-	}, true)*/
 	HttpRequestHandler(func() (rqst *Request) {
 		lstnr.srvlck.Lock()
 		defer func() {
