@@ -84,10 +84,10 @@ func (lstnr *Listener) QueueRequest(reqst *Request) {
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	HttpRequestHandler(func() (rqst *Request) {
-		lstnr.srvlck.Lock()
-		defer func() {
-			lstnr.srvlck.Unlock()
-		}()
+		//lstnr.srvlck.Lock()
+		//defer func() {
+		//	lstnr.srvlck.Unlock()
+		//}()
 		rqst = NewRequest(lstnr, w, r, func() {
 			lstnr.Shutdown()
 		}, func() {
