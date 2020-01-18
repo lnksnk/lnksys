@@ -29,10 +29,12 @@ type lstnrserver struct {
 func newLstnrServer(host string, hdnlr http.Handler,enableh2c bool) (lstnrsvr *lstnrserver) {
 	var srvmutex = http.NewServeMux()
 	srvmutex.Handle("/", hdnlr)
-	var rqsthndlr = srvmutex
+	var rqsthndlr http.Handler
 	var serverh2 = &http2.Server{}
 	if enableh2c {
 		rqsthndlr=h2c.NewHandler(srvmutex, serverh2)
+	} else {
+		rqsthndlr:hdnlr
 	}
 	
 	var server = &http.Server{
