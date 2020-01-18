@@ -75,7 +75,7 @@ func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}, func() {
 		lstnr.ShutdownHost(r.Host)
 	}, true)
-	HttpRequestHandler(reqst).ServeHTTP(w, r)
+	reqst.ServeHTTP(w,r)
 }
 
 func (lstnr *Listener) Shutdown() {
