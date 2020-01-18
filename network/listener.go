@@ -28,12 +28,8 @@ type lstnrserver struct {
 }
 
 func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
+
 	var srvmutex = http.NewServeMux()
-	var lmtfnc = func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			next.ServeHTTP(w, r)
-		})
-	}
 
 	srvmutex.Handle("/", hdnlr)
 
@@ -42,7 +38,8 @@ func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 	var server = &http.Server{
 		ReadHeaderTimeout: 20 * time.Second,
 		Addr:              host,
-		Handler:           h2c.NewHandler(lmtfnc(srvmutex), serverh2)}
+		Handler:           h2c.NewHandler(srvmutex, serverh2)}
+	server.SetKeepAlivesEnabled(false)
 	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2, srvmx: srvmutex}
 	return
 }
