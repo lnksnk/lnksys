@@ -5,12 +5,14 @@ import (
 	"fmt"
 	parameters "github.com/efjoubert/lnksys/parameters"
 	"strings"
+	"sync"
 )
 
 //DbStatement container representing the underlying DbConnection and allocated sql.Tx transaction
 type DbStatement struct {
-	cn *DbConnection
-	tx *sql.Tx
+	cn       *DbConnection
+	tx       *sql.Tx
+	stmntlck *sync.Mutex
 }
 
 //NewDbStatement invoke a new DbStatement from the DbConnection
@@ -36,6 +38,8 @@ func (stmnt *DbStatement) Begin() (err error) {
 //In the case of Insert or Update if the underlying db driver
 //return the lastInsertID and rowsAffected if supported
 func (stmnt *DbStatement) Execute(query string, args ...interface{}) (lastInsertID int64, rowsAffected int64, err error) {
+	stmnt.stmntlck.Lock()
+	defer stmnt.stmntlck.Unlock()
 	if stmnt.tx == nil {
 		err = stmnt.Begin()
 	}
@@ -129,7 +133,8 @@ func (stmnt *DbStatement) Execute(query string, args ...interface{}) (lastInsert
 
 //Query and return a DbResultSet
 func (stmnt *DbStatement) Query(query string, args ...interface{}) (rset *DbResultSet, err error) {
-
+	stmnt.stmntlck.Lock()
+	defer stmnt.stmntlck.Unlock()
 	if stmnt.tx == nil {
 		err = stmnt.Begin()
 	}

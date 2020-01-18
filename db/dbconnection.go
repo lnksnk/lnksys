@@ -260,11 +260,7 @@ func (dbcn *DbConnection) LoadCnSettings(cnsettings ...string) {
 
 //Execute - Execute (query) refer to golang sql connection Execute method
 func (dbcn *DbConnection) Execute(query string, args ...interface{}) (lastInsertID int64, rowsAffected int64, err error) {
-	dbcn.LockDBCN()
-	defer func() {
-		dbcn.UnlockDBCN()
-	}()
-	stmnt := &DbStatement{cn: dbcn}
+	stmnt := &DbStatement{cn: dbcn,stmntlck:&sync.Mutex{}}
 	lastInsertID, rowsAffected, err = stmnt.Execute(query, args...)
 	stmnt = nil
 	return
@@ -273,11 +269,7 @@ func (dbcn *DbConnection) Execute(query string, args ...interface{}) (lastInsert
 //Query - Query (query) refer to golang sql connection Query method
 //except that it returns and DbResultSet that extends standard resultset functionality
 func (dbcn *DbConnection) Query(query string, args ...interface{}) (rset *DbResultSet, err error) {
-	dbcn.LockDBCN()
-	defer func() {
-		dbcn.UnlockDBCN()
-	}()
-	stmnt := &DbStatement{cn: dbcn}
+	stmnt := &DbStatement{cn: dbcn,stmntlck:&sync.Mutex{}}
 	rset, err = stmnt.Query(query, args...)
 	return rset, err
 }
