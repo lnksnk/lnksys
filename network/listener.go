@@ -42,6 +42,7 @@ func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 		Addr:              host,
 		Handler:           h2c.NewHandler(srvmutex, serverh2),
 		ConnContext: func(ctx context.Context, c net.Conn) (cntx context.Context) {
+			cntx = ctx
 			return
 		}}
 	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2, srvmx: srvmutex}
