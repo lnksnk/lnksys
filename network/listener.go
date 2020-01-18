@@ -69,7 +69,13 @@ func (lstnr *Listener) QueueRequest(reqst *Request) {
 	lstnr.queuedRequests <- reqst
 }
 
+const maxClients = 201
+     sema := make(chan struct{}, maxClients)
+
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	sema <- struct{}{}
+	defer func() { <-sema }()
+
 	var reqst = NewRequest(lstnr, w, r, func() {
 		lstnr.Shutdown()
 	}, func() {
