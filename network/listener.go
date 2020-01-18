@@ -8,7 +8,6 @@ import (
 	"time"
 
 	active "github.com/efjoubert/lnksys/iorw/active"
-	reuseport "github.com/kavu/go_reuseport"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -38,6 +37,7 @@ func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 
 	var server = &http.Server{
 		ReadHeaderTimeout: 20 * time.Second,
+		WriteTimeout:      20 * time.Second,
 		Addr:              host,
 		Handler:           h2c.NewHandler(srvmutex, serverh2)}
 	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2, srvmx: srvmutex}
@@ -46,13 +46,7 @@ func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 
 func (lstnrsvr *lstnrserver) listenAndServe() {
 	go func(srvr *http.Server) {
-		listener, err := reuseport.NewReusablePortListener("tcp", srvr.Addr)
-		if err != nil {
-			panic(err)
-		}
-		defer listener.Close()
-
-		srvr.Serve(listener)
+		srvr.ListenAndServe()
 	}(lstnrsvr.httpsvr)
 }
 
