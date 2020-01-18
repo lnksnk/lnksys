@@ -83,7 +83,7 @@ func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}, func() {
 		lstnr.ShutdownHost(r.Host)
 	}, true)*/
-	HttpRequestHandler(func(rqst *Request) {
+	HttpRequestHandler(func() (rqst *Request) {
 		lstnr.srvlck.Lock()
 		defer func() {
 			lstnr.srvlck.Unlock()
