@@ -26,21 +26,14 @@ type lstnrserver struct {
 	srvmx    *http.ServeMux
 }
 
-func newLstnrServer(host string, hdnlr http.Handler,enableh2c bool) (lstnrsvr *lstnrserver) {
+func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 	var srvmutex = http.NewServeMux()
 	srvmutex.Handle("/", hdnlr)
-	var rqsthndlr http.Handler
 	var serverh2 = &http2.Server{}
-	if enableh2c {
-		rqsthndlr=h2c.NewHandler(srvmutex, serverh2)
-	} else {
-		rqsthndlr=hdnlr
-	}
-	
 	var server = &http.Server{
 		ReadHeaderTimeout: 20 * time.Second,
 		Addr:              host,
-		Handler:           rqsthndlr}
+		Handler:           h2c.NewHandler(srvmutex, serverh2)}
 	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2, srvmx: srvmutex}
 	return
 }
@@ -70,7 +63,6 @@ type Listener struct {
 	servers        map[string]*lstnrserver
 	queuedRequests chan *Request
 	qrqstlck       *sync.Mutex
-	sema 		   chan struct{}
 }
 
 func (lstnr *Listener) QueueRequest(reqst *Request) {
@@ -78,15 +70,12 @@ func (lstnr *Listener) QueueRequest(reqst *Request) {
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	lstnr.sema <- struct{}{}
-	defer func() { <-lstnr.sema }()
-
 	var reqst = NewRequest(lstnr, w, r, func() {
 		lstnr.Shutdown()
 	}, func() {
 		lstnr.ShutdownHost(r.Host)
 	}, true)
-	reqst.ServeHTTP(w,r)
+	HttpRequestHandler(reqst).ServeHTTP(w, r)
 }
 
 func (lstnr *Listener) Shutdown() {
@@ -115,7 +104,7 @@ func (lstnr *Listener) ShutdownHost(host string) {
 	}
 }
 
-func (lstnr *Listener) ListenAndServer(host string,enableh2c...bool) {
+func (lstnr *Listener) ListenAndServer(host string) {
 	if host != "" {
 		if len(lstnr.servers) == 0 {
 			lstnr.servers = map[string]*lstnrserver{}
@@ -123,15 +112,10 @@ func (lstnr *Listener) ListenAndServer(host string,enableh2c...bool) {
 		if _, hssrv := lstnr.servers[host]; hssrv {
 			return
 		}
-		if len(enableh2c)==1 && enableh2c[0] {
-			var server = newLstnrServer(host, lstnr,true)
-			server.listenAndServe()
-			lstnr.servers[host] = server
-		} else {
-			var server = newLstnrServer(host, lstnr,false)
-			server.listenAndServe()
-			lstnr.servers[host] = server
-		}
+		var server = newLstnrServer(host, lstnr)
+		server.listenAndServe()
+		lstnr.servers[host] = server
+
 	}
 }
 
@@ -143,7 +127,7 @@ func InvokeListener(host string) {
 
 func init() {
 	if lstnr == nil {
-		lstnr = &Listener{sema : make(chan struct{}, runtime.NumCPU()*100), queuedRequests: make(chan *Request, runtime.NumCPU()*101), qrqstlck: &sync.Mutex{}}
+		lstnr = &Listener{queuedRequests: make(chan *Request, runtime.NumCPU()*4), qrqstlck: &sync.Mutex{}}
 		func(qlstnr *Listener) {
 			var nmcpus = runtime.NumCPU()
 			for nmcpus > 0 {
