@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	runtime.GOMAXPROCS(runtime.NumCPU()*2)
 	/*var tlkr=network.NewTalker()
 	tlkr.Send("https://www.google.com")
 	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
