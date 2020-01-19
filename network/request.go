@@ -39,6 +39,7 @@ type Request struct {
 	currdr           *Resource
 	resources        []*Resource
 	resourcepaths    []string
+	rootpaths        []string
 	preCurrentBytes  []byte
 	preCurrentBytesl int
 	preCurrentBytesi int
@@ -591,7 +592,13 @@ func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shut
 		canShutdownHost:      shuttingDownHost != nil,
 		shuttingdownListener: shuttingDownListener,
 		forceRead:            false,
-		busyForcing:          false}
+		busyForcing:          false,
+		rootpaths:[]string{}}
+		if len(roots)>0 {
+			for rt,_:=range roots {
+				reqst.rootpaths=append(reqst.resourcepaths,rt)
+			}
+		}
 	if canShutdownEnv {
 		reqst.shuttingdownEnv = func() {
 			ShutdownEnv()
@@ -742,6 +749,9 @@ func (reqst *Request) Close() (err error) {
 	if reqst.rqstContent != nil {
 		reqst.rqstContent.Close()
 		reqst.rqstContent = nil
+	}
+	if reqst.rootpaths!=nil {
+		reqst.rootpaths=nil
 	}
 	return
 }
