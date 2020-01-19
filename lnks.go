@@ -7,10 +7,13 @@ import (
 	network "github.com/efjoubert/lnksys/network"
 	os "os"
 	runtime "runtime"
+	runtimedbg "runtime/debug"
 )
 
 func main() {
-	runtime.GOMAXPROCS(runtime.NumCPU()*2)
+	runtimedbg.SetGCPercent(20)
+	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
+
 	/*var tlkr=network.NewTalker()
 	tlkr.Send("https://www.google.com")
 	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
