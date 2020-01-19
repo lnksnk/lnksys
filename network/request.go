@@ -805,6 +805,16 @@ func (rsrc *Resource) IsActiveContent() (active bool) {
 
 var atvExtns map[string]bool
 
+func (reqst *Request) nextResourceRoots(resourepath string) (nxtrspaths []string, rmningrspaths []) {
+	if len(reqst.resourcepaths)>0 && resourcepath!=""{
+		var splitrspath=strings.Split(resourcepath,"/")
+		for _,respath:=range resourcepaths{
+			
+		}
+	}
+	return
+}
+
 func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 
 	var r io.Reader = nil
