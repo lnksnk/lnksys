@@ -22,6 +22,7 @@ import (
 	three "github.com/efjoubert/lnksys/embed/three"
 	video "github.com/efjoubert/lnksys/embed/video"
 	iorw "github.com/efjoubert/lnksys/iorw"
+	webaction "github.com/efjoubert/lnksys/embed/webaction"
 )
 
 var cachedResources map[string]*iorw.BufferedRW
@@ -70,6 +71,8 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	} else if embedjs = ace.AcsJSFindJS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = chart.ChartFindJS(embedfindjs); embedjs != nil {
+		return
+	} else if embedjs = webaction.WebactionFindJS(embedfindjs); embedjs!=nil {
 		return
 	}
 	return
