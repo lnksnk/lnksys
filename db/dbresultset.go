@@ -116,7 +116,7 @@ func (rset *DbResultSet) MetaData() *DbResultSetMetaData {
 
 //Data return Displayable data in the form of a slice, 'array', of interface{} values
 func (rset *DbResultSet) Data() []interface{} {
-	go func(somethingDone chan) {
+	go func(somethingDone chan bool) {
 		defer func(){
 			somethingDone <- true
 		}()
