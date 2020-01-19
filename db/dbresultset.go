@@ -155,7 +155,7 @@ func (rset *DbResultSet) Next() (next bool, err error) {
 			rset.dataref = make([]interface{}, len(rset.rsmetadata.cols))
 			rset.dispdata = make([]interface{}, len(rset.rsmetadata.cols))
 		}
-		go func(somthingDone chan bool) { 
+		go func(somethingDone chan bool) { 
 			defer func(){
 				somethingDone<-true
 			}()
