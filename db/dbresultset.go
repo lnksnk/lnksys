@@ -116,20 +116,21 @@ func (rset *DbResultSet) MetaData() *DbResultSetMetaData {
 
 //Data return Displayable data in the form of a slice, 'array', of interface{} values
 func (rset *DbResultSet) Data() []interface{} {
-	go func() {
+	go func(somethingDone chan) {
+		defer func(){
+			somethingDone <- true
+		}()
 		for n := range rset.data {
 			coltype := rset.rsmetadata.colTypes[n]
 			rset.dispdata[n] = castSQLTypeValue(rset.data[n], coltype)
 		}
-		rset.dosomething <- true
-	}()
+	}(rset.dosomething)
 	<-rset.dosomething
 	return rset.dispdata
 }
 
 func castSQLTypeValue(valToCast interface{}, colType *ColumnType) (castedVal interface{}) {
 	if valToCast != nil {
-
 		if d, dok := valToCast.([]uint8); dok {
 			castedVal = string(d)
 		} else if sd, dok := valToCast.(string); dok {
@@ -139,7 +140,6 @@ func castSQLTypeValue(valToCast interface{}, colType *ColumnType) (castedVal int
 		} else {
 			castedVal = valToCast
 		}
-
 	} else {
 		castedVal = valToCast
 	}
@@ -155,16 +155,20 @@ func (rset *DbResultSet) Next() (next bool, err error) {
 			rset.dataref = make([]interface{}, len(rset.rsmetadata.cols))
 			rset.dispdata = make([]interface{}, len(rset.rsmetadata.cols))
 		}
-
-		for n := range rset.data {
-			rset.dataref[n] = &rset.data[n]
-		}
-
-		if scerr := rset.rset.Scan(rset.dataref...); scerr != nil {
-			rset.Close()
-			err = scerr
-			next = false
-		}
+		go func(somthingDone chan bool) { 
+			defer func(){
+				somethingDone<-true
+			}()
+			for n := range rset.data {
+				rset.dataref[n] = &rset.data[n]
+			}
+			if scerr := rset.rset.Scan(rset.dataref...); scerr != nil {
+				rset.Close()
+				err = scerr
+				next = false
+			}
+		}(rset.dosomething)
+		<-rset.dosomething
 	} else {
 		if rseterr := rset.rset.Err(); rseterr != nil {
 			err = rseterr
