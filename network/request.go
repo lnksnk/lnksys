@@ -593,12 +593,12 @@ func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shut
 		shuttingdownListener: shuttingDownListener,
 		forceRead:            false,
 		busyForcing:          false,
-		rootpaths:[]string{}}
-		if len(roots)>0 {
-			for rt,_:=range roots {
-				reqst.rootpaths=append(reqst.resourcepaths,rt)
-			}
+		rootpaths:            []string{}}
+	if len(roots) > 0 {
+		for rt, _ := range roots {
+			reqst.rootpaths = append(reqst.resourcepaths, rt)
 		}
+	}
 	if canShutdownEnv {
 		reqst.shuttingdownEnv = func() {
 			ShutdownEnv()
@@ -750,8 +750,8 @@ func (reqst *Request) Close() (err error) {
 		reqst.rqstContent.Close()
 		reqst.rqstContent = nil
 	}
-	if reqst.rootpaths!=nil {
-		reqst.rootpaths=nil
+	if reqst.rootpaths != nil {
+		reqst.rootpaths = nil
 	}
 	return
 }
@@ -805,11 +805,20 @@ func (rsrc *Resource) IsActiveContent() (active bool) {
 
 var atvExtns map[string]bool
 
-func (reqst *Request) nextResourceRoots(resourepath string) (nxtrspaths []string, rmningrspaths []) {
-	if len(reqst.resourcepaths)>0 && resourcepath!=""{
-		var splitrspath=strings.Split(resourcepath,"/")
-		for _,respath:=range resourcepaths{
-			
+func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []string, rmningrspaths []string) {
+	if len(reqst.resourcepaths) > 0 && resourcepath != "" {
+		var splitrspath = strings.Split(resourcepath, "/")
+		var prefixpath = ""
+		for _, respath := range reqst.resourcepaths {
+			prefixpath = ""
+			for n, spltrspath := range splitrspath {
+				prefixpath = prefixpath + spltrspath + "/"
+				if respath == prefixpath {
+					nxtrspaths = append(nxtrspaths, prefixpath)
+					rmningrspaths = append(rmningrspaths, strings.Join(splitrspath[n:], "/"))
+					break
+				}
+			}
 		}
 	}
 	return
