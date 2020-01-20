@@ -879,7 +879,9 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 							} else {
 								for _,root := range nxtrspaths {
 									
-									var resource,rootFound=roots[root]
+									var rootFound=roots[root]
+									var resource = rootFound+""
+									
 									var tmprestest=tmpres+""
 									if strings.HasPrefix(tmprestest,"/") {
 										tmprestest=tmprestest[1:]
