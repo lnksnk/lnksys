@@ -846,10 +846,10 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 							if nrs>0 {
 								tmpDelim="/"
 							}
- 							tmpres = tmpres + tmpDelim + strings.Join(ressplit[:nrs+1], "/")
+ 							tmpres = strings.Join(ressplit[:nrs+1], "/")
 							if nrs > 0 {
-								for _,root := range nxtrspaths {
-									var zipresource = roots[root] + tmpres[:len(tmpres)-1] + ".zip"
+								//for _,root := range nxtrspaths {
+									var zipresource = roots[rspathrt] + tmpres[:len(tmpres)-1] + ".zip"
 									if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
 										func() {
 											if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
@@ -879,11 +879,11 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 									if rf != nil || finfo != nil {
 										break
 									}
-								}
+								//}
 							} else {
-								for _,root := range nxtrspaths {
+								//for _,root := range nxtrspaths {
 									
-									var rootFound=roots[root]
+									var rootFound=roots[rspathrt]
 									var resource = rootFound+""
 									var pathDelim=""
 									var tmprestest=tmpres+""
@@ -914,7 +914,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 											break
 										}
 									}
-								}
+								//}
 							}
 							if rf != nil || finfo != nil {
 								break
