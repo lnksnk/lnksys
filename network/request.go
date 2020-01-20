@@ -807,18 +807,18 @@ var atvExtns map[string]bool
 
 func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []string, rmningrspaths []string) {
 	if len(reqst.rootpaths) > 0 && resourcepath != "" {
-		var splitrspath = strings.Split(resourcepath, "/")
 		var prefixpath = ""
 		for _, respath := range reqst.rootpaths {
-			prefixpath = ""
-			for n, spltrspath := range splitrspath {
-				prefixpath = prefixpath + spltrspath + "/"
-				if respath == prefixpath || (strings.HasSuffix(prefixpath,"/") && respath==prefixpath[1:]) {
-					if respath!="" {
-						if _,rspathok:=roots[respath]; rspathok {
-							nxtrspaths = append(nxtrspaths, respath)
-							rmningrspaths = append(rmningrspaths, strings.Join(splitrspath[n+1:], "/"))
+			if respath!="" {
+				if _,rspathok:=roots[respath]; rspathok {
+					if strings.HasPrefix(resourcepath,"/") {
+						if strings.HasPrefix(resourcepath,"/"+respath) {
+							nxtrspaths=appen(respath)
+							rmningrspaths=append(rmningrspaths,resourcepath[len(respath])+1:])
 						}
+					} else if strings.HasPrefix(resourcepath,respath) {
+						nxtrspaths=appen(respath)
+						rmningrspaths=append(rmningrspaths,resourcepath[len(respath]):])
 					}
 				}
 			}
