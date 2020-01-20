@@ -596,7 +596,7 @@ func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shut
 		rootpaths:            []string{}}
 	if len(roots) > 0 {
 		for rt, _ := range roots {
-			reqst.rootpaths = append(reqst.resourcepaths, rt)
+			reqst.rootpaths = append(reqst.rootpaths, rt)
 		}
 	}
 	if canShutdownEnv {
