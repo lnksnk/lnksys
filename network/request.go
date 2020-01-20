@@ -881,10 +881,11 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 									
 									var rootFound=roots[root]
 									var resource = rootFound+""
-									
+									var pathDelim=""
 									var tmprestest=tmpres+""
 									if strings.HasPrefix(tmprestest,"/") {
 										tmprestest=tmprestest[1:]
+										pathDelim+"/"
 									}
 									if strings.HasSuffix(tmprestest,"/") {
 										tmprestest=tmprestest[:len(tmprestest)-1]
