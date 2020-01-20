@@ -832,8 +832,6 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 	var r io.Reader = nil
 
 	var nxtrspaths, rmningrspaths=reqst.nextResourceRoots(resourcepath)
-	fmt.Println(nxtrspaths)
-	fmt.Println(rmningrspaths)
 
 	var finfo os.FileInfo = nil
 	var lastPathRoot = ""
