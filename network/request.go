@@ -885,7 +885,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 									var tmprestest=tmpres+""
 									if strings.HasPrefix(tmprestest,"/") {
 										tmprestest=tmprestest[1:]
-										pathDelim+"/"
+										pathDelim="/"
 									}
 									if strings.HasSuffix(tmprestest,"/") {
 										tmprestest=tmprestest[:len(tmprestest)-1]
@@ -900,7 +900,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 									}
 									
 									if strings.HasPrefix(tmprestest,root) {
-										resource=resource+tmprestest[len(root):]
+										resource=resource+pathDelim+tmprestest[len(root):]
 									}
 
 									if fi, fierr := os.Stat(resource); fierr == nil {
