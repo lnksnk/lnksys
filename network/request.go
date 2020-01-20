@@ -812,6 +812,9 @@ func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []strin
 		for _, respath := range reqst.rootpaths {
 			prefixpath = ""
 			for n, spltrspath := range splitrspath {
+				if spltrspath=="" {
+					continue
+				}
 				prefixpath = prefixpath + spltrspath + "/"
 				if respath == prefixpath {
 					if respath!="" {
