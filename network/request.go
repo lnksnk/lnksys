@@ -902,6 +902,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 			activeInverse = true
 			rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
 			if r = findR(rsrcpth); r!=nil || finfo!=nil {
+				resourcepath=rsrcpth
 				break
 			}
 		} else {
