@@ -807,7 +807,6 @@ var atvExtns map[string]bool
 
 func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []string, rmningrspaths []string) {
 	if len(reqst.rootpaths) > 0 && resourcepath != "" {
-		var prefixpath = ""
 		for _, respath := range reqst.rootpaths {
 			if respath!="" {
 				if _,rspathok:=roots[respath]; rspathok {
