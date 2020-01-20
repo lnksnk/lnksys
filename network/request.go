@@ -842,7 +842,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 	var lastPathRoot = ""
 	var findR = func(rspath string) (rf io.Reader) {
 					var tmpres = "/"
-					var ressplit = strings.Split(resourcepath, "/")
+					var ressplit = strings.Split(rspath, "/")
 					if rf = embed.EmbedFindJS(rspath); rf == nil {
 						for nrs := range ressplit {
 							tmpres = strings.Join(ressplit[:nrs+1], "/") + "/"
