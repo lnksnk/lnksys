@@ -847,7 +847,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 						for nrs := range ressplit {
 							tmpres = strings.Join(ressplit[:nrs+1], "/") + "/"
 							if nrs > 0 {
-								for root := range nxtrspaths {
+								for _,root := range nxtrspaths {
 									var zipresource = roots[root] + tmpres[:len(tmpres)-1] + ".zip"
 									if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
 										func() {
@@ -880,7 +880,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 									}
 								}
 							} else {
-								for root := range nxtrspaths {
+								for _,root := range nxtrspaths {
 									var resource = roots[root] + tmpres + strings.Join(ressplit[nrs+1:], "/")
 									if fi, fierr := os.Stat(resource); fierr == nil {
 										if !fi.IsDir() {
