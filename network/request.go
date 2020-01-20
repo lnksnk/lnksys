@@ -867,7 +867,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 										if fi, fierr := os.Stat(resource); fierr == nil {
 											if !fi.IsDir() {
 												finfo = fi
-												lastPathRoot = roots[root] + tmpres
+												lastPathRoot = roots[root]
 												break
 											}
 										}
