@@ -867,11 +867,11 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 											}
 										}()
 									} else {
-										var resource = roots[root] + tmpres + strings.Join(ressplit[nrs+1:], "/")
+										var resource = roots[rspathrt] + tmpres + strings.Join(ressplit[nrs+1:], "/")
 										if fi, fierr := os.Stat(resource); fierr == nil {
 											if !fi.IsDir() {
 												finfo = fi
-												lastPathRoot = roots[root]
+												lastPathRoot = roots[rspathrt]
 												break
 											}
 										}
@@ -882,7 +882,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 								//}
 							} else {
 								//for _,root := range nxtrspaths {
-									
+									var root=rspathrt+""
 									var rootFound=roots[rspathrt]
 									var resource = rootFound+""
 									var pathDelim=""
@@ -924,21 +924,20 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					return
 				}
 	var activeInverse = false
-	for _,nxrspth:=range nxtrspaths {
-		for _,rsrcpth:=range rmningrspaths {
-			if r = findR(nxrspth,rsrcpth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") >= 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
-				activeInverse = true
-				rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
-				if r = findR(rsrcpth); r!=nil || finfo!=nil {
-					resourcepath=rsrcpth
-					if !strings.HasPrefix(resourcepath,"/") {
-						resourcepath="/"+resourcepath
-					}
-					break
+	for nxrspthn,nxrspth:=range nxtrspaths {
+		var rsrcpth=rmningrspaths[nxrspthn]
+		if r = findR(nxrspth,rmningrspaths[nxrspthn]); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") >= 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
+			activeInverse = true
+			rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
+			if r = findR(nxrspth,rsrcpth); r!=nil || finfo!=nil {
+				resourcepath=rsrcpth
+				if !strings.HasPrefix(resourcepath,"/") {
+					resourcepath="/"+resourcepath
 				}
-			} else {
 				break
 			}
+		} else {
+			break
 		}
 		if r != nil || finfo != nil {
 			rsrc = &Resource{
