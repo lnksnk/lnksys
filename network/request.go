@@ -902,6 +902,9 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 			rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
 			if r = findR(rsrcpth); r!=nil || finfo!=nil {
 				resourcepath=rsrcpth
+				if !strings.HasPrefix(resourcepath,"/") {
+					resourcepath="/"+resourcepath
+				}
 				break
 			}
 		} else {
