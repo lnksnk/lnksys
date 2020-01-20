@@ -878,10 +878,31 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 								}
 							} else {
 								for _,root := range nxtrspaths {
-									var resource = roots[root] + tmpres + strings.Join(ressplit[nrs+1:], "/")
+									
+									var resource,rootFound=roots[root]
+									var tmprestest=tmpres+""
+									if strings.HasPrefix(tmprestest,"/") {
+										tmprestest=tmprestest[1:]
+									}
+									if strings.HasSuffix(tmprestest,"/") {
+										tmprestest=tmprestest[:len(tmprestest)-1]
+									}
+									
+									if strings.HasPrefix(root,"/") {
+										root=root[1:]
+									}
+
+									if strings.HasSuffix(root,"/") {
+										root=root[:len(root)-1]
+									}
+									
+									if strings.HasPrefix(tmprestest,root) {
+										resource=resource+tmprestest[len(root):]
+									}
+
 									if fi, fierr := os.Stat(resource); fierr == nil {
 										if !fi.IsDir() {
-											lastPathRoot = roots[root]
+											lastPathRoot = rootFound
 											finfo = fi
 											break
 										}
