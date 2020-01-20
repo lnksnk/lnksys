@@ -842,7 +842,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					var ressplit = strings.Split(rspath, "/")
 					if rf = embed.EmbedFindJS(rspath); rf == nil {
 						for nrs := range ressplit {
-							tmpres = strings.Join(ressplit[:nrs+1], "/") + "/"
+							tmpres = strings.Join(ressplit[:nrs+1], "/")
 							if nrs > 0 {
 								for _,root := range nxtrspaths {
 									var zipresource = roots[root] + tmpres[:len(tmpres)-1] + ".zip"
@@ -897,7 +897,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 				}
 	var activeInverse = false
 	for _,rsrcpth:=range rmningrspaths {
-		if r = findR(rsrcpth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") == 2 && strings.Index(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
+		if r = findR(rsrcpth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
 			activeInverse = true
 			rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
 			if r = findR(rsrcpth); r!=nil || finfo!=nil {
