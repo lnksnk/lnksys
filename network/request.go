@@ -861,7 +861,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 											}
 										}()
 									} else {
-										var resource = roots[root] + "/" + strings.Join(ressplit[nrs+1:], "/")
+										var resource = roots[root] + tmpres + strings.Join(ressplit[nrs+1:], "/")
 										if fi, fierr := os.Stat(resource); fierr == nil {
 											if !fi.IsDir() {
 												finfo = fi
@@ -876,7 +876,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 								}
 							} else {
 								for _,root := range nxtrspaths {
-									var resource = roots[root] + "/" strings.Join(ressplit[nrs+1:], "/")
+									var resource = roots[root] + tmpres + strings.Join(ressplit[nrs+1:], "/")
 									if fi, fierr := os.Stat(resource); fierr == nil {
 										if !fi.IsDir() {
 											lastPathRoot = roots[root] + tmpres
