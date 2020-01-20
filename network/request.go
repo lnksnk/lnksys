@@ -814,9 +814,13 @@ func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []strin
 			for n, spltrspath := range splitrspath {
 				prefixpath = prefixpath + spltrspath + "/"
 				if respath == prefixpath {
-					nxtrspaths = append(nxtrspaths, prefixpath)
-					rmningrspaths = append(rmningrspaths, strings.Join(splitrspath[n:], "/"))
-					break
+					if respath!="" {
+						if _,rspathok:=roots[respath]; rspathok {
+							nxtrspaths = append(nxtrspaths, prefixpath)
+							rmningrspaths = append(rmningrspaths, strings.Join(splitrspath[n:], "/"))
+							break
+						}
+					}
 				}
 			}
 		}
@@ -895,10 +899,16 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					return
 				}
 	var activeInverse = false
-	if r = findR(resourcepath); r == nil && finfo == nil && strings.Count(resourcepath, "@") == 2 && strings.Index(resourcepath, "@") > 0 && strings.Index(resourcepath, "@") != strings.LastIndex(resourcepath, "@") {
-		activeInverse = true
-		resourcepath = strings.Replace(resourcepath, "@", "", -1)
-		r = findR(resourcepath)
+	for _,rsrcpth:=range rmningrspaths {
+		if r = findR(rsrcpth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") == 2 && strings.Index(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
+			activeInverse = true
+			rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
+			if r = findR(rsrcpth); r!=nil {
+				break
+			}
+		} else {
+			break
+		}
 	}
 	if r != nil || finfo != nil {
 		rsrc = &Resource{
