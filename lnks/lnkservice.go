@@ -15,9 +15,9 @@ type LnkService struct {
 }
 
 //NewLnkService NewLnkService
-func NewLnkService(brokerfunc ...interface{}) (lnksrvs *LnkService, err error) {
+func NewLnkService(name string, displayName string, description string,brokerfunc ...interface{}) (lnksrvs *LnkService, err error) {
 	lnksrvs = &LnkService{}
-	var srv, svrerr = service.NewService("LnkService", "LnkService", "LnkService", func(srvs *service.Service, args ...string) {
+	var srv, svrerr = service.NewService(name, displayName, description, func(srvs *service.Service, args ...string) {
 		lnksrvs.startLnkService(args...)
 	}, func(srvs *service.Service, args ...string) {
 		lnksrvs.runLnkService(args...)

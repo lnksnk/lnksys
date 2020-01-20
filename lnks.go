@@ -11,8 +11,8 @@ import (
 )
 
 func main() {
-	runtimedbg.SetGCPercent(20)
-	runtime.GOMAXPROCS(runtime.NumCPU() * 2)
+	runtimedbg.SetGCPercent(25)
+	runtime.GOMAXPROCS(runtime.NumCPU() * 8)
 
 	/*var tlkr=network.NewTalker()
 	tlkr.Send("https://www.google.com")
