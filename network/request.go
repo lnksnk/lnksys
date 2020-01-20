@@ -897,7 +897,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 				}
 	var activeInverse = false
 	for _,rsrcpth:=range rmningrspaths {
-		if r = findR(rsrcpth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
+		if r = findR(rsrcpth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") >= 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
 			activeInverse = true
 			rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
 			if r = findR(rsrcpth); r!=nil || finfo!=nil {
