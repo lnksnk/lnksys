@@ -898,7 +898,6 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 	if r = findR(resourcepath); r == nil && finfo == nil && strings.Count(resourcepath, "@") == 2 && strings.Index(resourcepath, "@") > 0 && strings.Index(resourcepath, "@") != strings.LastIndex(resourcepath, "@") {
 		activeInverse = true
 		resourcepath = strings.Replace(resourcepath, "@", "", -1)
-		ressplit = strings.Split(resourcepath, "/")
 		r = findR(resourcepath)
 	}
 	if r != nil || finfo != nil {
