@@ -843,7 +843,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					if rf = embed.EmbedFindJS(rspath); rf == nil {
 						for nrs := range ressplit {
 							var tmpDelim=""
-							if n>0 {
+							if nrs>0 {
 								tmpDelim="/"
 							}
  							tmpres = tmpres + tmpDelim + strings.Join(ressplit[:nrs+1], "/")
