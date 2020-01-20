@@ -832,67 +832,68 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 	fmt.Print(nxtrspaths)
 	fmt.Print(rmningrspaths)
 
-	var ressplit = strings.Split(resourcepath, "/")
-	var tmpres = "/"
+	
 
 	var finfo os.FileInfo = nil
 	var lastPathRoot = ""
 	var findR = func(rspath string) (rf io.Reader) {
-		if rf = embed.EmbedFindJS(rspath); rf == nil {
-			for nrs := range ressplit {
-				tmpres = strings.Join(ressplit[:nrs+1], "/") + "/"
-				if nrs > 0 {
-					for root := range roots {
-						var zipresource = roots[root] + tmpres[:len(tmpres)-1] + ".zip"
-						if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
-							func() {
-								if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
-									for _, f := range zipr.File {
+					var tmpres = "/"
+					var ressplit = strings.Split(resourcepath, "/")
+					if rf = embed.EmbedFindJS(rspath); rf == nil {
+						for nrs := range ressplit {
+							tmpres = strings.Join(ressplit[:nrs+1], "/") + "/"
+							if nrs > 0 {
+								for root := range roots {
+									var zipresource = roots[root] + tmpres[:len(tmpres)-1] + ".zip"
+									if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
+										func() {
+											if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
+												for _, f := range zipr.File {
 
-										if f.Name == strings.Join(ressplit[nrs+1:], "/") {
-											if ziprrc, ziprrcerr := f.Open(); ziprrcerr == nil {
-												rf = ziprrc
-												finfo = f.FileInfo()
+													if f.Name == strings.Join(ressplit[nrs+1:], "/") {
+														if ziprrc, ziprrcerr := f.Open(); ziprrcerr == nil {
+															rf = ziprrc
+															finfo = f.FileInfo()
+															break
+														}
+														break
+													}
+												}
+											}
+										}()
+									} else {
+										var resource = roots[root] + tmpres + strings.Join(ressplit[nrs+1:], "/")
+										if fi, fierr := os.Stat(resource); fierr == nil {
+											if !fi.IsDir() {
+												finfo = fi
+												lastPathRoot = roots[root] + tmpres
 												break
 											}
+										}
+									}
+									if rf != nil || finfo != nil {
+										break
+									}
+								}
+							} else {
+								for root := range roots {
+									var resource = roots[root] + tmpres + strings.Join(ressplit[nrs+1:], "/")
+									if fi, fierr := os.Stat(resource); fierr == nil {
+										if !fi.IsDir() {
+											lastPathRoot = roots[root] + tmpres
+											finfo = fi
 											break
 										}
 									}
 								}
-							}()
-						} else {
-							var resource = roots[root] + tmpres + strings.Join(ressplit[nrs+1:], "/")
-							if fi, fierr := os.Stat(resource); fierr == nil {
-								if !fi.IsDir() {
-									finfo = fi
-									lastPathRoot = roots[root] + tmpres
-									break
-								}
 							}
-						}
-						if rf != nil || finfo != nil {
-							break
-						}
-					}
-				} else {
-					for root := range roots {
-						var resource = roots[root] + tmpres + strings.Join(ressplit[nrs+1:], "/")
-						if fi, fierr := os.Stat(resource); fierr == nil {
-							if !fi.IsDir() {
-								lastPathRoot = roots[root] + tmpres
-								finfo = fi
+							if rf != nil || finfo != nil {
 								break
 							}
 						}
 					}
+					return
 				}
-				if rf != nil || finfo != nil {
-					break
-				}
-			}
-		}
-		return
-	}
 	var activeInverse = false
 	if r = findR(resourcepath); r == nil && finfo == nil && strings.Count(resourcepath, "@") == 2 && strings.Index(resourcepath, "@") > 0 && strings.Index(resourcepath, "@") != strings.LastIndex(resourcepath, "@") {
 		activeInverse = true
