@@ -813,7 +813,7 @@ func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []strin
 			prefixpath = ""
 			for n, spltrspath := range splitrspath {
 				prefixpath = prefixpath + spltrspath + "/"
-				if respath == prefixpath || (strings.HasSuffix(prefixpath,"/") && respath=prefixpath[1:] ) {
+				if respath == prefixpath || (strings.HasSuffix(prefixpath,"/") && respath==prefixpath[1:]) {
 					if respath!="" {
 						if _,rspathok:=roots[respath]; rspathok {
 							nxtrspaths = append(nxtrspaths, prefixpath)
