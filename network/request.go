@@ -828,6 +828,10 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 
 	var r io.Reader = nil
 
+	var nxtrspaths, rmningrspaths=reqst.nextResourceRoots(resourcepath)
+	fmt.Print(nxtrspaths)
+	fmt.Print(rmningrspaths)
+
 	var ressplit = strings.Split(resourcepath, "/")
 	var tmpres = "/"
 
