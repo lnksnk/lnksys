@@ -811,7 +811,10 @@ func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []strin
 			if respath!="" {
 				if _,rspathok:=roots[respath]; rspathok {
 					if strings.HasPrefix(resourcepath,"/") {
-						if strings.HasPrefix(resourcepath,"/"+respath) {
+						if strings.HasPrefix(respath,"/") && strings.HasPrefix(resourcepath,respath) {
+							nxtrspaths=append(nxtrspaths,respath)
+							rmningrspaths=append(rmningrspaths,resourcepath[len(respath):])
+						} else if strings.HasPrefix(resourcepath,"/"+respath) {
 							nxtrspaths=append(nxtrspaths,respath)
 							rmningrspaths=append(rmningrspaths,resourcepath[len(respath)+1:])
 						}
