@@ -806,10 +806,10 @@ func (rsrc *Resource) IsActiveContent() (active bool) {
 var atvExtns map[string]bool
 
 func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []string, rmningrspaths []string) {
-	if len(reqst.resourcepaths) > 0 && resourcepath != "" {
+	if len(reqst.rootpaths) > 0 && resourcepath != "" {
 		var splitrspath = strings.Split(resourcepath, "/")
 		var prefixpath = ""
-		for _, respath := range reqst.resourcepaths {
+		for _, respath := range reqst.rootpaths {
 			prefixpath = ""
 			for n, spltrspath := range splitrspath {
 				prefixpath = prefixpath + spltrspath + "/"
