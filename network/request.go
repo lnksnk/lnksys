@@ -837,7 +837,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 
 	var finfo os.FileInfo = nil
 	var lastPathRoot = ""
-	var findR = func(rspath string) (rf io.Reader) {
+	var findR = func(rspathrt string, rspath string) (rf io.Reader) {
 					var tmpres = "/"
 					var ressplit = strings.Split(rspath, "/")
 					if rf = embed.EmbedFindJS(rspath); rf == nil {
@@ -924,34 +924,37 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					return
 				}
 	var activeInverse = false
-	for _,rsrcpth:=range rmningrspaths {
-		if r = findR(rsrcpth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") >= 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
-			activeInverse = true
-			rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
-			if r = findR(rsrcpth); r!=nil || finfo!=nil {
-				resourcepath=rsrcpth
-				if !strings.HasPrefix(resourcepath,"/") {
-					resourcepath="/"+resourcepath
+	for _,nxrspth:=range nxtrspaths {
+		for _,rsrcpth:=range rmningrspaths {
+			if r = findR(nxrspth,rsrcpth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") >= 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
+				activeInverse = true
+				rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
+				if r = findR(rsrcpth); r!=nil || finfo!=nil {
+					resourcepath=rsrcpth
+					if !strings.HasPrefix(resourcepath,"/") {
+						resourcepath="/"+resourcepath
+					}
+					break
 				}
+			} else {
 				break
 			}
-		} else {
-			break
 		}
-	}
-	if r != nil || finfo != nil {
-		rsrc = &Resource{
-			path:          resourcepath,
-			pathroot:      lastPathRoot,
-			r:             r,
-			finfo:         finfo,
-			reqst:         reqst,
-			activeInverse: activeInverse,
-			activeEnd:     false}
-		if finfo != nil {
-			rsrc.size = finfo.Size()
+		if r != nil || finfo != nil {
+			rsrc = &Resource{
+				path:          resourcepath,
+				pathroot:      lastPathRoot,
+				r:             r,
+				finfo:         finfo,
+				reqst:         reqst,
+				activeInverse: activeInverse,
+				activeEnd:     false}
+			if finfo != nil {
+				rsrc.size = finfo.Size()
+			}
+			return
 		}
-	}
+	}	
 	return
 }
 
