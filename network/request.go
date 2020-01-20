@@ -881,7 +881,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 									var resource = roots[root] + tmpres + strings.Join(ressplit[nrs+1:], "/")
 									if fi, fierr := os.Stat(resource); fierr == nil {
 										if !fi.IsDir() {
-											lastPathRoot = roots[root] + tmpres
+											lastPathRoot = roots[root]
 											finfo = fi
 											break
 										}
