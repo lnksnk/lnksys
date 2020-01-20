@@ -46,7 +46,7 @@ func main() {
 }
 
 func RunService(args ...string) {
-	var lnksrvs, err = lnks.NewLnkService(RunBroker)
+	var lnksrvs, err = lnks.NewLnkService("", "", "", RunBroker)
 	if err == nil {
 		err = lnksrvs.Execute(args...)
 	}
