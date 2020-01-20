@@ -842,7 +842,11 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					var ressplit = strings.Split(rspath, "/")
 					if rf = embed.EmbedFindJS(rspath); rf == nil {
 						for nrs := range ressplit {
-							tmpres = tmpres + strings.Join(ressplit[:nrs+1], "/")
+							var tmpDelim=""
+							if n>0 {
+								tmpDelim="/"
+							}
+ 							tmpres = tmpres + tmpDelim + strings.Join(ressplit[:nrs+1], "/")
 							if nrs > 0 {
 								for _,root := range nxtrspaths {
 									var zipresource = roots[root] + tmpres[:len(tmpres)-1] + ".zip"
