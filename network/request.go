@@ -816,7 +816,7 @@ func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []strin
 				if respath == prefixpath || (strings.HasSuffix(prefixpath,"/") && respath==prefixpath[1:]) {
 					if respath!="" {
 						if _,rspathok:=roots[respath]; rspathok {
-							nxtrspaths = append(nxtrspaths, prefixpath)
+							nxtrspaths = append(nxtrspaths, respath)
 							rmningrspaths = append(rmningrspaths, strings.Join(splitrspath[n:], "/"))
 						}
 					}
