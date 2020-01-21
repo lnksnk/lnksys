@@ -841,27 +841,29 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 		if rf = embed.EmbedFindJS(rspath); rf == nil {
 			if !func() bool {
 				var rootFound = roots[rspathrt]
-				var resource = rootFound + ""
-				var pathDelim = "/"
-				var tmprestest = rspath
-				if strings.HasPrefix(tmprestest, "/") {
-					tmprestest = tmprestest[1:]
-				}
-				if strings.HasSuffix(tmprestest, "/") {
-					tmprestest = tmprestest[:len(tmprestest)-1]
-				}
+				if rffi, rffierr := os.Stat(resource); rffierr == nil && rffi.IsDir() {
+					var resource = rootFound + ""
+					var pathDelim = "/"
+					var tmprestest = rspath
+					if strings.HasPrefix(tmprestest, "/") {
+						tmprestest = tmprestest[1:]
+					}
+					if strings.HasSuffix(tmprestest, "/") {
+						tmprestest = tmprestest[:len(tmprestest)-1]
+					}
 
-				if strings.HasSuffix(resource, "/") && pathDelim == "/" {
-					pathDelim = ""
-				}
+					if strings.HasSuffix(resource, "/") && pathDelim == "/" {
+						pathDelim = ""
+					}
 
-				resource = resource + pathDelim + tmprestest
+					resource = resource + pathDelim + tmprestest
 
-				if fi, fierr := os.Stat(resource); fierr == nil {
-					if !fi.IsDir() {
-						lastPathRoot = rootFound
-						finfo = fi
-						return true
+					if fi, fierr := os.Stat(resource); fierr == nil {
+						if !fi.IsDir() {
+							lastPathRoot = rootFound
+							finfo = fi
+							return true
+						}
 					}
 				}
 				return false
