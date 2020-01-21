@@ -808,19 +808,19 @@ var atvExtns map[string]bool
 func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []string, rmningrspaths []string) {
 	if len(reqst.rootpaths) > 0 && resourcepath != "" {
 		for _, respath := range reqst.rootpaths {
-			if respath!="" {
-				if _,rspathok:=roots[respath]; rspathok {
-					if strings.HasPrefix(resourcepath,"/") {
-						if strings.HasPrefix(respath,"/") && strings.HasPrefix(resourcepath,respath) {
-							nxtrspaths=append(nxtrspaths,respath)
-							rmningrspaths=append(rmningrspaths,resourcepath[len(respath):])
-						} else if strings.HasPrefix(resourcepath,"/"+respath) {
-							nxtrspaths=append(nxtrspaths,respath)
-							rmningrspaths=append(rmningrspaths,resourcepath[len(respath)+1:])
+			if respath != "" {
+				if _, rspathok := roots[respath]; rspathok {
+					if strings.HasPrefix(resourcepath, "/") {
+						if strings.HasPrefix(respath, "/") && strings.HasPrefix(resourcepath, respath) {
+							nxtrspaths = append(nxtrspaths, respath)
+							rmningrspaths = append(rmningrspaths, resourcepath[len(respath):])
+						} else if strings.HasPrefix(resourcepath, "/"+respath) {
+							nxtrspaths = append(nxtrspaths, respath)
+							rmningrspaths = append(rmningrspaths, resourcepath[len(respath)+1:])
 						}
-					} else if strings.HasPrefix(resourcepath,respath) {
-						nxtrspaths=append(nxtrspaths,respath)
-						rmningrspaths=append(rmningrspaths,resourcepath[len(respath):])
+					} else if strings.HasPrefix(resourcepath, respath) {
+						nxtrspaths = append(nxtrspaths, respath)
+						rmningrspaths = append(rmningrspaths, resourcepath[len(respath):])
 					}
 				}
 			}
@@ -833,123 +833,128 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 
 	var r io.Reader = nil
 
-	var nxtrspaths, rmningrspaths=reqst.nextResourceRoots(resourcepath)
+	var nxtrspaths, rmningrspaths = reqst.nextResourceRoots(resourcepath)
 
 	var finfo os.FileInfo = nil
 	var lastPathRoot = ""
 	var findR = func(rspathrt string, rspath string) (rf io.Reader) {
-					var tmpres = "/"
-					var ressplit = strings.Split(rspath, "/")
-					if rf = embed.EmbedFindJS(rspath); rf == nil {
-						for nrs := range ressplit {
- 							tmpres = strings.Join(ressplit[:nrs+1], "/")
-							if nrs > 0 {
-								//for _,root := range nxtrspaths {
-									var zipresource = roots[rspathrt] + tmpres[:len(tmpres)-1] + ".zip"
-									if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
-										func() {
-											if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
-												for _, f := range zipr.File {
+		var tmpres = "/"
+		var ressplit = strings.Split(rspath, "/")
+		if rf = embed.EmbedFindJS(rspath); rf == nil {
+			for nrs := range ressplit {
+				tmpres = strings.Join(ressplit[:nrs+1], "/")
+				if nrs > 0 {
+					//for _,root := range nxtrspaths {
+					var zipresource = roots[rspathrt] + tmpres[:len(tmpres)-1] + ".zip"
+					if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
+						func() {
+							if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
+								for _, f := range zipr.File {
 
-													if f.Name == strings.Join(ressplit[nrs+1:], "/") {
-														if ziprrc, ziprrcerr := f.Open(); ziprrcerr == nil {
-															rf = ziprrc
-															finfo = f.FileInfo()
-															break
-														}
-														break
-													}
-												}
-											}
-										}()
-									} else {
-										var resource = roots[rspathrt] + tmpres + strings.Join(ressplit[nrs+1:], "/")
-										if fi, fierr := os.Stat(resource); fierr == nil {
-											if !fi.IsDir() {
-												finfo = fi
-												lastPathRoot = roots[rspathrt]
-												break
-											}
-										}
-									}
-									if rf != nil || finfo != nil {
-										break
-									}
-								//}
-							} else {
-								//for _,root := range nxtrspaths {
-									var root=rspathrt+""
-									var rootFound=roots[rspathrt]
-									var resource = rootFound+""
-									var pathDelim=""
-									var tmprestest=tmpres+""
-									if strings.HasPrefix(tmprestest,"/") {
-										tmprestest=tmprestest[1:]
-										pathDelim="/"
-									}
-									if strings.HasSuffix(tmprestest,"/") {
-										tmprestest=tmprestest[:len(tmprestest)-1]
-									}
-									
-									if strings.HasPrefix(root,"/") {
-										root=root[1:]
-									}
-
-									if strings.HasSuffix(root,"/") {
-										root=root[:len(root)-1]
-									}
-									
-									if strings.HasPrefix(tmprestest,root) {
-										resource=resource+pathDelim+tmprestest[len(root):]
-									}
-
-									if fi, fierr := os.Stat(resource); fierr == nil {
-										if !fi.IsDir() {
-											lastPathRoot = rootFound
-											finfo = fi
+									if f.Name == strings.Join(ressplit[nrs+1:], "/") {
+										if ziprrc, ziprrcerr := f.Open(); ziprrcerr == nil {
+											rf = ziprrc
+											finfo = f.FileInfo()
 											break
 										}
+										break
 									}
-								//}
+								}
 							}
-							if rf != nil || finfo != nil {
+						}()
+					} else {
+						var resource = roots[rspathrt] + tmpres + strings.Join(ressplit[nrs+1:], "/")
+						if fi, fierr := os.Stat(resource); fierr == nil {
+							if !fi.IsDir() {
+								finfo = fi
+								lastPathRoot = roots[rspathrt]
 								break
 							}
 						}
 					}
-					return
+					if rf != nil || finfo != nil {
+						break
+					}
+					//}
+				} else {
+					//for _,root := range nxtrspaths {
+					var root = rspathrt + ""
+					var rootFound = roots[rspathrt]
+					var resource = rootFound + ""
+					var pathDelim = ""
+					var tmprestest = tmpres + ""
+					if strings.HasPrefix(tmprestest, "/") {
+						tmprestest = tmprestest[1:]
+						pathDelim = "/"
+					}
+					if strings.HasSuffix(tmprestest, "/") {
+						tmprestest = tmprestest[:len(tmprestest)-1]
+					}
+
+					if strings.HasPrefix(root, "/") {
+						root = root[1:]
+					}
+
+					if strings.HasSuffix(root, "/") {
+						root = root[:len(root)-1]
+					}
+
+					if strings.HasPrefix(tmprestest, root) {
+						resource = resource + pathDelim + tmprestest[len(root):]
+					}
+
+					if fi, fierr := os.Stat(resource); fierr == nil {
+						if !fi.IsDir() {
+							lastPathRoot = rootFound
+							finfo = fi
+							break
+						}
+					}
+					//}
 				}
+				if rf != nil || finfo != nil {
+					break
+				}
+			}
+		}
+		return
+	}
 	var activeInverse = false
-	for nxrspthn,nxrspth:=range nxtrspaths {
-		var rsrcpth=rmningrspaths[nxrspthn]
-		if r = findR(nxrspth,rmningrspaths[nxrspthn]); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") >= 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
-			activeInverse = true
-			rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
-			if r = findR(nxrspth,rsrcpth); r!=nil || finfo!=nil {
-				resourcepath=rsrcpth
-				if !strings.HasPrefix(resourcepath,"/") {
-					resourcepath="/"+resourcepath
+
+	for _, rsrcpth := range rmningrspaths {
+		for _, nxrspth := range nxtrspaths {
+			if r = findR(nxrspth, nxrspth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") >= 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
+				activeInverse = true
+				rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
+				if r = findR(nxrspth, rsrcpth); r != nil || finfo != nil {
+					resourcepath = rsrcpth
+					if !strings.HasPrefix(resourcepath, "/") {
+						resourcepath = "/" + resourcepath
+					}
+					break
 				}
+			} else {
 				break
 			}
-		} else {
-			break
+			if r != nil || finfo != nil {
+				rsrc = &Resource{
+					path:          resourcepath,
+					pathroot:      lastPathRoot,
+					r:             r,
+					finfo:         finfo,
+					reqst:         reqst,
+					activeInverse: activeInverse,
+					activeEnd:     false}
+				if finfo != nil {
+					rsrc.size = finfo.Size()
+				}
+				return
+			}
 		}
 		if r != nil || finfo != nil {
-			rsrc = &Resource{
-				path:          resourcepath,
-				pathroot:      lastPathRoot,
-				r:             r,
-				finfo:         finfo,
-				reqst:         reqst,
-				activeInverse: activeInverse,
-				activeEnd:     false}
-			if finfo != nil {
-				rsrc.size = finfo.Size()
-			}
-			return
+			break
 		}
-	}	
+	}
 	return
 }
 
