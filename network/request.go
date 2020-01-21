@@ -841,7 +841,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 		if rf = embed.EmbedFindJS(rspath); rf == nil {
 			if !func() bool {
 				var rootFound = roots[rspathrt]
-				if rffi, rffierr := os.Stat(resource); rffierr == nil && rffi.IsDir() {
+				if rffi, rffierr := os.Stat(rootFound); rffierr == nil && rffi.IsDir() {
 					var resource = rootFound + ""
 					var pathDelim = "/"
 					var tmprestest = rspath
