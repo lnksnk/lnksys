@@ -838,14 +838,13 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 	var finfo os.FileInfo = nil
 	var lastPathRoot = ""
 	var findR = func(rspathrt string, rspath string) (rf io.Reader) {
-		var tmpres = "/"
 		var ressplit = strings.Split(rspath, "/")
 		if rf = embed.EmbedFindJS(rspath); rf == nil {
 			if !func() bool {
 				var rootFound = roots[rspathrt]
 				var resource = rootFound + ""
 				var pathDelim = "/"
-				var tmprestest = tmpres + ""
+				var tmprestest = rspath
 				if strings.HasPrefix(tmprestest, "/") {
 					tmprestest = tmprestest[1:]
 				}
