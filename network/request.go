@@ -910,8 +910,6 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					}
 					break
 				}
-			} else {
-				break
 			}
 		}
 		if r != nil || finfo != nil {
