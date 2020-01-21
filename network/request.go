@@ -868,8 +868,8 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					var ressplit = strings.Split(rspath, "/")
 					var tmpres=""
 					for nrs := range ressplit {
-						tmpres = strings.Join(ressplit[:nrs+1], "/")
 						if nrs > 0 {
+							tmpres = strings.Join(ressplit[:nrs], "/")
 							//for _,root := range nxtrspaths {
 							var zipresource = rootFound + pathDelim + tmpres[:len(tmpres)-1] + ".zip"
 							if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
