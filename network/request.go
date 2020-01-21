@@ -877,7 +877,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 									if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
 										for _, f := range zipr.File {
 
-											if f.Name == strings.Join(ressplit[nrs+1:], "/") {
+											if f.Name == strings.Join(ressplit[nrs:], "/") {
 												if ziprrc, ziprrcerr := f.Open(); ziprrcerr == nil {
 													rf = ziprrc
 													finfo = f.FileInfo()
