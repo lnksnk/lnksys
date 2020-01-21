@@ -838,7 +838,6 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 	var finfo os.FileInfo = nil
 	var lastPathRoot = ""
 	var findR = func(rspathrt string, rspath string) (rf io.Reader) {
-		var ressplit = strings.Split(rspath, "/")
 		if rf = embed.EmbedFindJS(rspath); rf == nil {
 			if !func() bool {
 				var rootFound = roots[rspathrt]
@@ -863,11 +862,13 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 				}
 				return false
 			}() {
+				var ressplit = strings.Split(rspath, "/")
+				var rootFound = roots[rspathrt]
 				for nrs := range ressplit {
-					tmpres = strings.Join(ressplit[:nrs+1], "/")
+					tmpres := strings.Join(ressplit[:nrs+1], "/")
 					if nrs > 0 {
 						//for _,root := range nxtrspaths {
-						var zipresource = roots[rspathrt] + tmpres[:len(tmpres)-1] + ".zip"
+						var zipresource = rootFound + tmpres[:len(tmpres)-1] + ".zip"
 						if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
 							func() {
 								if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
