@@ -870,13 +870,11 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					for nrs := range ressplit {
 						if nrs > 0 {
 							tmpres = strings.Join(ressplit[:nrs], "/")
-							//for _,root := range nxtrspaths {
 							var zipresource = rootFound + pathDelim + tmpres[:len(tmpres)] + ".zip"
 							if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
 								func() {
 									if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
 										for _, f := range zipr.File {
-
 											if f.Name == strings.Join(ressplit[nrs:], "/") {
 												if ziprrc, ziprrcerr := f.Open(); ziprrcerr == nil {
 													rf = ziprrc
