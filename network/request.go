@@ -197,7 +197,7 @@ func (reqst *Request) AddResource(resource ...string) {
 
 func nextResource(reqst *Request, nxtrspath string) (nxtrs *Resource) {
 	if nxtrspath != "" {
-		nxtrs = reqst.NewResource(nxtrspath)
+		nxtrs = NewResource(reqst, nxtrspath)
 	}
 	return nxtrs
 }
