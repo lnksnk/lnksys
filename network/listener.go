@@ -28,7 +28,7 @@ type lstnrserver struct {
 	sema chan struct{}
 }
 
-func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
+func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 
 	//var srvmutex = http.NewServeMux()
 
