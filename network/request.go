@@ -839,11 +839,14 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 	var lastPathRoot = ""
 	var findR = func(rspathrt string, rspath string) (rf io.Reader) {
 		if rf = embed.EmbedFindJS(rspath); rf == nil {
-			if !func() bool {
-				var rootFound = roots[rspathrt]
-				if rffi, rffierr := os.Stat(rootFound); rffierr == nil && rffi.IsDir() {
+			var rootFound = roots[rspathrt]
+			var pathDelim = "/"
+			if rffi, rffierr := os.Stat(rootFound); rffierr == nil && rffi.IsDir() {
+				if strings.HasSuffix(rootFound, "/") && pathDelim == "/" {
+					pathDelim = ""
+				}
+				if !func() bool {
 					var resource = rootFound + ""
-					var pathDelim = "/"
 					var tmprestest = rspath
 					if strings.HasPrefix(tmprestest, "/") {
 						tmprestest = tmprestest[1:]
@@ -851,13 +854,8 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					if strings.HasSuffix(tmprestest, "/") {
 						tmprestest = tmprestest[:len(tmprestest)-1]
 					}
-
-					if strings.HasSuffix(resource, "/") && pathDelim == "/" {
-						pathDelim = ""
-					}
-
+					
 					resource = resource + pathDelim + tmprestest
-
 					if fi, fierr := os.Stat(resource); fierr == nil {
 						if !fi.IsDir() {
 							lastPathRoot = rootFound
@@ -865,36 +863,35 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 							return true
 						}
 					}
-				}
-				return false
-			}() {
-				var ressplit = strings.Split(rspath, "/")
-				var rootFound = roots[rspathrt]
-				var pathDelim = "/"
-				for nrs := range ressplit {
-					tmpres := strings.Join(ressplit[:nrs+1], "/")
-					if nrs > 0 {
-						//for _,root := range nxtrspaths {
-						var zipresource = rootFound + pathDelim + tmpres[:len(tmpres)-1] + ".zip"
-						if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
-							func() {
-								if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
-									for _, f := range zipr.File {
+					return false
+				}() {
+					var ressplit = strings.Split(rspath, "/")
+					var tmpres=""
+					for nrs := range ressplit {
+						tmpres = tmpres + strings.Join(ressplit[:nrs+1], "/")
+						if nrs > 0 {
+							//for _,root := range nxtrspaths {
+							var zipresource = rootFound + pathDelim + tmpres[:len(tmpres)-1] + ".zip"
+							if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
+								func() {
+									if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
+										for _, f := range zipr.File {
 
-										if f.Name == strings.Join(ressplit[nrs+1:], "/") {
-											if ziprrc, ziprrcerr := f.Open(); ziprrcerr == nil {
-												rf = ziprrc
-												finfo = f.FileInfo()
+											if f.Name == strings.Join(ressplit[nrs+1:], "/") {
+												if ziprrc, ziprrcerr := f.Open(); ziprrcerr == nil {
+													rf = ziprrc
+													finfo = f.FileInfo()
+													break
+												}
 												break
 											}
-											break
 										}
 									}
-								}
-							}()
-						}
-						if rf != nil || finfo != nil {
-							break
+								}()
+							}
+							if rf != nil || finfo != nil {
+								break
+							}
 						}
 					}
 				}
