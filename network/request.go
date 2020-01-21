@@ -842,7 +842,6 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 		var ressplit = strings.Split(rspath, "/")
 		if rf = embed.EmbedFindJS(rspath); rf == nil {
 			if !func() bool {
-				var root = rspathrt + ""
 				var rootFound = roots[rspathrt]
 				var resource = rootFound + ""
 				var pathDelim = "/"
