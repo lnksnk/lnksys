@@ -914,6 +914,12 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 					}
 					break
 				}
+			} else if r != nil || finfo != nil {
+				resourcepath = rsrcpth
+				if !strings.HasPrefix(resourcepath, "/") {
+					resourcepath = "/" + resourcepath
+				}
+				break
 			}
 		}
 		if r != nil || finfo != nil {
