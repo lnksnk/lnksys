@@ -890,7 +890,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 						tmprestest = tmprestest[:len(tmprestest)-1]
 					}
 
-					resource = resource + pathDelim + tmprestest[len(root):]
+					resource = resource + pathDelim + tmprestest
 
 					if fi, fierr := os.Stat(resource); fierr == nil {
 						if !fi.IsDir() {
