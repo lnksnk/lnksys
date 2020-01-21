@@ -2,9 +2,16 @@ package network
 
 import (
 	"archive/zip"
+	"bufio"
+	"context"
+	"fmt"
 	"io"
-	"os"
+	"net/http"
+	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
+	"time"
 
 	embed "github.com/efjoubert/lnksys/embed"
 )
