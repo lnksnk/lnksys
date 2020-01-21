@@ -24,15 +24,15 @@ type Listening interface {
 type lstnrserver struct {
 	httpsvr  *http.Server
 	http2svr *http2.Server
-	srvmx    *http.ServeMux
-	sema     chan struct{}
+	//srvmx    *http.ServeMux
+	sema chan struct{}
 }
 
 func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 
-	var srvmutex = http.NewServeMux()
+	//var srvmutex = http.NewServeMux()
 
-	srvmutex.Handle("/", hdnlr)
+	//srvmutex.Handle("/", hdnlr)
 
 	var serverh2 = &http2.Server{}
 
@@ -42,12 +42,12 @@ func newLstnrServer(host string, hdnlr http.Handler) (lstnrsvr *lstnrserver) {
 		IdleTimeout:       10 * time.Second,
 		WriteTimeout:      2 * time.Minute,
 		Addr:              host,
-		Handler:           h2c.NewHandler(srvmutex, serverh2),
+		Handler:           h2c.NewHandler(hndlr, serverh2),
 		ConnContext: func(ctx context.Context, c net.Conn) (cntx context.Context) {
 			cntx = ctx
 			return
 		}}
-	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2, srvmx: srvmutex}
+	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2}
 	return
 }
 
@@ -66,7 +66,7 @@ func (lstnrsvr *lstnrserver) Shutdown() (err error) {
 	lstnrsvr.httpsvr.Close()
 	lstnrsvr.httpsvr = nil
 	lstnrsvr.http2svr = nil
-	lstnrsvr.srvmx = nil
+	//lstnrsvr.srvmx = nil
 	return
 }
 
