@@ -3,15 +3,10 @@ package network
 import (
 	"archive/zip"
 	"bufio"
-	"context"
-	"fmt"
 	"io"
-	"net/http"
 	"path/filepath"
-	"runtime"
 	"strings"
-	"sync"
-	"time"
+	"os"
 
 	embed "github.com/efjoubert/lnksys/embed"
 )
