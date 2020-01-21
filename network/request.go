@@ -871,7 +871,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 						if nrs > 0 {
 							tmpres = strings.Join(ressplit[:nrs], "/")
 							//for _,root := range nxtrspaths {
-							var zipresource = rootFound + pathDelim + tmpres[:len(tmpres)-1] + ".zip"
+							var zipresource = rootFound + pathDelim + tmpres[:len(tmpres)] + ".zip"
 							if _, fiziperr := os.Stat(zipresource); fiziperr == nil {
 								func() {
 									if zipr, ziprerr := zip.OpenReader(zipresource); ziprerr == nil {
