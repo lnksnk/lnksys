@@ -923,7 +923,7 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 
 	for _, rsrcpth := range rmningrspaths {
 		for _, nxrspth := range nxtrspaths {
-			if r = findR(nxrspth, nxrspth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") >= 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
+			if r = findR(nxrspth, rsrcpth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") >= 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
 				activeInverse = true
 				rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
 				if r = findR(nxrspth, rsrcpth); r != nil || finfo != nil {
