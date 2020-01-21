@@ -935,23 +935,20 @@ func (reqst *Request) NewResource(resourcepath string) (rsrc *Resource) {
 			} else {
 				break
 			}
-			if r != nil || finfo != nil {
-				rsrc = &Resource{
-					path:          resourcepath,
-					pathroot:      lastPathRoot,
-					r:             r,
-					finfo:         finfo,
-					reqst:         reqst,
-					activeInverse: activeInverse,
-					activeEnd:     false}
-				if finfo != nil {
-					rsrc.size = finfo.Size()
-				}
-				return
-			}
 		}
 		if r != nil || finfo != nil {
-			break
+			rsrc = &Resource{
+				path:          resourcepath,
+				pathroot:      lastPathRoot,
+				r:             r,
+				finfo:         finfo,
+				reqst:         reqst,
+				activeInverse: activeInverse,
+				activeEnd:     false}
+			if finfo != nil {
+				rsrc.size = finfo.Size()
+			}
+			return
 		}
 	}
 	return
