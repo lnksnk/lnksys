@@ -200,7 +200,7 @@ type BufferedRW struct {
 
 func NewBufferedRW(maxBufferSize int64, rw ...interface{}) (bufRW *BufferedRW) {
 	var altRW ReaderWriter=nil
-	if len(rw)==1 {
+	if len(rw)==1 && rw[0]!=nil {
 		if rwi,rwiok:=rw[0](ReaderWriter); rwiok {
 			altRW=rwi
 		} else {
