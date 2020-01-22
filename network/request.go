@@ -69,6 +69,7 @@ type Request struct {
 	canShutdownEnv       bool
 	forceRead            bool
 	busyForcing          bool
+	preWriteHeader 			 func()
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -220,9 +221,10 @@ func (reqst *Request) ExecuteRequest() {
 	}
 	if isAtv {
 		if reqst.rqstContent == nil {
-			reqst.rqstContent = iorw.NewBufferedRW(int64(maxbufsize), nil)
 			if reqst.r.Body != nil {
-				reqst.rqstContent.Print(reqst.r.Body)
+				reqst.rqstContent = iorw.NewBufferedRW(int64(maxbufsize), reqst.r.Body)
+			} else {
+				reqst.rqstContent = iorw.NewBufferedRW(int64(maxbufsize), nil)
 			}
 		}
 		reqst.forceRead = isAtv
@@ -236,10 +238,20 @@ func (reqst *Request) ExecuteRequest() {
 	if isAtv {
 		contentencoding = "; charset=UTF-8"
 	}
-	reqst.w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
-	reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
-	reqst.w.WriteHeader(200)
-	
+
+	if reqst.preWriteHeader==nil {
+		defer func(){
+			if reqst.preWriteHeader!=nil {
+				reqst.preWriteHeader()
+				reqst.preWriteHeader
+			}
+		}()
+		reqst.preWriteHeader=func() {
+			reqst.w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
+			reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
+			reqst.w.WriteHeader(200)
+		}
+	}
 	if reqst.Active == nil {
 		reqst.Active = active.NewActive(int64(maxbufsize), reqst, map[string]interface{}{"DBMS": db.DBMSManager, "Parameters": func() *parameters.Parameters {
 			return reqst.Parameters()
@@ -297,11 +309,6 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				} else {
 					reqst.Print(nxtrs)
-					//if reqst.resources == nil {
-					//	reqst.resources = []*Resource{}
-					//}
-					//reqst.resources = append(reqst.resources, nxtrs)
-					//reqst.resourcesSize = reqst.resourcesSize + nxtrs.size
 				}
 			}
 		} else {
@@ -574,6 +581,12 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 }
 
 func (reqst *Request) Write(p []byte) (n int, err error) {
+	if len(p)> 0 {
+		if reqst.preWriteHeader!=nil {
+			reqst.preWriteHeader()
+			reqst.preWriteHeader=nil
+		}
+	}
 	if n, err = reqst.w.Write(p); n > 0 && err == nil {
 		if f, ok := reqst.w.(http.Flusher); ok {
 			f.Flush()
