@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"net"
+
 	active "github.com/efjoubert/lnksys/iorw/active"
 	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
-	"net"
 )
 
 /*Listening interface
@@ -34,7 +34,7 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 
 	//srvmutex.Handle("/", hdnlr)
 
-	var serverh2 = &http2.Server{}
+	//var serverh2 = &http2.Server{}
 
 	var server = &http.Server{
 		ReadHeaderTimeout: 20 * time.Second,
@@ -42,12 +42,12 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 		IdleTimeout:       10 * time.Second,
 		WriteTimeout:      2 * time.Minute,
 		Addr:              host,
-		Handler:           h2c.NewHandler(hndlr, serverh2),
+		Handler:           hndlr, //h2c.NewHandler(hndlr, serverh2),
 		ConnContext: func(ctx context.Context, c net.Conn) (cntx context.Context) {
 			cntx = ctx
 			return
 		}}
-	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2}
+	lstnrsvr = &lstnrserver{httpsvr: server} //, http2svr: serverh2}
 	return
 }
 
@@ -85,10 +85,6 @@ func (lstnr *Listener) QueueRequest(reqst *Request) {
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	HttpRequestHandler(func() (rqst *Request) {
-		//lstnr.srvlck.Lock()
-		//defer func() {
-		//	lstnr.srvlck.Unlock()
-		//}()
 		rqst = NewRequest(lstnr, w, r, func() {
 			lstnr.Shutdown()
 		}, func() {
