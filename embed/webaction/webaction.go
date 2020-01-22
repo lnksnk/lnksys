@@ -38,7 +38,7 @@ function postForm(options){
 	}
 	
 	var hasForm=false;
-	var enableProgressElem=true;
+	var enableProgressElem=false;
 
     if(options.enable_progress_elem!=undefined&&options.enable_progress_elem!=""){
 		enableProgressElem=options.enable_progress_elem=="true"?true:false;
