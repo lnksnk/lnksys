@@ -104,7 +104,7 @@ type activeParser struct {
 	rdrRune    io.RuneReader
 	rdskr      io.Seeker
 	maxBufSize int64
-	lck        *sync.RWMutex
+	lck        *sync.Mutex
 	//
 	runesToParse  []rune
 	runesToParsei int
