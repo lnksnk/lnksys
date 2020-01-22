@@ -231,8 +231,8 @@ func (atvprsr *activeParser) Close() {
 }
 
 func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
-	atvprsr.lck.RLock()
-	defer atvprsr.lck.RUnlock()
+	atvprsr.lck.Lock()
+	defer atvprsr.lck.Unlock()
 	atvprsr.atvbufrdr().Print(a...)
 	for {
 		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
@@ -316,13 +316,13 @@ func wrappingupActiveParsing(atvprsr *activeParser) {
 
 func (atvprsr *activeParser) ACommit() (acerr error) {
 	if atvprsr.atvrdr != nil {
-		atvprsr.lck.RLock()
+		atvprsr.lck.Lock()
 		defer func() {
 			if err := recover(); err != nil {
 				acerr = fmt.Errorf("Panic: %+v\n", err)
 			}
 			wrappingupActiveParsing(atvprsr)
-			atvprsr.lck.RUnlock()
+			atvprsr.lck.Unlock()
 		}()
 		if atvxctr := preppingActiveParsing(atvprsr); atvxctr != nil && atvxctr.foundCode {
 			if atvprsr.atv != nil {
@@ -722,7 +722,7 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 		maxBufSize = 81920
 	}
 	atv = &Active{atvprsr: &activeParser{
-		maxBufSize: maxBufSize, lck: &sync.RWMutex{},
+		maxBufSize: maxBufSize, lck: &sync.Mutex{},
 		runesToParse:     make([]rune, maxBufSize),
 		runeLabel:        [][]rune{[]rune("<@"), []rune("@>")},
 		runeLabelI:       []int{0, 0},
