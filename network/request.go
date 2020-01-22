@@ -235,10 +235,12 @@ func (reqst *Request) ExecuteRequest() {
 	reqst.AddResource(reqst.r.URL.Path)
 	if isAtv {
 		contentencoding = "; charset=UTF-8"
-		reqst.w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
-		reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
-		reqst.w.WriteHeader(200)
-		if reqst.Active == nil {
+	}
+	reqst.w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
+	reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
+	reqst.w.WriteHeader(200)
+	
+	if reqst.Active == nil {
 			reqst.Active = active.NewActive(int64(maxbufsize), reqst, map[string]interface{}{"DBMS": db.DBMSManager, "Parameters": func() *parameters.Parameters {
 				return reqst.Parameters()
 			}, "DBQuery": func(alias string, query string, args ...interface{}) (dbquery *db.DBQuery) {
@@ -305,10 +307,6 @@ func (reqst *Request) ExecuteRequest() {
 		} else {
 			break
 		}
-	}
-	if !isAtv {
-		reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
-		http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), reqst.bufRW)
 	}
 }
 
