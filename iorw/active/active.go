@@ -225,6 +225,9 @@ func (atvprsr *activeParser) Close() {
 	if atvprsr.atv != nil {
 		atvprsr.atv = nil
 	}
+	if atvprsr.lck!=nil {
+		atvprsr.lck=nil
+	}
 }
 
 func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
@@ -459,21 +462,6 @@ type Active struct {
 	vm        *goja.Runtime
 	activeMap map[string]interface{}
 }
-
-/*type activeRune struct {
-	rne     rune
-	rnesize int
-	reerr   error
-	atvprsr *activeParser
-}
-
-func (atvRne *activeRune) process() {
-	processRune(atvRne.rne, atvRne.atvprsr, atvRne.atvprsr.runeLabel, atvRne.atvprsr.runeLabelI, atvRne.atvprsr.runePrvR)
-}
-
-func (atvRne *activeRune) close() {
-	atvRne.atvprsr = nilmmit
-}*/
 
 func (atv *Active) APrint(a ...interface{}) (err error) {
 	if atv.atvprsr != nil {
@@ -783,6 +771,7 @@ func (atv *Active) Reset() {
 func (atv *Active) Close() {
 	if atv.atvprsr != nil {
 		atv.atvprsr.Close()
+		atv.atvprsr=nil
 	}
 
 	if atv.printer != nil {
