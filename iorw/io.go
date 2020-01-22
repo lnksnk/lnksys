@@ -198,7 +198,13 @@ type BufferedRW struct {
 	bufRWActnDone chan bool
 }
 
-func NewBufferedRW(maxBufferSize int64, altRW ReaderWriter) (bufRW *BufferedRW) {
+func NewBufferedRW(maxBufferSize int64, rw ...interface{}) (bufRW *BufferedRW) {
+	var altRW ReaderWriter=nil
+	if rwi,rwiok:=rw(ReaderWriter); rwiok {
+		altRW=rwi
+	} else {
+		altRW=NewRW(rw)
+	}
 	bufRW = &BufferedRW{altRW: altRW, maxBufferSize: maxBufferSize, bufRWActn: bufRWNoAction, bufRWActnDone: make(chan bool, 1), isCursor: false, lastCurpos: 0, cbufi: 0, cbytesi: 0}
 	if altRW != nil {
 		if altRWBuf, altRWBufOk := altRW.(*BufferedRW); altRWBufOk && !altRWBuf.isCursor {
