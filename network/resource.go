@@ -176,7 +176,6 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 			if !strings.HasPrefix(resourcepath, "/") {
 				resourcepath = "/" + resourcepath
 			}
-			break
 		}
 	}
 	if r != nil || finfo != nil {
