@@ -200,10 +200,12 @@ type BufferedRW struct {
 
 func NewBufferedRW(maxBufferSize int64, rw ...interface{}) (bufRW *BufferedRW) {
 	var altRW ReaderWriter=nil
-	if rwi,rwiok:=rw(ReaderWriter); rwiok {
-		altRW=rwi
-	} else {
-		altRW=NewRW(rw)
+	if len(rw)==1 {
+		if rwi,rwiok:=rw[0](ReaderWriter); rwiok {
+			altRW=rwi
+		} else {
+			altRW=NewRW(rw[0])
+		}
 	}
 	bufRW = &BufferedRW{altRW: altRW, maxBufferSize: maxBufferSize, bufRWActn: bufRWNoAction, bufRWActnDone: make(chan bool, 1), isCursor: false, lastCurpos: 0, cbufi: 0, cbytesi: 0}
 	if altRW != nil {
