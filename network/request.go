@@ -243,7 +243,7 @@ func (reqst *Request) ExecuteRequest() {
 		defer func(){
 			if reqst.preWriteHeader!=nil {
 				reqst.preWriteHeader()
-				reqst.preWriteHeader
+				reqst.preWriteHeader=nil
 			}
 		}()
 		reqst.preWriteHeader=func() {
