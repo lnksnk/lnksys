@@ -4,9 +4,9 @@ import (
 	"archive/zip"
 	"bufio"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
-	"os"
 
 	embed "github.com/efjoubert/lnksys/embed"
 )
@@ -127,6 +127,24 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 								break
 							}
 						}
+					}
+				}
+			} else if strings.HasSuffix(rootFound, ".zip") {
+				if _, fiziperr := os.Stat(rootFound); fiziperr == nil {
+					if zipr, ziprerr := zip.OpenReader(rootFound); ziprerr == nil {
+						for _, f := range zipr.File {
+							if f.Name == rspath {
+								if ziprrc, ziprrcerr := f.Open(); ziprrcerr == nil {
+									rf = ziprrc
+									finfo = f.FileInfo()
+									break
+								}
+								break
+							}
+						}
+					}
+					if rf != nil || finfo != nil {
+						return
 					}
 				}
 			}
