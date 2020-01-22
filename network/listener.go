@@ -53,7 +53,7 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 
 func (lstnrsvr *lstnrserver) listenAndServe() {
 	go func(srvr *http.Server) {
-		srvr.ListenAndServe()
+		srvr.Serve(net.Listen(srvr.Addr))
 	}(lstnrsvr.httpsvr)
 }
 
