@@ -296,11 +296,12 @@ func (reqst *Request) ExecuteRequest() {
 						break
 					}
 				} else {
-					if reqst.resources == nil {
-						reqst.resources = []*Resource{}
-					}
-					reqst.resources = append(reqst.resources, nxtrs)
-					reqst.resourcesSize = reqst.resourcesSize + nxtrs.size
+					reqst.Print(nxtrs)
+					//if reqst.resources == nil {
+					//	reqst.resources = []*Resource{}
+					//}
+					//reqst.resources = append(reqst.resources, nxtrs)
+					//reqst.resourcesSize = reqst.resourcesSize + nxtrs.size
 				}
 			}
 		} else {
