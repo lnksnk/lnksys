@@ -23,35 +23,36 @@ import (
 const maxbufsize int = 81920
 
 type Request struct {
-	rqstlck          *sync.Mutex
-	bufRW            *iorw.BufferedRW
-	rw               *iorw.RW
-	rqstContent      *iorw.BufferedRW
-	listener         Listening
-	w                http.ResponseWriter
-	r                *http.Request
-	done             chan bool
-	resourcesOffset  int64
-	resourcesSize    int64
-	currdr           *Resource
-	resources        []*Resource
-	resourcepaths    []string
-	rootpaths        []string
-	preCurrentBytes  []byte
-	preCurrentBytesl int
-	preCurrentBytesi int
-	currentbytes     []byte
-	currentbytesl    int
-	currentbytesi    int
-	currentrunes     []rune
-	currentrunesl    int
-	currentrunesi    int
-	preCurrentRunes  []byte
-	preCurrentRunesl int
-	preCurrentRunesi int
-	runeRdr          *bufio.Reader
-	dbcn             map[string]*db.DbConnection
-	params           *parameters.Parameters
+	rqstlck               *sync.Mutex
+	bufRW                 *iorw.BufferedRW
+	rw                    *iorw.RW
+	rqstContent           *iorw.BufferedRW
+	listener              Listening
+	w                     http.ResponseWriter
+	r                     *http.Request
+	done                  chan bool
+	resourcesOffset       int64
+	resourcesSize         int64
+	currdr                *Resource
+	resources             []*Resource
+	lastResourcePathAdded string
+	resourcepaths         []string
+	rootpaths             []string
+	preCurrentBytes       []byte
+	preCurrentBytesl      int
+	preCurrentBytesi      int
+	currentbytes          []byte
+	currentbytesl         int
+	currentbytesi         int
+	currentrunes          []rune
+	currentrunesl         int
+	currentrunesi         int
+	preCurrentRunes       []byte
+	preCurrentRunesl      int
+	preCurrentRunesi      int
+	runeRdr               *bufio.Reader
+	dbcn                  map[string]*db.DbConnection
+	params                *parameters.Parameters
 	*active.Active
 	interuptRequest      bool
 	runeBuffer           []rune
@@ -265,6 +266,14 @@ func (reqst *Request) ExecuteRequest() {
 		if len(reqst.resourcepaths) > 0 {
 			var nextrs = reqst.resourcepaths[0]
 			reqst.resourcepaths = reqst.resourcepaths[1:]
+			if !strings.HasPrefix(nextrs, "/") {
+				if reqst.lastResourcePathAdded == "" {
+					reqst.lastResourcePathAdded = "/"
+				}
+				nextrs = reqst.lastResourcePathAdded + nextrs
+			} else if strings.HasPrefix(nextrs, "/") {
+				reqst.lastResourcePathAdded = nextrs[:strings.LastIndex(nextrs, "/")+1]
+			}
 			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
 				if isAtv {
 					if atverr := func(nxtrs *Resource) (fnerr error) {
