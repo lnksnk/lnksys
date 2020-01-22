@@ -41,22 +41,30 @@ func (rsrc *Resource) IsActiveContent() (active bool) {
 	return
 }
 
-func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspaths []string, rmningrspaths []string) {
+func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspath string, rmningrspath string) {
 	if len(reqst.rootpaths) > 0 && resourcepath != "" {
+		nxtrspath = ""
+		rmningrspath = ""
 		for _, respath := range reqst.rootpaths {
 			if respath != "" {
 				if _, rspathok := roots[respath]; rspathok {
 					if strings.HasPrefix(resourcepath, "/") {
 						if strings.HasPrefix(respath, "/") && strings.HasPrefix(resourcepath, respath) {
-							nxtrspaths = append(nxtrspaths, respath)
-							rmningrspaths = append(rmningrspaths, resourcepath[len(respath):])
+							if len(respath) > len(nxtrspath) {
+								nxtrspath = respath
+								rmningrspath = resourcepath[len(respath):]
+							}
 						} else if strings.HasPrefix(resourcepath, "/"+respath) {
-							nxtrspaths = append(nxtrspaths, respath)
-							rmningrspaths = append(rmningrspaths, resourcepath[len(respath)+1:])
+							if len(respath) > len(nxtrspath) {
+								nxtrspath = respath
+								rmningrspath = resourcepath[len(respath)+1:]
+							}
 						}
 					} else if strings.HasPrefix(resourcepath, respath) {
-						nxtrspaths = append(nxtrspaths, respath)
-						rmningrspaths = append(rmningrspaths, resourcepath[len(respath):])
+						if len(respath) > len(nxtrspath) {
+							nxtrspath = respath
+							rmningrspath = resourcepath[len(respath):]
+						}
 					}
 				}
 			}
@@ -69,7 +77,7 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 
 	var r io.Reader = nil
 
-	var nxtrspaths, rmningrspaths = reqst.nextResourceRoots(resourcepath)
+	var nxtrspath, rmningrspath = reqst.nextResourceRoots(resourcepath)
 
 	var finfo os.FileInfo = nil
 	var lastPathRoot = ""
@@ -152,42 +160,38 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 		return
 	}
 	var activeInverse = false
-
-	for _, rsrcpth := range rmningrspaths {
-		for _, nxrspth := range nxtrspaths {
-			if r = findR(nxrspth, rsrcpth); r == nil && finfo == nil && strings.Count(rsrcpth, "@") > 0 && strings.Index(rsrcpth, "@") >= 0 && strings.Index(rsrcpth, "@") != strings.LastIndex(rsrcpth, "@") {
-				activeInverse = true
-				rsrcpth = strings.Replace(rsrcpth, "@", "", -1)
-				if r = findR(nxrspth, rsrcpth); r != nil || finfo != nil {
-					resourcepath = rsrcpth
-					if !strings.HasPrefix(resourcepath, "/") {
-						resourcepath = "/" + resourcepath
-					}
-					break
-				}
-			}
-			if r != nil || finfo != nil {
-				resourcepath = rsrcpth
+	if rmningrspath != "" && nxtrspath != "" {
+		if r = findR(nxtrspath, rmningrspath); r == nil && finfo == nil && strings.Count(rmningrspath, "@") > 0 && strings.Index(rmningrspath, "@") >= 0 && strings.Index(rmningrspath, "@") != strings.LastIndex(rmningrspath, "@") {
+			activeInverse = true
+			rmningrspath = strings.Replace(rmningrspath, "@", "", -1)
+			if r = findR(nxtrspath, rmningrspath); r != nil || finfo != nil {
+				resourcepath = rmningrspath
 				if !strings.HasPrefix(resourcepath, "/") {
 					resourcepath = "/" + resourcepath
 				}
-				break
 			}
 		}
 		if r != nil || finfo != nil {
-			rsrc = &Resource{
-				path:          resourcepath,
-				pathroot:      lastPathRoot,
-				r:             r,
-				finfo:         finfo,
-				reqst:         reqst,
-				activeInverse: activeInverse,
-				activeEnd:     false}
-			if finfo != nil {
-				rsrc.size = finfo.Size()
+			resourcepath = rmningrspath
+			if !strings.HasPrefix(resourcepath, "/") {
+				resourcepath = "/" + resourcepath
 			}
-			return
+			break
 		}
+	}
+	if r != nil || finfo != nil {
+		rsrc = &Resource{
+			path:          resourcepath,
+			pathroot:      lastPathRoot,
+			r:             r,
+			finfo:         finfo,
+			reqst:         reqst,
+			activeInverse: activeInverse,
+			activeEnd:     false}
+		if finfo != nil {
+			rsrc.size = finfo.Size()
+		}
+		return
 	}
 	return
 }
