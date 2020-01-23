@@ -155,6 +155,11 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 						return
 					}
 				}
+			} else if strings.HasPrefix(rootFound, "http:") || strings.HasPrefix(rootFound, "https:") {
+				var tlkr=NewTalker()
+				var rw=iorw.NewBufferedRW(81920)
+				tlkr.FSend(rw,rootFound)
+				rf=rw
 			}
 		}
 		return

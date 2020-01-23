@@ -28,6 +28,7 @@ type Request struct {
 	rw                    *iorw.RW
 	rqstContent           *iorw.BufferedRW
 	listener              Listening
+	talker                Talking
 	w                     http.ResponseWriter
 	r                     *http.Request
 	done                  chan bool
@@ -69,7 +70,7 @@ type Request struct {
 	canShutdownEnv       bool
 	forceRead            bool
 	busyForcing          bool
-	preWriteHeader 			 func()
+	preWriteHeader       func()
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -239,14 +240,14 @@ func (reqst *Request) ExecuteRequest() {
 		contentencoding = "; charset=UTF-8"
 	}
 
-	if reqst.preWriteHeader==nil {
-		defer func(){
-			if reqst.preWriteHeader!=nil {
+	if reqst.preWriteHeader == nil {
+		defer func() {
+			if reqst.preWriteHeader != nil {
 				reqst.preWriteHeader()
-				reqst.preWriteHeader=nil
+				reqst.preWriteHeader = nil
 			}
 		}()
-		reqst.preWriteHeader=func() {
+		reqst.preWriteHeader = func() {
 			reqst.w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
 			reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
 			reqst.w.WriteHeader(200)
@@ -581,10 +582,10 @@ func readResources(reqst *Request, p []byte) (n int, err error) {
 }
 
 func (reqst *Request) Write(p []byte) (n int, err error) {
-	if len(p)> 0 {
-		if reqst.preWriteHeader!=nil {
+	if len(p) > 0 {
+		if reqst.preWriteHeader != nil {
 			reqst.preWriteHeader()
-			reqst.preWriteHeader=nil
+			reqst.preWriteHeader = nil
 		}
 	}
 	if n, err = reqst.w.Write(p); n > 0 && err == nil {

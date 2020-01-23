@@ -1,7 +1,6 @@
 package network
 
 import (
-	"fmt"
 	"io"
 	"net"
 	http "net/http"
@@ -11,6 +10,11 @@ import (
 	"github.com/efjoubert/lnksys/iorw/active"
 	"github.com/efjoubert/lnksys/parameters"
 )
+
+type Talking interface {
+	Send(url string, params ...interface{}) (err error)
+	FSend(w io.Writer, url string, params ...interface{}) (err error)
+}
 
 //http2 "golang.org/x/net/http2"
 
@@ -45,6 +49,10 @@ func NewTalker(h2c ...bool) (tlkr *Talker) {
 }
 
 func (tlkr *Talker) Send(url string, params ...interface{}) (err error) {
+	return tlkr.FSend(nil, url, params...)
+}
+
+func (tlkr *Talker) FSend(w io.Writer, url string, params ...interface{}) (err error) {
 	defer func() {
 		tlkr.enableClose = true
 	}()
@@ -58,22 +66,18 @@ func (tlkr *Talker) Send(url string, params ...interface{}) (err error) {
 		var resp, resperr = tlkr.client.Do(req)
 		if resperr == nil {
 			if resp.Body != nil {
-				io.Copy(tlkr, resp.Body)
-				tlkr.trw.Print(resp.Body)
+				if w == nil {
+					io.Copy(tlkr, resp.Body)
+					tlkr.trw.Print(resp.Body)
+				} else {
+					iorw.FPrint(w, resp.Body)
+				}
 			}
-			fmt.Print(tlkr.trw.String())
 		}
 	} else {
 		err = reqerr
 	}
 	return
-}
-
-func (tlkr *Talker) Get(url string, params ...interface{}) {
-}
-
-func (tlkr *Talker) Post(url string, params ...interface{}) {
-
 }
 
 func (tlkr *Talker) Reset() {
