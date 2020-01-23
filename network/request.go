@@ -24,6 +24,7 @@ const maxbufsize int = 81920
 
 type Request struct {
 	rqstlck               *sync.Mutex
+	rspnshdrs 			  map[string]string
 	bufRW                 *iorw.BufferedRW
 	rw                    *iorw.RW
 	rqstContent           *iorw.BufferedRW
@@ -71,6 +72,14 @@ type Request struct {
 	forceRead            bool
 	busyForcing          bool
 	preWriteHeader       func()
+}
+
+func (reqst*Request) RequestHeaders() http.Header{
+	return reqst.r.Header
+}
+
+func (reqst*Request) ResponseHeaders() http.Header{
+	return reqst.w.Header()
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
