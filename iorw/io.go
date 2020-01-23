@@ -263,6 +263,8 @@ func copyN(dst io.Writer, bufDst *BufferedRW, bufSrc *BufferedRW, src io.Reader,
 		} else {
 			written, err = bufSrc.copyN(bufDst, buffSize)
 		}
+	} else if dst!=nil && src!=nil {
+		written, err = io.CopyN(dst, src, buffSize)
 	}
 	return
 }
