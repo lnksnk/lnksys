@@ -334,6 +334,28 @@ func (bufRW *BufferedRW) String() (s string) {
 		if bufRW.wbytesi > 0 {
 			s += string(bufRW.wbytes[0:bufRW.wbytesi])
 		}
+	} else {
+		var runesbuf = make([]rune,8192)
+		var runesbufi = 0
+		for {
+			r, size, err: = bufRW.ReadRune(); 
+			if size>0 {
+				runesbuf[runesbufi]=r
+				runesbufi++
+				if runesbufi==len(runesbuf) {
+					s+=string(runesbuf[:runesbufi])
+					runesbufi=0
+				}
+			}
+			if err!=nil {
+				break
+			}
+		}
+		if runesbufi>0 {
+			s+=string(runesbuf[:runesbufi])
+			runesbufi=0
+		}
+		runesbuf=nil
 	}
 	return
 }
