@@ -159,6 +159,7 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 				var tlkr = NewTalker()
 				var rw = iorw.NewBufferedRW(81920)
 				tlkr.FSend(rw, rootFound)
+				tlkr.Close()
 				rf = rw
 			}
 		}
