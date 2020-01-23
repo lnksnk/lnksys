@@ -104,12 +104,12 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 					pathDelim = ""
 				}
 				if strings.HasSuffix(rootFound, "/") {
-					rootFound=[:len(rootFound)-1]
+					rootFound = rootFound[:len(rootFound)-1]
 				}
 				var tlkr = NewTalker()
 				var rw = iorw.NewBufferedRW(81920)
-				if qryparams!="" {
-					qryparams="?"+qryparams
+				if qryparams != "" {
+					qryparams = "?" + qryparams
 				}
 				tlkr.FSend(rw, rootFound+pathDelim+rspath+qryparams)
 				tlkr.Close()
