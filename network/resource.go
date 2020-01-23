@@ -3,12 +3,12 @@ package network
 import (
 	"archive/zip"
 	"bufio"
+	embed "github.com/efjoubert/lnksys/embed"
+	iorw "github.com/efjoubert/lnksys/iorw"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
-
-	embed "github.com/efjoubert/lnksys/embed"
 )
 
 type Resource struct {
@@ -156,10 +156,10 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 					}
 				}
 			} else if strings.HasPrefix(rootFound, "http:") || strings.HasPrefix(rootFound, "https:") {
-				var tlkr=NewTalker()
-				var rw=iorw.NewBufferedRW(81920)
-				tlkr.FSend(rw,rootFound)
-				rf=rw
+				var tlkr = NewTalker()
+				var rw = iorw.NewBufferedRW(81920)
+				tlkr.FSend(rw, rootFound)
+				rf = rw
 			}
 		}
 		return
