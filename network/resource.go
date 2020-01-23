@@ -3,12 +3,13 @@ package network
 import (
 	"archive/zip"
 	"bufio"
-	embed "github.com/efjoubert/lnksys/embed"
-	iorw "github.com/efjoubert/lnksys/iorw"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+
+	embed "github.com/efjoubert/lnksys/embed"
+	iorw "github.com/efjoubert/lnksys/iorw"
 )
 
 type Resource struct {
@@ -85,7 +86,35 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 		if rf = embed.EmbedFindJS(rspath); rf == nil {
 			var rootFound = roots[rspathrt]
 			var pathDelim = "/"
-			if rffi, rffierr := os.Stat(rootFound); rffierr == nil && rffi.IsDir() {
+			if strings.HasPrefix(rootFound, "http:") || strings.HasPrefix(rootFound, "https:") {
+				var qryparams = ""
+				if strings.LastIndex(rspath, "?") > -1 {
+					qryparams = rspath[strings.LastIndex(rspath, "?")+1:]
+					rspath = rspath[:strings.LastIndex(rspath, "?")]
+				}
+				if strings.LastIndex(rootFound, "?") > -1 {
+					if qryparams == "" {
+						qryparams = rootFound[strings.LastIndex(rootFound, "?")+1:]
+					} else {
+						qryparams = qryparams + "&" + rootFound[strings.LastIndex(rootFound, "?")+1:]
+					}
+					rootFound = rootFound[:strings.LastIndex(rootFound, "?")]
+				}
+				if strings.HasPrefix(rspath, "/") {
+					pathDelim = ""
+				}
+				if strings.HasSuffix(rootFound, "/") {
+					rootFound=[:len(rootFound)-1]
+				}
+				var tlkr = NewTalker()
+				var rw = iorw.NewBufferedRW(81920)
+				if qryparams!="" {
+					qryparams="?"+qryparams
+				}
+				tlkr.FSend(rw, rootFound+pathDelim+rspath+qryparams)
+				tlkr.Close()
+				rf = rw
+			} else if rffi, rffierr := os.Stat(rootFound); rffierr == nil && rffi.IsDir() {
 				if strings.HasSuffix(rootFound, "/") && pathDelim == "/" {
 					pathDelim = ""
 				}
@@ -155,12 +184,6 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 						return
 					}
 				}
-			} else if strings.HasPrefix(rootFound, "http:") || strings.HasPrefix(rootFound, "https:") {
-				var tlkr = NewTalker()
-				var rw = iorw.NewBufferedRW(81920)
-				tlkr.FSend(rw, rootFound)
-				tlkr.Close()
-				rf = rw
 			}
 		}
 		return
