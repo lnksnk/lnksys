@@ -338,7 +338,7 @@ func (bufRW *BufferedRW) String() (s string) {
 		var runesbuf = make([]rune,8192)
 		var runesbufi = 0
 		for {
-			r, size, err: = bufRW.ReadRune(); 
+			r, size, err:= bufRW.ReadRune(); 
 			if size>0 {
 				runesbuf[runesbufi]=r
 				runesbufi++
