@@ -112,8 +112,8 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 				if qryparams != "" {
 					qryparams = "?" + qryparams
 				}
-				var tlkrhdrs=map[string]string[]{}
-				var tlkrparams=map[string]string[]{}
+				var tlkrhdrs=map[string][]string{}
+				var tlkrparams=map[string][]string{}
 				if reqst.isfirsResource {
 					tlkr.FSend(rw,reqst.RequestContent(),tlkrhdrs, rootFound+pathDelim+rspath+qryparams,tlkrparams,reqst.params)
 				} else {
