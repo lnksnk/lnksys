@@ -48,11 +48,11 @@ func NewTalker(h2c ...bool) (tlkr *Talker) {
 	return
 }
 
-func (tlkr *Talker) Send(url string, params ...interface{}) (err error) {
-	return tlkr.FSend(nil, url, params...)
+func (tlkr *Talker) Send(url string, body io.Reader, headers map[string][]string, params ...interface{}) (err error) {
+	return tlkr.FSend(nil, body, headers, url, params...)
 }
 
-func (tlkr *Talker) FSend(w io.Writer, url string, params ...interface{}) (err error) {
+func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]string, url string, params ...interface{}) (err error) {
 	defer func() {
 		tlkr.enableClose = true
 	}()
@@ -61,7 +61,14 @@ func (tlkr *Talker) FSend(w io.Writer, url string, params ...interface{}) (err e
 	if len(params) > 0 {
 		method = "POST"
 	}
-	var req, reqerr = http.NewRequest(method, url, tlkr)
+	var req, reqerr = http.NewRequest(method, url, body)
+	if len(headers) > 0 {
+		for hdrkey, hdrvals := range headers {
+			for _, hdrv := range hdrvals {
+				req.Header.Add(http.CanonicalHeaderKey(hdrkey), hdrv)
+			}
+		}
+	}
 	if reqerr == nil && req != nil {
 		var resp, resperr = tlkr.client.Do(req)
 		if resperr == nil {
