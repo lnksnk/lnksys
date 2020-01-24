@@ -114,7 +114,7 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 				}
 				var tlkrhdrs=map[string][]string{}
 				var tlkrparams=map[string][]string{}
-				if reqst.isfirsResource {
+				if reqst.isfirstResource {
 					tlkr.FSend(rw,reqst.RequestContent(),tlkrhdrs, rootFound+pathDelim+rspath+qryparams,tlkrparams,reqst.params)
 				} else {
 					tlkr.FSend(rw,nil,tlkrhdrs, rootFound+pathDelim+rspath+qryparams,tlkrparams)
@@ -223,9 +223,9 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 			reqst:         reqst,
 			activeInverse: activeInverse,
 			activeEnd:     false,
-			isfirst:       reqst.isfirsResource}
-		if reqst.isfirsResource {
-			reqst.isfirsResource=false
+			isfirst:       reqst.isfirstResource}
+		if reqst.isfirstResource {
+			reqst.isfirstResource=false
 		}
 		if finfo != nil {
 			rsrc.size = finfo.Size()
