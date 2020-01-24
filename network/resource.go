@@ -111,7 +111,7 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 				if qryparams != "" {
 					qryparams = "?" + qryparams
 				}
-				tlkr.FSend(rw,reqst.r.RequestContent(),nil, rootFound+pathDelim+rspath+qryparams)
+				tlkr.FSend(rw,reqst.RequestContent(),nil, rootFound+pathDelim+rspath+qryparams)
 				tlkr.Close()
 				rf = rw
 			} else if rffi, rffierr := os.Stat(rootFound); rffierr == nil && rffi.IsDir() {
