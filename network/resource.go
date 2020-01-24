@@ -25,7 +25,7 @@ type Resource struct {
 	rbuf          *bufio.Reader
 	activeInverse bool
 	activeEnd     bool
-	isfirst 	  bool
+	isfirst       bool
 	disableActive bool
 }
 
@@ -85,13 +85,16 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 	var finfo os.FileInfo = nil
 	var lastPathRoot = ""
 	var disableActive = false
-	
+
 	var findR = func(rspathrt string, rspath string) (rf io.Reader) {
 		if rf = embed.EmbedFindJS(rspath); rf == nil {
 			var rootFound = roots[rspathrt]
 			var pathDelim = "/"
 			if strings.HasPrefix(rootFound, "http:") || strings.HasPrefix(rootFound, "https:") {
 				var qryparams = ""
+				if disableActive {
+					qryparams = "disable-active=Y"
+				}
 				if strings.LastIndex(rspath, "?") > -1 {
 					qryparams = rspath[strings.LastIndex(rspath, "?")+1:]
 					rspath = rspath[:strings.LastIndex(rspath, "?")]
@@ -115,12 +118,12 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 				if qryparams != "" {
 					qryparams = "?" + qryparams
 				}
-				var tlkrhdrs=map[string][]string{}
-				var tlkrparams=map[string][]string{}
+				var tlkrhdrs = map[string][]string{}
+				var tlkrparams = map[string][]string{}
 				if reqst.isfirstResource {
-					tlkr.FSend(rw,reqst.RequestContent(),tlkrhdrs, rootFound+pathDelim+rspath+qryparams,tlkrparams,reqst.params)
+					tlkr.FSend(rw, reqst.RequestContent(), tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrparams, reqst.params)
 				} else {
-					tlkr.FSend(rw,nil,tlkrhdrs, rootFound+pathDelim+rspath+qryparams,tlkrparams)
+					tlkr.FSend(rw, nil, tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrparams)
 				}
 				tlkr.Close()
 				rf = rw
@@ -199,7 +202,7 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 		return
 	}
 	var activeInverse = false
-	
+
 	if rmningrspath != "" && nxtrspath != "" {
 		if r = findR(nxtrspath, rmningrspath); r == nil && finfo == nil && strings.Count(rmningrspath, "@") > 0 && strings.Index(rmningrspath, "@") >= 0 && strings.Index(rmningrspath, "@") != strings.LastIndex(rmningrspath, "@") {
 			activeInverse = true
@@ -239,7 +242,7 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 			isfirst:       reqst.isfirstResource,
 			disableActive: disableActive}
 		if reqst.isfirstResource {
-			reqst.isfirstResource=false
+			reqst.isfirstResource = false
 		}
 		if finfo != nil {
 			rsrc.size = finfo.Size()

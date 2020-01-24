@@ -24,7 +24,7 @@ const maxbufsize int = 81920
 
 type Request struct {
 	rqstlck               *sync.Mutex
-	rspnshdrs 			  map[string]string
+	rspnshdrs             map[string]string
 	bufRW                 *iorw.BufferedRW
 	rw                    *iorw.RW
 	rqstContent           *iorw.BufferedRW
@@ -38,7 +38,7 @@ type Request struct {
 	currdr                *Resource
 	resources             []*Resource
 	lastResourcePathAdded string
-	isfirstResource 	      bool
+	isfirstResource       bool
 	resourcepaths         []string
 	rootpaths             []string
 	preCurrentBytes       []byte
@@ -75,11 +75,11 @@ type Request struct {
 	preWriteHeader       func()
 }
 
-func (reqst*Request) RequestHeaders() http.Header{
+func (reqst *Request) RequestHeaders() http.Header {
 	return reqst.r.Header
 }
 
-func (reqst*Request) ResponseHeaders() http.Header{
+func (reqst *Request) ResponseHeaders() http.Header {
 	return reqst.w.Header()
 }
 
@@ -225,10 +225,18 @@ func (reqst *Request) ExecuteRequest() {
 	if reqst.bufRW == nil {
 		reqst.bufRW = iorw.NewBufferedRW(int64(maxbufsize), reqst)
 	}
+
+	var disableActive = false
+
 	if reqstContentType == "application/json" {
 
 	} else {
 		reqst.PopulateParameters()
+		if reqst.params.ContainsParameter("disable-active") {
+			if disableAtv := reqst.params.Parameter("disable-active"); len(disableAtv) == 1 && strings.ToUpper(disableAtv[0]) == "Y" {
+				disableActive = true
+			}
+		}
 	}
 	if isAtv {
 		if reqst.rqstContent == nil {
@@ -304,7 +312,7 @@ func (reqst *Request) ExecuteRequest() {
 						defer func() {
 							nxtrs.Close()
 						}()
-						if nxtrs.disableActive {
+						if nxtrs.disableActive || disableActive {
 							reqst.Print(nxtrs)
 						} else {
 							if nxtrs.activeInverse {
@@ -612,7 +620,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 
 func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
 	reqst = &Request{
-		isfirstResource:       true,
+		isfirstResource:      true,
 		rqstlck:              &sync.Mutex{},
 		listener:             listener,
 		w:                    w,
