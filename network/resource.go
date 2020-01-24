@@ -26,6 +26,7 @@ type Resource struct {
 	activeInverse bool
 	activeEnd     bool
 	isfirst 	  bool
+	disableActive bool
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
@@ -196,10 +197,20 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 		return
 	}
 	var activeInverse = false
+	var disableActive = false
 	if rmningrspath != "" && nxtrspath != "" {
 		if r = findR(nxtrspath, rmningrspath); r == nil && finfo == nil && strings.Count(rmningrspath, "@") > 0 && strings.Index(rmningrspath, "@") >= 0 && strings.Index(rmningrspath, "@") != strings.LastIndex(rmningrspath, "@") {
 			activeInverse = true
 			rmningrspath = strings.Replace(rmningrspath, "@", "", -1)
+			if r = findR(nxtrspath, rmningrspath); r != nil || finfo != nil {
+				resourcepath = rmningrspath
+				if !strings.HasPrefix(resourcepath, "/") {
+					resourcepath = "/" + resourcepath
+				}
+			}
+		} else if r == nil && finfo == nil && strings.Count(rmningrspath, "#") > 0 && strings.Index(rmningrspath, "#") >= 0 && strings.Index(rmningrspath, "#") != strings.LastIndex(rmningrspath, "#") {
+			disableActive = true
+			rmningrspath = strings.Replace(rmningrspath, "#", "", -1)
 			if r = findR(nxtrspath, rmningrspath); r != nil || finfo != nil {
 				resourcepath = rmningrspath
 				if !strings.HasPrefix(resourcepath, "/") {
@@ -223,7 +234,8 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 			reqst:         reqst,
 			activeInverse: activeInverse,
 			activeEnd:     false,
-			isfirst:       reqst.isfirstResource}
+			isfirst:       reqst.isfirstResource,
+			disableActive: disableActive}
 		if reqst.isfirstResource {
 			reqst.isfirstResource=false
 		}

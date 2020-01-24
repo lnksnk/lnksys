@@ -304,13 +304,17 @@ func (reqst *Request) ExecuteRequest() {
 						defer func() {
 							nxtrs.Close()
 						}()
-						if nxtrs.activeInverse {
-							if fnerr = reqst.Active.APrint("<@", nxtrs, "@>"); fnerr == nil {
-								fnerr = reqst.Active.ACommit()
-							}
+						if nxtrs.disableActive {
+							reqst.Print(nxtrs)
 						} else {
-							if fnerr = reqst.Active.APrint(nxtrs); fnerr == nil {
-								fnerr = reqst.Active.ACommit()
+							if nxtrs.activeInverse {
+								if fnerr = reqst.Active.APrint("<@", nxtrs, "@>"); fnerr == nil {
+									fnerr = reqst.Active.ACommit()
+								}
+							} else {
+								if fnerr = reqst.Active.APrint(nxtrs); fnerr == nil {
+									fnerr = reqst.Active.ACommit()
+								}
 							}
 						}
 						return
