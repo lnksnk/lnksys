@@ -13,6 +13,7 @@ import (
 	falcor "github.com/efjoubert/lnksys/embed/falcor"
 	fontawesome "github.com/efjoubert/lnksys/embed/fontawesome"
 	jquery "github.com/efjoubert/lnksys/embed/jquery"
+	typescript "github.com/efjoubert/lnksys/embed/typescript"
 	jspanel "github.com/efjoubert/lnksys/embed/jspanel"
 	jss "github.com/efjoubert/lnksys/embed/jss"
 	materialdb "github.com/efjoubert/lnksys/embed/materialdb"
@@ -76,6 +77,8 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	} else if embedjs = webaction.WebactionFindJS(embedfindjs); embedjs!=nil {
 		return
 	} else if embedjs = blockui.BlockuiFindJS(embedfindjs); embedjs!=nil {
+		return
+	} else if embedjs=typescript.TypescriptFindJS(embedfindjs); embedjs!=nil {
 		return
 	}
 	return
