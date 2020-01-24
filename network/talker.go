@@ -12,8 +12,8 @@ import (
 )
 
 type Talking interface {
-	Send(url string, params ...interface{}) (err error)
-	FSend(w io.Writer, url string, params ...interface{}) (err error)
+	Send(url string, body io.Reader, headers map[string][]string, params ...interface{}) (err error)
+	FSend((w io.Writer, body io.Reader, headers map[string][]string, url string, params ...interface{}) (err error)
 }
 
 //http2 "golang.org/x/net/http2"
