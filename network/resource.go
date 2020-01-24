@@ -208,9 +208,9 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 					resourcepath = "/" + resourcepath
 				}
 			}
-		} else if r == nil && finfo == nil && strings.Count(rmningrspath, "#") > 0 && strings.Index(rmningrspath, "#") >= 0 && strings.Index(rmningrspath, "#") != strings.LastIndex(rmningrspath, "#") {
+		} else if r == nil && finfo == nil && strings.Count(rmningrspath, "!") > 0 && strings.Index(rmningrspath, "!") >= 0 && strings.Index(rmningrspath, "!") != strings.LastIndex(rmningrspath, "!") {
 			disableActive = true
-			rmningrspath = strings.Replace(rmningrspath, "#", "", -1)
+			rmningrspath = strings.Replace(rmningrspath, "!", "", -1)
 			if r = findR(nxtrspath, rmningrspath); r != nil || finfo != nil {
 				resourcepath = rmningrspath
 				if !strings.HasPrefix(resourcepath, "/") {
