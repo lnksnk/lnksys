@@ -38,6 +38,7 @@ type Request struct {
 	currdr                *Resource
 	resources             []*Resource
 	lastResourcePathAdded string
+	isfirstResource 	      bool
 	resourcepaths         []string
 	rootpaths             []string
 	preCurrentBytes       []byte
@@ -607,6 +608,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 
 func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
 	reqst = &Request{
+		isfirstResource:       true,
 		rqstlck:              &sync.Mutex{},
 		listener:             listener,
 		w:                    w,

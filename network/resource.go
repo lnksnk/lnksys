@@ -25,6 +25,7 @@ type Resource struct {
 	rbuf          *bufio.Reader
 	activeInverse bool
 	activeEnd     bool
+	isfirst 	  bool
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
@@ -111,7 +112,13 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 				if qryparams != "" {
 					qryparams = "?" + qryparams
 				}
-				tlkr.FSend(rw,reqst.RequestContent(),nil, rootFound+pathDelim+rspath+qryparams)
+				var tlkrhdrs=map[string]string[]{}
+				var tlkrparams=map[string]string[]{}
+				if reqst.isfirsResource {
+					tlkr.FSend(rw,reqst.RequestContent(),tlkrhdrs, rootFound+pathDelim+rspath+qryparams,tlkrparams,reqst.params)
+				} else {
+					tlkr.FSend(rw,nil,tlkrhdrs, rootFound+pathDelim+rspath+qryparams,tlkrparams)
+				}
 				tlkr.Close()
 				rf = rw
 			} else if rffi, rffierr := os.Stat(rootFound); rffierr == nil && rffi.IsDir() {
@@ -215,7 +222,11 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 			finfo:         finfo,
 			reqst:         reqst,
 			activeInverse: activeInverse,
-			activeEnd:     false}
+			activeEnd:     false,
+			isfirst:       reqst.isfirsResource}
+		if reqst.isfirsResource {
+			reqst.isfirsResource=false
+		}
 		if finfo != nil {
 			rsrc.size = finfo.Size()
 		}

@@ -2,12 +2,16 @@ package network
 
 import (
 	"io"
+	"io/ioutil"
+	"mime/multipart"
 	"net"
 	http "net/http"
+	"strings"
 	"time"
 
 	iorw "github.com/efjoubert/lnksys/iorw"
 	"github.com/efjoubert/lnksys/iorw/active"
+	mime "github.com/efjoubert/lnksys/network/mime"
 	"github.com/efjoubert/lnksys/parameters"
 )
 
@@ -58,9 +62,53 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 	}()
 	tlkr.enableClose = false
 	var method = "GET"
-	if len(params) > 0 {
-		method = "POST"
+	if headers == nil {
+		headers = map[string][]string{}
 	}
+	var urlPath = url
+	if strings.Index(urlPath, "?") > -1 {
+		urlPath = urlPath[:strings.Index(urlPath, "?")]
+	}
+	var mimedetails = mime.FindMimeTypeByExt(urlPath, ".txt", "text/plain")
+	var mimetype = mimedetails[0]
+	headers["Content-Type"] = append(headers["Content-Type"], mimetype)
+
+	if len(params) > 0 {
+		pipeReader, pipeWriter := io.Pipe()
+		body = pipeReader
+		mpartwriter := multipart.NewWriter(pipeWriter)
+		method = "POST"
+		errChan := make(chan error, 1)
+		go func() {
+			defer pipeWriter.Close()
+			for _, d := range params {
+				if prms, prmsok := d.(*parameters.Parameters); prmsok {
+					for _, prmstd := range prms.StandardKeys() {
+						for _, prmstdval := range prms.Parameter(prmstd) {
+							part, err := mpartwriter.CreateFormField(prmstd)
+							if err != nil {
+								errChan <- err
+								return
+							}
+							_, err = io.Copy(part, strings.NewReader(prmstdval))
+						}
+					}
+					if method == "" {
+						method = "POST"
+					}
+				}
+				if err == nil {
+					err = pipeWriter.Close()
+				}
+			}
+			errChan <- err
+		}()
+		if err := <-errChan; err == nil {
+			headers["Content-Type"] = append(headers["Content-Type"], mpartwriter.FormDataContentType())
+			body = ioutil.NopCloser(pipeReader)
+		}
+	}
+
 	var req, reqerr = http.NewRequest(method, url, body)
 	if len(headers) > 0 {
 		for hdrkey, hdrvals := range headers {
