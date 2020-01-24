@@ -84,6 +84,8 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 
 	var finfo os.FileInfo = nil
 	var lastPathRoot = ""
+	var disableActive = false
+	
 	var findR = func(rspathrt string, rspath string) (rf io.Reader) {
 		if rf = embed.EmbedFindJS(rspath); rf == nil {
 			var rootFound = roots[rspathrt]
@@ -197,7 +199,7 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 		return
 	}
 	var activeInverse = false
-	var disableActive = false
+	
 	if rmningrspath != "" && nxtrspath != "" {
 		if r = findR(nxtrspath, rmningrspath); r == nil && finfo == nil && strings.Count(rmningrspath, "@") > 0 && strings.Index(rmningrspath, "@") >= 0 && strings.Index(rmningrspath, "@") != strings.LastIndex(rmningrspath, "@") {
 			activeInverse = true
