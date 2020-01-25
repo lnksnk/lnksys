@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"net"
+	"os"
 )
 
 /*Listening interface
@@ -56,7 +57,7 @@ type tcpKeepAliveListener struct {
 }
 
 func (tcpln tcpKeepAliveListener) Accept() (net.Conn, error) {
-	tc, err := ln.AcceptTCP()
+	tc, err := tcpln.AcceptTCP()
 	if err != nil {
 		return nil, err
 	}
