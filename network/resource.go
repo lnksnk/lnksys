@@ -27,10 +27,13 @@ type Resource struct {
 	activeEnd     bool
 	isfirst       bool
 	disableActive bool
+	pipeR         *io.PipeReader
+	pipeW         *io.PipeWriter
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 	if rsrc.rbuf == nil {
+		rsrc.pipeR, rsrc.pipeW = io.Pipe()
 		if rsrc.r == nil && rsrc.finfo != nil {
 			if strings.HasSuffix(rsrc.pathroot, "/") && rsrc.pathroot != "/" {
 				rsrc.r, _ = os.Open(rsrc.pathroot[:len(rsrc.pathroot)-1] + rsrc.path)
@@ -38,7 +41,16 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 				rsrc.r, _ = os.Open(rsrc.pathroot + rsrc.path)
 			}
 		}
-		rsrc.rbuf = bufio.NewReader(rsrc.r)
+		go func(rr io.Reader) {
+			defer rsrc.pipeW.Close()
+			for {
+				ws, wserr := io.Copy(rsrc.pipeW, rsrc.r)
+				if ws == 0 || wserr != nil {
+					break
+				}
+			}
+		}(rsrc.r)
+		rsrc.rbuf = bufio.NewReader(rsrc.pipeR)
 	}
 	r, size, err = rsrc.rbuf.ReadRune()
 	return
