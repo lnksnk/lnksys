@@ -309,7 +309,17 @@ func (rsrc *Resource) Read(p []byte) (n int, err error) {
 			}
 			if rsrc.r != nil {
 				if rsrc.IsActiveContent() {
-					if rsrc.readBufferl, err = rsrc.ReadRuneBytes(rsrc.readBuffer); err != nil {
+					/*if rsrc.readBufferl, err = rsrc.ReadRuneBytes(rsrc.readBuffer); err != nil {
+						if err == io.EOF {
+							if rsrc.readBufferl == 0 {
+								rsrc.reqst.resourcesOffset -= rsrc.Size()
+								rsrc.reqst.resourcesSize -= rsrc.Size()
+								rsrc.readBufferl = 0
+								break
+							}
+						}
+					}*/
+					if rsrc.readBufferl, err = rsrc.r.Read(rsrc.readBuffer); err != nil {
 						if err == io.EOF {
 							if rsrc.readBufferl == 0 {
 								rsrc.reqst.resourcesOffset -= rsrc.Size()
