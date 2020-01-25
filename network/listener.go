@@ -41,7 +41,7 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 		  //log.Println("Before")
 		  h.ServeHTTP(w, r) // call original
 		  //log.Println("After")
-		})
+		}))
 	  }
 
 	var serverh2 = &http2.Server{}
