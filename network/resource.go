@@ -286,7 +286,7 @@ func (rsrc *Resource) ReadRuneBytes(p []byte) (n int, err error) {
 	return
 }
 
-func (rsrc *Resource) Read(p []byte) (n int, err error) {
+func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
 	if rsrc.reqst.interuptRequest {
 		err = io.EOF
 		return
@@ -366,6 +366,11 @@ func (rsrc *Resource) Read(p []byte) (n int, err error) {
 			break
 		}
 	}
+	return
+}
+
+func (rsrc *Resource) Read(p []byte) (n int, err error) {
+	n, err = rsrc.internalRead(p)
 	return
 }
 
