@@ -63,17 +63,17 @@ func (tcpln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	tc.SetNoDelay(false)
+	tc.SetReadBuffer(4096)
 	if err = tc.SetKeepAlive(true); err != nil {
 		return nil, err
 	}
 	// OpenBSD has no user-settable per-socket TCP keepalive
 	// https://github.com/caddyserver/caddy/pull/2787
-	if runtime.GOOS != "openbsd" {
+	/*if runtime.GOOS != "openbsd" {
 		if err = tc.SetKeepAlivePeriod(3 * time.Minute); err != nil {
 			return nil, err
 		}
-	}
+	}*/
 
 	return tc, nil
 }
