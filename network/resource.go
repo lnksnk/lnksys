@@ -294,10 +294,6 @@ func (rsrc *Resource) ReadRuneBytes(p []byte) (n int, err error) {
 			rsrc.rbufBusy = false
 		}()
 		for n < len(p) {
-
-			if rsrc.rbuf == nil {
-				rsrc.rbuf = bufio.NewReaderSize(rsrc.r, 16)
-			}
 			if c, sz, rerr := rsrc.ReadRune(); rerr != nil {
 				if rerr == io.EOF {
 					if n == 0 {
