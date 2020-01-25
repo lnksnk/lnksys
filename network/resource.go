@@ -29,17 +29,17 @@ type Resource struct {
 	isfirst       bool
 	disableActive bool
 	pipedR        io.Reader
-	pipeW         io.Writer
+	pipeW         io.WriteCloser
 	pipedLck      *sync.Mutex
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 	if rsrc.rbuf == nil {
-		func(){
+		func() {
 			rsrc.pipedLck.Lock()
 			defer rsrc.pipedLck.Unlock()
-			rsrc.pipedR,rsrc.pipeW=io.Pipe()
-			go func(){
+			rsrc.pipedR, rsrc.pipeW = io.Pipe()
+			go func() {
 				defer rsrc.pipeW.Close()
 				io.Copy(rsrc.pipeW, rsrc.r)
 			}()
@@ -254,7 +254,7 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 			activeEnd:     false,
 			isfirst:       reqst.isfirstResource,
 			disableActive: disableActive,
-			pipedLck:	   &sync.Mutex{}}
+			pipedLck:      &sync.Mutex{}}
 		if reqst.isfirstResource {
 			reqst.isfirstResource = false
 		}
