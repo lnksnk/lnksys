@@ -41,8 +41,8 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 				defer rsrc.pipeW.Close()
 				buff := make([]byte, 8192)
 				for {
-					_, werr := io.CopyBuffer(rsrc.pipeW, rsrc.r, buff)
-					if werr != nil {
+					ws, werr := io.CopyBuffer(rsrc.pipeW, rsrc.r, buff)
+					if werr != nil || ws == 0 {
 						break
 					}
 				}
