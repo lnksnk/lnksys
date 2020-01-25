@@ -39,7 +39,7 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 			rsrc.pipedR, rsrc.pipeW = io.Pipe()
 			go func() {
 				defer rsrc.pipeW.Close()
-				buff := make([]byte, 8192)
+				buff := make([]byte, maxbufsize)
 				for {
 					n, nerr := rsrc.r.Read(buff)
 					if n > 0 {
@@ -304,6 +304,32 @@ func (rsrc *Resource) ReadRuneBytes(p []byte) (n int, err error) {
 }
 
 func (rsrc *Resource) Read(p []byte) (n int, err error) {
+	if rsrc.rbuf == nil {
+		func() {
+			rsrc.pipedR, rsrc.pipeW = io.Pipe()
+			go func() {
+				defer rsrc.pipeW.Close()
+				buff := make([]byte, maxbufsize)
+				for {
+					n, nerr := rsrc.internalRead(buff)
+					if n > 0 {
+						nw, nwerr := rsrc.pipeW.Write(buff[:n])
+						if nw == 0 || nwerr != nil {
+							break
+						}
+					}
+					if nerr != nil {
+						break
+					}
+				}
+			}()
+			rsrc.rbuf = bufio.NewReader(rsrc.pipedR)
+		}()
+	}
+	n, err = rsrc.rbuf.Read(p)
+}
+
+func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
 	if rsrc.reqst.interuptRequest {
 		err = io.EOF
 		return
