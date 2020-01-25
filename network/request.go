@@ -31,6 +31,8 @@ type Request struct {
 	listener              Listening
 	talker                Talking
 	w                     http.ResponseWriter
+	wpipeR 				  *io.PipeReader
+	wpipeW				  *io.PipeWriter
 	r                     *http.Request
 	done                  chan bool
 	resourcesOffset       int64
@@ -609,10 +611,31 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			reqst.preWriteHeader()
 			reqst.preWriteHeader = nil
 		}
-	}
-	if n, err = reqst.w.Write(p); n > 0 && err == nil {
-		if f, ok := reqst.w.(http.Flusher); ok {
-			f.Flush()
+		if reqst.wpipeR==nil && reqst.wpipeW==nil {
+			go func(){
+				defer func() {
+					reqst.wpipeR.Close()
+				}()
+				npp:=make([]byte,maxbufsize)
+				for {
+					np,nperr:=reqst.wpipeR.Read(npp)
+					if np>0 {
+						if nwp, nwperr := reqst.w.Write(npp[:n]); nwp > 0 && nwperr == nil {
+							if f, ok := reqst.w.(http.Flusher); ok {
+								f.Flush()
+							}
+						} else if nwperr!=nil {
+							nperr=nwperr
+						}
+					}
+					if nperr!=nil {
+						break
+					}
+				}
+			}()
+		}
+		if reqst.wpipeW!=nil {
+			n,err=reqst.wpipeW.Write(p)
 		}
 	}
 	return
