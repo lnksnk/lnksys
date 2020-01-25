@@ -27,11 +27,23 @@ type Resource struct {
 	activeEnd     bool
 	isfirst       bool
 	disableActive bool
+	pipedR        io.Reader
+	pipeW         io.Writer
+	pipedLck      *sync.Mutex
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 	if rsrc.rbuf == nil {
-		rsrc.rbuf = bufio.NewReader(rsrc.r)
+		func(){
+			rsrc.pipedLck.Lock()
+			defer rsrc.pipedLck.Unlock()
+			rsrc.pipedR,rsrc.pipeW=io.Pipe()
+			go func(){
+				defer rsrc.pipeW.Close()
+				io.Copy(rsrc.pipeW, rsrc.r)
+			}()
+			rsrc.rbuf = bufio.NewReader(rsrc.pipedR)
+		}()
 	}
 	r, size, err = rsrc.rbuf.ReadRune()
 	return
@@ -240,7 +252,9 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 			activeInverse: activeInverse,
 			activeEnd:     false,
 			isfirst:       reqst.isfirstResource,
-			disableActive: disableActive}
+			disableActive: disableActive,
+			pipedLck	   &sync.Mutex{}
+			}
 		if reqst.isfirstResource {
 			reqst.isfirstResource = false
 		}
