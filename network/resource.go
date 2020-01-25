@@ -327,6 +327,7 @@ func (rsrc *Resource) Read(p []byte) (n int, err error) {
 		}()
 	}
 	n, err = rsrc.rbuf.Read(p)
+	return
 }
 
 func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
