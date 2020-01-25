@@ -38,16 +38,18 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 	var serverh2 = &http2.Server{}
 
 	var server = &http.Server{
-		//ReadHeaderTimeout: 20 * time.Second,
-		//ReadTimeout:       1 * time.Minute,
-		//IdleTimeout:       10 * time.Second,
-		//WriteTimeout:      2 * time.Minute,
-		Addr:    host,
-		Handler: h2c.NewHandler(hndlr, serverh2),
+		ReadHeaderTimeout: 20 * time.Second,
+		ReadTimeout:       1 * time.Minute,
+		IdleTimeout:       10 * time.Second,
+		WriteTimeout:      2 * time.Minute,
+		Addr:              host,
+		Handler:           h2c.NewHandler(hndlr, serverh2),
 		ConnContext: func(ctx context.Context, c net.Conn) (cntx context.Context) {
 			cntx = ctx
 			return
 		}}
+
+	server.SetKeepAlivesEnabled(true)
 	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2}
 	return
 }
@@ -64,7 +66,6 @@ func (tcpln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	tc.SetReadBuffer(8192)
 	tc.SetWriteBuffer(8192)
 	tc.SetNoDelay(false)
-	tc.SetLinger(1)
 	if err = tc.SetKeepAlive(true); err != nil {
 		return nil, err
 	}
