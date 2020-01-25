@@ -17,13 +17,14 @@ type Resource struct {
 	reqst         *Request
 	finfo         os.FileInfo
 	r             io.Reader
+	rbuf          *bufio.Reader
 	path          string
 	pathroot      string
 	size          int64
 	readBuffer    []byte
 	readBufferi   int
 	readBufferl   int
-	rbuf          *bufio.Reader
+	rsbuf         *bufio.Reader
 	activeInverse bool
 	activeEnd     bool
 	isfirst       bool
@@ -34,7 +35,7 @@ type Resource struct {
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
-	if rsrc.rbuf == nil {
+	if rsrc.rsbuf == nil {
 		func() {
 			rsrc.pipedR, rsrc.pipeW = io.Pipe()
 			go func() {
@@ -53,10 +54,10 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 					}
 				}
 			}()
-			rsrc.rbuf = bufio.NewReader(rsrc.pipedR)
+			rsrc.rsbuf = bufio.NewReader(rsrc.pipedR)
 		}()
 	}
-	r, size, err = rsrc.rbuf.ReadRune()
+	r, size, err = rsrc.rsbuf.ReadRune()
 	return
 }
 func (rsrc *Resource) IsActiveContent() (active bool) {
@@ -281,8 +282,14 @@ func (rsrc *Resource) Size() int64 {
 }
 
 func (rsrc *Resource) ReadRuneBytes(p []byte) (n int, err error) {
+	if rsrc.r == nil {
+		return
+	}
 	for n < len(p) {
-		if c, sz, rerr := rsrc.ReadRune(); rerr != nil {
+		if rsrc.rbuf == nil {
+			rsrc.rbuf = bufio.NewReaderSize(rsrc.r, 1)
+		}
+		if c, sz, rerr := rsrc.rbuf.ReadRune(); rerr != nil {
 			if rerr == io.EOF {
 				if n == 0 {
 					err = rerr
@@ -304,7 +311,7 @@ func (rsrc *Resource) ReadRuneBytes(p []byte) (n int, err error) {
 }
 
 func (rsrc *Resource) Read(p []byte) (n int, err error) {
-	if rsrc.rbuf == nil {
+	if rsrc.rsbuf == nil {
 		func() {
 			rsrc.pipedR, rsrc.pipeW = io.Pipe()
 			go func() {
@@ -323,10 +330,10 @@ func (rsrc *Resource) Read(p []byte) (n int, err error) {
 					}
 				}
 			}()
-			rsrc.rbuf = bufio.NewReader(rsrc.pipedR)
+			rsrc.rsbuf = bufio.NewReader(rsrc.pipedR)
 		}()
 	}
-	n, err = rsrc.rbuf.Read(p)
+	n, err = rsrc.rsbuf.Read(p)
 	return
 }
 
@@ -425,14 +432,17 @@ func (rsrc *Resource) Close() (err error) {
 		}
 		rsrc.r = nil
 	}
+	if rsrc.rbuf != nil {
+		rsrc.rbuf = nil
+	}
 	if rsrc.reqst != nil {
 		rsrc.reqst = nil
 	}
 	if rsrc.readBuffer != nil {
 		rsrc.readBuffer = nil
 	}
-	if rsrc.rbuf != nil {
-		rsrc.rbuf = nil
+	if rsrc.rsbuf != nil {
+		rsrc.rsbuf = nil
 	}
 	return
 }
