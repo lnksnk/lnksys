@@ -31,7 +31,7 @@ type Resource struct {
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 	if rsrc.rbuf == nil {
-		rsrc.rbuf = bufio.NewReader(rsrc.r)
+		rsrc.rbuf = bufio.NewReader(rsrc)
 	}
 	r, size, err = rsrc.rbuf.ReadRune()
 	return
