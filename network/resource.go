@@ -41,7 +41,7 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 				defer rsrc.pipeW.Close()
 				buff := make([]byte, maxbufsize)
 				for {
-					n, nerr := rsrc.r.Read(buff)
+					n, nerr := rsrc.internalRead(buff)
 					if n > 0 {
 						nw, nwerr := rsrc.pipeW.Write(buff[:n])
 						if nw == 0 || nwerr != nil {
