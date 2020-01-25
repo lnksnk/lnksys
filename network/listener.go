@@ -63,7 +63,8 @@ func (tcpln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	}
 	tc.SetReadBuffer(8192)
 	tc.SetWriteBuffer(8192)
-	tc.SetNoDelay(true)
+	tc.SetNoDelay(false)
+	tc.SetLinger(1)
 	if err = tc.SetKeepAlive(true); err != nil {
 		return nil, err
 	}
