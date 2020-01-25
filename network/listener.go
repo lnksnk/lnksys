@@ -51,9 +51,60 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 	return
 }
 
+type tcpKeepAliveListener struct {
+	*net.TCPListener
+}
+
+func (tcpln tcpKeepAliveListener) Accept() (net.Conn, error) {
+	tc, err := ln.AcceptTCP()
+	if err != nil {
+		return nil, err
+	}
+	if err = tc.SetKeepAlive(true); err != nil {
+		return nil, err
+	}
+	// OpenBSD has no user-settable per-socket TCP keepalive
+	// https://github.com/caddyserver/caddy/pull/2787
+	if runtime.GOOS != "openbsd" {
+		if err = tc.SetKeepAlivePeriod(3 * time.Minute); err != nil {
+			return nil, err
+		}
+	}
+	
+	return tc, nil
+}
+
+func (tcpln tcpKeepAliveListener) File() (*os.File, error) {
+	return tcpln.TCPListener.File()
+}
+
 func (lstnrsvr *lstnrserver) listenAndServe() {
 	go func(srvr *http.Server) {
-		srvr.ListenAndServe()
+		ln, err := net.Listen("tcp", s.Server.Addr)
+		if err != nil {
+			var succeeded bool
+			if runtime.GOOS == "windows" {
+				// Windows has been known to keep sockets open even after closing the listeners.
+				// Tests reveal this error case easily because they call Start() then Stop()
+				// in succession. TODO: Better way to handle this? And why limit this to Windows?
+				for i := 0; i < 20; i++ {
+					time.Sleep(100 * time.Millisecond)
+					ln, err = net.Listen("tcp", s.Server.Addr)
+					if err == nil {
+						succeeded = true
+						break
+					}
+				}
+			}
+			if !succeeded {
+				return nil, err
+			}
+
+			if tcpLn, ok := ln.(*net.TCPListener); ok {
+				ln = tcpKeepAliveListener{TCPListener: tcpLn}
+			}
+		}
+		srvr.Serve(ln)
 	}(lstnrsvr.httpsvr)
 }
 
