@@ -253,8 +253,7 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 			activeEnd:     false,
 			isfirst:       reqst.isfirstResource,
 			disableActive: disableActive,
-			pipedLck:	   &sync.Mutex{}
-			}
+			pipedLck:	   &sync.Mutex{}}
 		if reqst.isfirstResource {
 			reqst.isfirstResource = false
 		}
