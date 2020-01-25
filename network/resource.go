@@ -36,8 +36,6 @@ type Resource struct {
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 	if rsrc.rbuf == nil {
 		func() {
-			rsrc.pipedLck.Lock()
-			defer rsrc.pipedLck.Unlock()
 			rsrc.pipedR, rsrc.pipeW = io.Pipe()
 			go func() {
 				defer rsrc.pipeW.Close()
