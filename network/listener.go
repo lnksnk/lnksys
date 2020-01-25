@@ -33,7 +33,7 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 
 	//var srvmutex = http.NewServeMux()
 
-	//srvmutex.Handle("/", hdnlr) 
+	//srvmutex.Handle("/", hdnlr)
 
 	var serverh2 = &http2.Server{}
 
@@ -42,8 +42,8 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 		//ReadTimeout:       1 * time.Minute,
 		//IdleTimeout:       10 * time.Second,
 		//WriteTimeout:      2 * time.Minute,
-		Addr:              host,
-		Handler:           h2c.NewHandler(hndlr, serverh2),
+		Addr:    host,
+		Handler: h2c.NewHandler(hndlr, serverh2),
 		ConnContext: func(ctx context.Context, c net.Conn) (cntx context.Context) {
 			cntx = ctx
 			return
@@ -71,7 +71,7 @@ func (tcpln tcpKeepAliveListener) Accept() (net.Conn, error) {
 			return nil, err
 		}
 	}
-	
+
 	return tc, nil
 }
 
@@ -97,15 +97,15 @@ func (lstnrsvr *lstnrserver) listenAndServe() {
 					}
 				}
 			}
-			if !succeeded {
-				return nil, err
-			}
-
-			if tcpLn, ok := ln.(*net.TCPListener); ok {
-				ln = tcpKeepAliveListener{TCPListener: tcpLn}
+			if succeeded {
+				if tcpLn, ok := ln.(*net.TCPListener); ok {
+					ln = tcpKeepAliveListener{TCPListener: tcpLn}
+				}
 			}
 		}
-		srvr.Serve(ln)
+		if err == nil && ln != nil {
+			srvr.Serve(ln)
+		}
 	}(lstnrsvr.httpsvr)
 }
 
