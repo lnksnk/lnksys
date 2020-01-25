@@ -89,7 +89,7 @@ func (lstnrsvr *lstnrserver) listenAndServe() {
 				// in succession. TODO: Better way to handle this? And why limit this to Windows?
 				for i := 0; i < 20; i++ {
 					time.Sleep(100 * time.Millisecond)
-					ln, err = net.Listen("tcp", s.Server.Addr)
+					ln, err = net.Listen("tcp", srvr.Addr)
 					if err == nil {
 						succeeded = true
 						break
