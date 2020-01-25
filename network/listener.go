@@ -32,7 +32,17 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 
 	//var srvmutex = http.NewServeMux()
 
-	//srvmutex.Handle("/", hdnlr)
+	//srvmutex.Handle("/", hdnlr) 
+
+	var nextHndlr = func (h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r 
+												*http.Request) {
+
+		  //log.Println("Before")
+		  h.ServeHTTP(w, r) // call original
+		  //log.Println("After")
+		})
+	  }
 
 	var serverh2 = &http2.Server{}
 
@@ -42,7 +52,7 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 		//IdleTimeout:       10 * time.Second,
 		//WriteTimeout:      2 * time.Minute,
 		Addr:              host,
-		Handler:           h2c.NewHandler(hndlr, serverh2),
+		Handler:           h2c.NewHandler(nextHndlr(hdnlr), serverh2),
 		ConnContext: func(ctx context.Context, c net.Conn) (cntx context.Context) {
 			cntx = ctx
 			return
