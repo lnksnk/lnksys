@@ -31,7 +31,14 @@ type Resource struct {
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 	if rsrc.rbuf == nil {
-		rsrc.rbuf = bufio.NewReader(rsrc)
+		if rsrc.r == nil && rsrc.finfo != nil {
+			if strings.HasSuffix(rsrc.pathroot, "/") && rsrc.pathroot != "/" {
+				rsrc.r, _ = os.Open(rsrc.pathroot[:len(rsrc.pathroot)-1] + rsrc.path)
+			} else {
+				rsrc.r, _ = os.Open(rsrc.pathroot + rsrc.path)
+			}
+		}
+		rsrc.rbuf = bufio.NewReader(rsrc.r)
 	}
 	r, size, err = rsrc.rbuf.ReadRune()
 	return
