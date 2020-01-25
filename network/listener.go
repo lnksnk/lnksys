@@ -64,7 +64,7 @@ func (tcpln tcpKeepAliveListener) Accept() (net.Conn, error) {
 	tc.SetReadBuffer(8192)
 	tc.SetWriteBuffer(8192)
 	tc.SetNoDelay(true)
-	if err = tc.SetKeepAlive(false); err != nil {
+	if err = tc.SetKeepAlive(true); err != nil {
 		return nil, err
 	}
 	// OpenBSD has no user-settable per-socket TCP keepalive
