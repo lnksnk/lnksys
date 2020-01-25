@@ -435,9 +435,6 @@ func (rsrc *Resource) Close() (err error) {
 		}
 		rsrc.r = nil
 	}
-	if rsrc.rbuf != nil {
-		rsrc.rbuf = nil
-	}
 	if rsrc.reqst != nil {
 		rsrc.reqst = nil
 	}
