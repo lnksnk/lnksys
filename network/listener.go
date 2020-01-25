@@ -80,7 +80,7 @@ func (tcpln tcpKeepAliveListener) File() (*os.File, error) {
 
 func (lstnrsvr *lstnrserver) listenAndServe() {
 	go func(srvr *http.Server) {
-		ln, err := net.Listen("tcp", s.Server.Addr)
+		ln, err := net.Listen("tcp", srvr.Addr)
 		if err != nil {
 			var succeeded bool
 			if runtime.GOOS == "windows" {
