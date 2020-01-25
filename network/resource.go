@@ -287,7 +287,7 @@ func (rsrc *Resource) ReadRuneBytes(p []byte) (n int, err error) {
 	}
 	for n < len(p) {
 		if rsrc.rbuf == nil {
-			rsrc.rbuf = bufio.NewReaderSize(rsrc.r, 1)
+			rsrc.rbuf = bufio.NewReaderSize(rsrc.r, 16)
 		}
 		if c, sz, rerr := rsrc.rbuf.ReadRune(); rerr != nil {
 			if rerr == io.EOF {
@@ -360,7 +360,17 @@ func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
 			}
 			if rsrc.r != nil {
 				if rsrc.IsActiveContent() {
-					if rsrc.readBufferl, err = rsrc.ReadRuneBytes(rsrc.readBuffer); err != nil {
+					/*if rsrc.readBufferl, err = rsrc.ReadRuneBytes(rsrc.readBuffer); err != nil {
+						if err == io.EOF {
+							if rsrc.readBufferl == 0 {
+								rsrc.reqst.resourcesOffset -= rsrc.Size()
+								rsrc.reqst.resourcesSize -= rsrc.Size()
+								rsrc.readBufferl = 0
+								break
+							}
+						}
+					}*/
+					if rsrc.readBufferl, err = rsrc.r.Read(rsrc.readBuffer); err != nil {
 						if err == io.EOF {
 							if rsrc.readBufferl == 0 {
 								rsrc.reqst.resourcesOffset -= rsrc.Size()
