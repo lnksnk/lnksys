@@ -10,7 +10,6 @@ import (
 
 	embed "github.com/efjoubert/lnksys/embed"
 	iorw "github.com/efjoubert/lnksys/iorw"
-	"sync"
 )
 
 type Resource struct {
@@ -23,40 +22,21 @@ type Resource struct {
 	readBuffer    []byte
 	readBufferi   int
 	readBufferl   int
-	rsbuf         *bufio.Reader
+	rbuf          *bufio.Reader
 	activeInverse bool
 	activeEnd     bool
 	isfirst       bool
 	disableActive bool
 	pipedR        io.Reader
-	pipeW         io.WriteCloser
+	pipeW         io.Writer
 	pipedLck      *sync.Mutex
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
-	if rsrc.rsbuf == nil {
-		func() {
-			rsrc.pipedR, rsrc.pipeW = io.Pipe()
-			go func() {
-				defer rsrc.pipeW.Close()
-				buff := make([]byte, maxbufsize)
-				for {
-					n, nerr := rsrc.internalRead(buff)
-					if n > 0 {
-						nw, nwerr := rsrc.pipeW.Write(buff[:n])
-						if nw == 0 || nwerr != nil {
-							break
-						}
-					}
-					if nerr != nil {
-						break
-					}
-				}
-			}()
-			rsrc.rsbuf = bufio.NewReader(rsrc.pipedR)
-		}()
+	if rsrc.rbuf == nil {
+		rsrc.rbuf=bufio.NewReader(rsrc.r)
 	}
-	r, size, err = rsrc.rsbuf.ReadRune()
+	r, size, err = rsrc.rbuf.ReadRune()
 	return
 }
 func (rsrc *Resource) IsActiveContent() (active bool) {
@@ -264,7 +244,8 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 			activeEnd:     false,
 			isfirst:       reqst.isfirstResource,
 			disableActive: disableActive,
-			pipedLck:      &sync.Mutex{}}
+			pipedLck:	   &sync.Mutex{}
+			}
 		if reqst.isfirstResource {
 			reqst.isfirstResource = false
 		}
@@ -304,33 +285,6 @@ func (rsrc *Resource) ReadRuneBytes(p []byte) (n int, err error) {
 }
 
 func (rsrc *Resource) Read(p []byte) (n int, err error) {
-	if rsrc.rsbuf == nil {
-		func() {
-			rsrc.pipedR, rsrc.pipeW = io.Pipe()
-			go func() {
-				defer rsrc.pipeW.Close()
-				buff := make([]byte, maxbufsize)
-				for {
-					n, nerr := rsrc.internalRead(buff)
-					if n > 0 {
-						nw, nwerr := rsrc.pipeW.Write(buff[:n])
-						if nw == 0 || nwerr != nil {
-							break
-						}
-					}
-					if nerr != nil {
-						break
-					}
-				}
-			}()
-			rsrc.rsbuf = bufio.NewReader(rsrc.pipedR)
-		}()
-	}
-	n, err = rsrc.rsbuf.Read(p)
-	return
-}
-
-func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
 	if rsrc.reqst.interuptRequest {
 		err = io.EOF
 		return
@@ -353,17 +307,7 @@ func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
 			}
 			if rsrc.r != nil {
 				if rsrc.IsActiveContent() {
-					/*if rsrc.readBufferl, err = rsrc.ReadRuneBytes(rsrc.readBuffer); err != nil {
-						if err == io.EOF {
-							if rsrc.readBufferl == 0 {
-								rsrc.reqst.resourcesOffset -= rsrc.Size()
-								rsrc.reqst.resourcesSize -= rsrc.Size()
-								rsrc.readBufferl = 0
-								break
-							}
-						}
-					}*/
-					if rsrc.readBufferl, err = rsrc.r.Read(rsrc.readBuffer); err != nil {
+					if rsrc.readBufferl, err = rsrc.ReadRuneBytes(rsrc.readBuffer); err != nil {
 						if err == io.EOF {
 							if rsrc.readBufferl == 0 {
 								rsrc.reqst.resourcesOffset -= rsrc.Size()
@@ -441,8 +385,8 @@ func (rsrc *Resource) Close() (err error) {
 	if rsrc.readBuffer != nil {
 		rsrc.readBuffer = nil
 	}
-	if rsrc.rsbuf != nil {
-		rsrc.rsbuf = nil
+	if rsrc.rbuf != nil {
+		rsrc.rbuf = nil
 	}
 	return
 }
