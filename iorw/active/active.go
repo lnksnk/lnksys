@@ -231,22 +231,65 @@ func (atvprsr *activeParser) Close() {
 }
 
 func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
-	atvprsr.lck.Lock()
-	defer atvprsr.lck.Unlock()
-	atvprsr.atvbufrdr().Print(a...)
-	for {
-		if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
-			if rnsize > 0 {
-				processRune(atvprsr.parsingLevel, rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+	if len(a)>0 {
+		atvprsr.lck.Lock()
+		defer atvprsr.lck.Unlock()
+		var stopReading = false
+		for _,d:=range a {
+			if rnrd,rnrdrok:=d.(io.RuneReader); rnrdrok {
+				if atvprsr.atvrdr!=nil {
+					for {
+						if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
+							if rnsize > 0 {
+								processRune(atvprsr.parsingLevel, rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+							}
+						} else {
+							if rnerr != io.EOF {
+								err = rnerr
+								stopReading=true
+							}
+							break
+						}
+					}
+				}
+				if stopReading {
+					break
+				}
+				for {
+					if rne, rnsize, rnerr := rnrd.ReadRune(); rnerr == nil {
+						if rnsize > 0 {
+							processRune(atvprsr.parsingLevel, rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+						}
+					} else {
+						if rnerr != io.EOF {
+							err = rnerr
+							stopReading=true
+						}
+						break
+					}
+				}
+				if stopReading {
+					break
+				}
+			} else {
+				atvprsr.atvbufrdr().Print(d)
 			}
-		} else {
-			if rnerr != io.EOF {
-				err = rnerr
+		}
+		if atvprsr.atvrdr!=nil {
+			for {
+				if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
+					if rnsize > 0 {
+						processRune(atvprsr.parsingLevel, rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+					}
+				} else {
+					if rnerr != io.EOF {
+						err = rnerr
+					}
+					break
+				}
 			}
-			break
 		}
 	}
-
 	return
 }
 
