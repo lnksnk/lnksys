@@ -39,7 +39,13 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 			rsrc.pipedR, rsrc.pipeW = io.Pipe()
 			go func() {
 				defer rsrc.pipeW.Close()
-				io.Copy(rsrc.pipeW, rsrc.r)
+				buff := make([]byte, 8192)
+				for {
+					_, werr := io.CopyBuffer(rsrc.pipeW, rsrc.r, buff)
+					if werr != nil {
+						break
+					}
+				}
 			}()
 			rsrc.rbuf = bufio.NewReader(rsrc.pipedR)
 		}()
