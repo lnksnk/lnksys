@@ -10,6 +10,7 @@ import (
 
 	embed "github.com/efjoubert/lnksys/embed"
 	iorw "github.com/efjoubert/lnksys/iorw"
+	"sync"
 )
 
 type Resource struct {
