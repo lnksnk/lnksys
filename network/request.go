@@ -296,7 +296,7 @@ func (reqst *Request) ExecuteRequest() {
 	} else {
 		reqst.Active.Reset()
 	}
-	var isFirtsRS=false
+	var isFirtsRS=true
 	for {
 		if len(reqst.resourcepaths) > 0 {
 			var nextrs = reqst.resourcepaths[0]
