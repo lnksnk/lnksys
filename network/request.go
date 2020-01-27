@@ -617,11 +617,11 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 				defer pipeReader.Close()
 				buffer := make([]byte, 81920)
 				for {
-					n, err := pipeReader.Read(buffer)
-					if err != nil {
+					pn, perr := pipeReader.Read(buffer)
+					if perr != nil {
 						break
 					}
-					res.Write(buffer[0:n])
+					res.Write(buffer[0:pn])
 					if f, ok := res.(http.Flusher); ok {
 						f.Flush()
 					}
