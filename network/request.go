@@ -613,7 +613,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			reqst.preWriteHeader = nil
 		}
 		if reqst.wpipeR==nil && reqst.wpipeW==nil {
-			reqst.wpipeR,reqst.wpipeW=io.Pipe()
+		/*	reqst.wpipeR,reqst.wpipeW=io.Pipe()
 			reqst.wpipeE=make(chan error,1)
 			go func(wpipeR *io.PipeReader,wo io.Writer){
 				//var setErr=false
@@ -649,7 +649,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 					}
 				}
 			}(reqst.wpipeR,reqst.w)
-		}
+		}*/
 		if reqst.wpipeW!=nil {
 			n,err=reqst.wpipeW.Write(p)
 		} else {
