@@ -339,7 +339,7 @@ func (reqst *Request) ExecuteRequest() {
 				} else {
 					if isFirtsRS {
 						if reqst.preWriteHeader==nil {
-							reqst.RequestHeaders().Set("Content-Length",fmt.Sprintf("%d",nxtrs.Size()))
+							reqst.ResponseHeaders().Set("Content-Length",fmt.Sprintf("%d",nxtrs.Size()))
 						}
 						isFirtsRS=false
 					}
