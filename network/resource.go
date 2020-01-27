@@ -22,7 +22,7 @@ type Resource struct {
 	readBuffer      []byte
 	readBufferi     int
 	readBufferl     int
-	readRuneBuffer  []rsrRune
+	readRuneBuffer  []*rsrRune
 	readRuneBufferi int
 	readRuneBufferl int
 	rbuf            *bufio.Reader
@@ -44,8 +44,8 @@ func (rsrr rsrRune) ReadRune() (rune, int, error) {
 	return rsrr.rsrr, rsrr.rsrsize, rsrr.rsrrerr
 }
 
-func newRsrRune(r rune, size int, err error) rsrRune {
-	return rsrRune{rsrrerr: err, rsrsize: size, rsrr: r}
+func newRsrRune(r rune, size int, err error) *rsrRune {
+	return &rsrRune{rsrrerr: err, rsrsize: size, rsrr: r}
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
@@ -74,19 +74,15 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 			rsrc.readRuneBufferi = 0
 		}
 		if rsrc.readRuneBuffer == nil {
-			rsrc.readRuneBuffer = make([]rsrRune, 81920)
+			rsrc.readRuneBuffer = make([]*rsrRune, 81920)
 		}
 		rsrc.readRuneBufferl = 0
-		for {
-			rr, rsize, rerr := rsrc.rbuf.ReadRune()
+		for rr, rsize, rerr := rsrc.rbuf.ReadRune(); (rsize>0 || rerr!=nil) {
 			if rsize > 0 {
 				rsrc.readRuneBuffer[rsrc.readRuneBufferl] = newRsrRune(rr, rsize, rerr)
 				rsrc.readRuneBufferl++
 			}
 			if rerr != nil || rsrc.readRuneBufferl == len(rsrc.readRuneBuffer) {
-				r = 0
-				size = 0
-				err = nil
 				break
 			}
 		}
@@ -442,6 +438,9 @@ func (rsrc *Resource) Close() (err error) {
 		rsrc.readBuffer = nil
 	}
 	if rsrc.readRuneBuffer != nil {
+		for n := range rsrc.readRuneBuffer {
+			rsrc.readRuneBuffer[n] = nil
+		}
 		rsrc.readRuneBuffer = nil
 	}
 	if rsrc.rbuf != nil {
