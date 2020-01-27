@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 
 	embed "github.com/efjoubert/lnksys/embed"
@@ -14,7 +13,7 @@ import (
 
 type Resource struct {
 	reqst           *Request
-	rsinfo *ResourceInfo
+	rsinfo          *ResourceInfo
 	r               io.Reader
 	size            int64
 	readBuffer      []byte
@@ -49,8 +48,8 @@ func newRsrRune(r rune, size int, err error) *rsrRune {
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 	if rsrc.rbuf == nil {
 		rsrc.pipeR, rsrc.pipeW = io.Pipe()
-		if rsrc.r == nil && rsrc.rsinfo!=nil {
-			rsrc.r=rsrc.rsinfo.Reader(rsrc)
+		if rsrc.r == nil && rsrc.rsinfo != nil {
+			rsrc.r = rsrc.rsinfo.Reader(rsrc)
 		}
 		go func(rr io.Reader) {
 			defer rsrc.pipeW.Close()
@@ -97,7 +96,7 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 }
 
 func (rsrc *Resource) IsActiveContent() (active bool) {
-	active=(rsrc.rsinfo!=nil && rsrc.rsinfo.IsActiveContent())
+	active = (rsrc.rsinfo != nil && rsrc.rsinfo.IsActiveContent())
 	return
 }
 
@@ -295,7 +294,7 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 			activeEnd:     false,
 			isfirst:       reqst.isfirstResource,
 			disableActive: disableActive}
-		rsrc.rsinfo=NextResourceInfo(rsrc,resourcepath,lastPathRoot,finfo)
+		rsrc.rsinfo = NextResourceInfo(rsrc, resourcepath, lastPathRoot, finfo)
 		if reqst.isfirstResource {
 			reqst.isfirstResource = false
 		}
@@ -349,7 +348,7 @@ func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
 				rsrc.readBuffer = make([]byte, maxbufsize)
 			}
 			if rsrc.r == nil && rsrc.rsinfo != nil {
-				rsrc.r=rsrc.rsinfo.Reader(rsrc)
+				rsrc.r = rsrc.rsinfo.Reader(rsrc)
 			}
 			if rsrc.r != nil {
 				if rsrc.readBufferl, err = rsrc.r.Read(rsrc.readBuffer); err != nil {
@@ -396,8 +395,8 @@ func (rsrc *Resource) Read(p []byte) (n int, err error) {
 }
 
 func (rsrc *Resource) Seek(offset int64, whence int) (n int64, err error) {
-	if rsrc.r == nil && rsrc.rsinfo!=nil {
-		rsrc.r=rsrc.rsinfo.Reader(rsrc)
+	if rsrc.r == nil && rsrc.rsinfo != nil {
+		rsrc.r = rsrc.rsinfo.Reader(rsrc)
 	}
 	if rs, rsok := rsrc.r.(io.Seeker); rsok {
 		n, err = rs.Seek(offset, whence)
@@ -428,9 +427,9 @@ func (rsrc *Resource) Close() (err error) {
 	if rsrc.rbuf != nil {
 		rsrc.rbuf = nil
 	}
-	if rsrc.rsinfo!=nil {
+	if rsrc.rsinfo != nil {
 		rsrc.rsinfo.Close()
-		rsrc.rsinfo=nil
+		rsrc.rsinfo = nil
 	}
 	return
 }
