@@ -616,14 +616,18 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			reqst.wpipeR,reqst.wpipeW=io.Pipe()
 			reqst.wpipeE=make(chan error,1)
 			go func(wpipeR *io.PipeReader,wo io.Writer){
+				var setErr=false
 				defer func() {
 					if rcvr:=recover(); rcvr!=nil {
-						reqst.wpipeE<-fmt.Errorf("Panic: %+v\n", rcvr)
+						if !setErr {
+							reqst.wpipeE<-fmt.Errorf("Panic: %+v\n", rcvr)
+						}
 					}
 					wpipeR.Close()
 				}()
 				npp:=make([]byte,maxbufsize)
 				for {
+					setErr=false
 					np,nperr:=wpipeR.Read(npp)
 					if np>0 {
 						nwp, nwperr := wo.Write(npp[:np]);
@@ -637,6 +641,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 						}
 					}
 					reqst.wpipeE<-nperr
+					setErr=true
 					if nperr!=nil {
 						break
 					}
