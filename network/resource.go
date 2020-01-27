@@ -13,22 +13,25 @@ import (
 )
 
 type Resource struct {
-	reqst         *Request
-	finfo         os.FileInfo
-	r             io.Reader
-	path          string
-	pathroot      string
-	size          int64
-	readBuffer    []byte
-	readBufferi   int
-	readBufferl   int
-	rbuf          *bufio.Reader
-	activeInverse bool
-	activeEnd     bool
-	isfirst       bool
-	disableActive bool
-	pipeR         *io.PipeReader
-	pipeW         *io.PipeWriter
+	reqst           *Request
+	finfo           os.FileInfo
+	r               io.Reader
+	path            string
+	pathroot        string
+	size            int64
+	readBuffer      []byte
+	readBufferi     int
+	readBufferl     int
+	readRuneBuffer  []byte
+	readRuneBufferi int
+	readRuneBufferl int
+	rbuf            *bufio.Reader
+	activeInverse   bool
+	activeEnd       bool
+	isfirst         bool
+	disableActive   bool
+	pipeR           *io.PipeReader
+	pipeW           *io.PipeWriter
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
@@ -320,36 +323,13 @@ func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
 				}
 			}
 			if rsrc.r != nil {
-				if rsrc.IsActiveContent() {
-					/*if rsrc.readBufferl, err = rsrc.ReadRuneBytes(rsrc.readBuffer); err != nil {
-						if err == io.EOF {
-							if rsrc.readBufferl == 0 {
-								rsrc.reqst.resourcesOffset -= rsrc.Size()
-								rsrc.reqst.resourcesSize -= rsrc.Size()
-								rsrc.readBufferl = 0
-								break
-							}
-						}
-					}*/
-					if rsrc.readBufferl, err = rsrc.r.Read(rsrc.readBuffer); err != nil {
-						if err == io.EOF {
-							if rsrc.readBufferl == 0 {
-								rsrc.reqst.resourcesOffset -= rsrc.Size()
-								rsrc.reqst.resourcesSize -= rsrc.Size()
-								rsrc.readBufferl = 0
-								break
-							}
-						}
-					}
-				} else {
-					if rsrc.readBufferl, err = rsrc.r.Read(rsrc.readBuffer); err != nil {
-						if err == io.EOF {
-							if rsrc.readBufferl == 0 {
-								rsrc.reqst.resourcesOffset -= rsrc.Size()
-								rsrc.reqst.resourcesSize -= rsrc.Size()
-								rsrc.readBufferl = 0
-								break
-							}
+				if rsrc.readBufferl, err = rsrc.r.Read(rsrc.readBuffer); err != nil {
+					if err == io.EOF {
+						if rsrc.readBufferl == 0 {
+							rsrc.reqst.resourcesOffset -= rsrc.Size()
+							rsrc.reqst.resourcesSize -= rsrc.Size()
+							rsrc.readBufferl = 0
+							break
 						}
 					}
 				}
