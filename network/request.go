@@ -614,11 +614,11 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 		if reqst.wpipeR==nil && reqst.wpipeW==nil {
 			reqst.wpipeR,reqst.wpipeW=io.Pipe()
 			go func(res http.ResponseWriter, pipeReader *io.PipeReader){
+				defer pipeReader.Close()
 				buffer := make([]byte, 81920)
 				for {
 					n, err := pipeReader.Read(buffer)
 					if err != nil {
-						pipeReader.Close()
 						break
 					}
 					res.Write(buffer[0:n])
