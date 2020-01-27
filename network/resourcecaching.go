@@ -1,6 +1,7 @@
 package network
 
 import (
+	active "github.com/efjoubert/lnksys/iorw/active"
 	"io"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 )
 
 type ResourceInfo struct {
+	*active.Active
 	finfo    os.FileInfo
 	path     string
 	pathroot string
@@ -34,6 +36,10 @@ func (rsinfo *ResourceInfo) PathRoot() string {
 }
 
 func (rsinfo *ResourceInfo) Close() {
+	if rsinfo.Active != nil {
+		rsinfo.Active.Close()
+		rsinfo.Active = nil
+	}
 	if rsinfo.finfo != nil {
 		rsinfo = nil
 	}
