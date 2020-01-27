@@ -10,7 +10,6 @@ import (
 
 	embed "github.com/efjoubert/lnksys/embed"
 	iorw "github.com/efjoubert/lnksys/iorw"
-	"fmt"
 )
 
 type Resource struct {
@@ -380,9 +379,6 @@ func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
 							break
 						}
 					}
-				}
-				if rsrc.readBufferl>0 {
-					fmt.Print(string(rsrc.readBuffer[:rsrc.readBufferl]))
 				}
 			} else {
 				rsrc.reqst.resourcesOffset -= rsrc.Size()
