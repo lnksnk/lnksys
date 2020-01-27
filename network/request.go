@@ -618,7 +618,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			go func(wpipeR *io.PipeReader,wo io.Writer){
 				defer func() {
 					if rcvr:=recover(); rcvr!=nil {
-						reqst.wpipeE<-fmt.EPrint(rcvr)
+						reqst.wpipeE<-fmt.Errorf("Panic: %+v\n", rcvr)
 					}
 					wpipeR.Close()
 				}()
