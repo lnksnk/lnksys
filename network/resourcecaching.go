@@ -67,7 +67,7 @@ func (rsinfo *ResourceInfo) Reader(rsrc *Resource) (r io.Reader) {
 type ResourceInfoHandler struct {
 }
 
-func (rsifihndlr *ResourceInfoHandler) nextResourceRoots(resourcepath string) (nxtrspath string, rmningrspath string) {
+func (rsifihndlr *ResourceInfoHandler) nextResourceRoots(reqst *Request, resourcepath string) (nxtrspath string, rmningrspath string) {
 	if len(reqst.rootpaths) > 0 && resourcepath != "" {
 		nxtrspath = ""
 		rmningrspath = ""
