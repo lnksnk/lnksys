@@ -97,10 +97,7 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 }
 
 func (rsrc *Resource) IsActiveContent() (active bool) {
-	var ext = filepath.Ext(rsrc.path)
-	if atvExtns != nil {
-		active, _ = atvExtns[ext]
-	}
+	active=(rsrc.rsinfo!=nil && rsrc.rsinfo.IsActiveContent())
 	return
 }
 
@@ -351,12 +348,8 @@ func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
 			if len(rsrc.readBuffer) == 0 {
 				rsrc.readBuffer = make([]byte, maxbufsize)
 			}
-			if rsrc.r == nil && rsrc.finfo != nil {
-				if strings.HasSuffix(rsrc.pathroot, "/") && rsrc.pathroot != "/" {
-					rsrc.r, _ = os.Open(rsrc.pathroot[:len(rsrc.pathroot)-1] + rsrc.path)
-				} else {
-					rsrc.r, _ = os.Open(rsrc.pathroot + rsrc.path)
-				}
+			if rsrc.r == nil && rsrc.rsinfo != nil {
+				rsrc.r=rsrc.rsinfo.Reader(rsrc)
 			}
 			if rsrc.r != nil {
 				if rsrc.readBufferl, err = rsrc.r.Read(rsrc.readBuffer); err != nil {

@@ -3,6 +3,7 @@ package network
 import (
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -36,6 +37,14 @@ func (rsinfo *ResourceInfo) Close() {
 	if rsinfo.finfo != nil {
 		rsinfo = nil
 	}
+}
+
+func (rsinfo *ResourceInfo) IsActiveContent() (active bool) {
+	var ext = filepath.Ext(rsinfo.path)
+	if atvExtns != nil {
+		active, _ = atvExtns[ext]
+	}
+	return
 }
 
 func (rsinfo *ResourceInfo) Reader(rsrc *Resource) (r io.Reader) {
