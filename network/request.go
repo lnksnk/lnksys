@@ -619,29 +619,26 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 				var setErr=false
 				defer func() {
 					if rcvr:=recover(); rcvr!=nil {
-						if !setErr {
-							reqst.wpipeE<-fmt.Errorf("Panic: %+v\n", rcvr)
-						}
+						//if !setErr {
+							//reqst.wpipeE<-fmt.Errorf("Panic: %+v\n", rcvr)
+						//}
 					}
 					wpipeR.Close()
 				}()
 				npp:=make([]byte,maxbufsize)
 				for {
-					setErr=false
 					np,nperr:=wpipeR.Read(npp)
 					if np>0 {
 						nwp, nwperr := wo.Write(npp[:np]);
 						if nwp > 0 {
-							//if f, ok := wo.(http.Flusher); ok {
-							//	f.Flush()
-							//}
+							if f, ok := wo.(http.Flusher); ok {
+								f.Flush()
+							}
 						}
 						if nwperr!=nil {
 							nperr=nwperr
 						}
 					}
-					reqst.wpipeE<-nperr
-					setErr=true
 					if nperr!=nil {
 						break
 					}
@@ -650,7 +647,6 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 		}
 		if reqst.wpipeW!=nil {
 			n,err=reqst.wpipeW.Write(p)
-			err=<-reqst.wpipeE
 		} else {
 			n,err=reqst.w.Write(p)
 		}
