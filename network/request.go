@@ -823,6 +823,14 @@ func (reqst *Request) Close() (err error) {
 	if reqst.rootpaths != nil {
 		reqst.rootpaths = nil
 	}
+	if reqst.wpipeR!=nil {
+		reqst.wpipeR.Close()
+		reqst.wpipeR=nil
+	}
+	if reqst.wpipeW!=nil {
+		reqst.wpipeW.Close()
+		reqst.wpipeW=nil
+	}
 	return
 }
 
