@@ -311,7 +311,9 @@ func (reqst *Request) ExecuteRequest() {
 			}
 			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
 				if isFirtsRS {
-					reqst.ResponseHeaders().Set("Content-Length",fmt.Sprintf("%d",nxtrs.Size()))
+					if !isAtv {
+						reqst.ResponseHeaders().Set("Content-Length",fmt.Sprintf("%d",nxtrs.Size()))
+					}
 					isFirtsRS=false
 				}
 				if isAtv {
