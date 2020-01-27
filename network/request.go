@@ -641,9 +641,6 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 		}
 		if reqst.wpipeW!=nil {
 			n,err=reqst.wpipeW.Write(p)
-			if n>0 {
-				fmt.Print(string(p[:n]))
-			}
 		}
 	}
 	return
