@@ -77,7 +77,8 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 			rsrc.readRuneBuffer = make([]*rsrRune, 81920)
 		}
 		rsrc.readRuneBufferl = 0
-		for rr, rsize, rerr := rsrc.rbuf.ReadRune(); (rsize>0 || rerr!=nil) {
+		for {
+			rr, rsize, rerr := rsrc.rbuf.ReadRune()
 			if rsize > 0 {
 				rsrc.readRuneBuffer[rsrc.readRuneBufferl] = newRsrRune(rr, rsize, rerr)
 				rsrc.readRuneBufferl++
