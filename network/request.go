@@ -633,7 +633,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 						nwp, nwperr := wo.Write(npp[:np]);
 						if nwp > 0 {
 							if f, ok := wo.(http.Flusher); ok {
-								f.Flush()
+								//f.Flush()
 							}
 						}
 						if nwperr!=nil {
