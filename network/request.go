@@ -33,6 +33,7 @@ type Request struct {
 	w                     http.ResponseWriter
 	wpipeR 				  *io.PipeReader
 	wpipeW				  *io.PipeWriter
+	wpipeE 				  chan error
 	r                     *http.Request
 	done                  chan bool
 	resourcesOffset       int64
@@ -611,12 +612,13 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			reqst.preWriteHeader()
 			reqst.preWriteHeader = nil
 		}
-		/*if reqst.wpipeR==nil && reqst.wpipeW==nil {
+		if reqst.wpipeR==nil && reqst.wpipeW==nil {
 			reqst.wpipeR,reqst.wpipeW=io.Pipe()
+			reqst.wpipeE=make(chan error,1)
 			go func(wpipeR *io.PipeReader,wo io.Writer){
 				defer func() {
 					if rcvr:=recover(); rcvr!=nil {
-						reqst.interuptRequest=true
+						reqst.wpipeE<-fmt.EPrint(rcvr)
 					}
 					wpipeR.Close()
 				}()
@@ -634,6 +636,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 							nperr=nwperr
 						}
 					}
+					reqst.wpipeE<-nperr
 					if nperr!=nil {
 						break
 					}
@@ -642,7 +645,8 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 		}
 		if reqst.wpipeW!=nil {
 			n,err=reqst.wpipeW.Write(p)
-		}*/
+			err=<-reqst.wpipeE
+		}
 		if reqst.wpipeW!=nil {
 			n,err=reqst.wpipeW.Write(p)
 		} else {
@@ -835,6 +839,10 @@ func (reqst *Request) Close() (err error) {
 	if reqst.wpipeW!=nil {
 		reqst.wpipeW.Close()
 		reqst.wpipeW=nil
+	}
+	if reqst.wpipeE!=nil {
+		close(reqst.wpipeE)
+		reqst.wpipeE=nil
 	}
 	return
 }
