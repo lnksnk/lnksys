@@ -616,7 +616,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			reqst.wpipeR,reqst.wpipeW=io.Pipe()
 			reqst.wpipeE=make(chan error,1)
 			go func(wpipeR *io.PipeReader,wo io.Writer){
-				var setErr=false
+				//var setErr=false
 				defer func() {
 					if rcvr:=recover(); rcvr!=nil {
 						//if !setErr {
