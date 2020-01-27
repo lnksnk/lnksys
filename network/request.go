@@ -611,23 +611,6 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			reqst.preWriteHeader()
 			reqst.preWriteHeader = nil
 		}
-		if reqst.wpipeR==nil && reqst.wpipeW==nil {
-			reqst.wpipeR,reqst.wpipeW=io.Pipe()
-			go func(res http.ResponseWriter, pipeReader *io.PipeReader){
-				defer pipeReader.Close()
-				buffer := make([]byte, 81920)
-				for {
-					pn, perr := pipeReader.Read(buffer)
-					if perr != nil {
-						break
-					}
-					res.Write(buffer[0:pn])
-					if f, ok := res.(http.Flusher); ok {
-						f.Flush()
-					}
-				}
-			}(reqst.w,reqst.wpipeR)
-		}
 		/*if reqst.wpipeR==nil && reqst.wpipeW==nil {
 			reqst.wpipeR,reqst.wpipeW=io.Pipe()
 			go func(wpipeR *io.PipeReader,wo io.Writer){
