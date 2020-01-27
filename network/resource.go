@@ -14,10 +14,8 @@ import (
 
 type Resource struct {
 	reqst           *Request
-	finfo           os.FileInfo
+	rsinfo *ResourceInfo
 	r               io.Reader
-	path            string
-	pathroot        string
 	size            int64
 	readBuffer      []byte
 	readBufferi     int
@@ -51,12 +49,8 @@ func newRsrRune(r rune, size int, err error) *rsrRune {
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 	if rsrc.rbuf == nil {
 		rsrc.pipeR, rsrc.pipeW = io.Pipe()
-		if rsrc.r == nil && rsrc.finfo != nil {
-			if strings.HasSuffix(rsrc.pathroot, "/") && rsrc.pathroot != "/" {
-				rsrc.r, _ = os.Open(rsrc.pathroot[:len(rsrc.pathroot)-1] + rsrc.path)
-			} else {
-				rsrc.r, _ = os.Open(rsrc.pathroot + rsrc.path)
-			}
+		if rsrc.r == nil && rsrc.rsinfo!=nil {
+			rsrc.r=rsrc.rsinfo.Reader(rsrc)
 		}
 		go func(rr io.Reader) {
 			defer rsrc.pipeW.Close()
@@ -298,15 +292,13 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 	}
 	if r != nil || finfo != nil {
 		rsrc = &Resource{
-			path:          resourcepath,
-			pathroot:      lastPathRoot,
 			r:             r,
-			finfo:         finfo,
 			reqst:         reqst,
 			activeInverse: activeInverse,
 			activeEnd:     false,
 			isfirst:       reqst.isfirstResource,
 			disableActive: disableActive}
+		rsrc.rsinfo=NextResourceInfo(rsrc,resourcepath,lastPathRoot,finfo)
 		if reqst.isfirstResource {
 			reqst.isfirstResource = false
 		}
@@ -411,12 +403,8 @@ func (rsrc *Resource) Read(p []byte) (n int, err error) {
 }
 
 func (rsrc *Resource) Seek(offset int64, whence int) (n int64, err error) {
-	if rsrc.r == nil && rsrc.finfo != nil {
-		if strings.HasSuffix(rsrc.pathroot, "/") && rsrc.pathroot != "/" {
-			rsrc.r, _ = os.Open(rsrc.pathroot[:len(rsrc.pathroot)-1] + rsrc.path)
-		} else {
-			rsrc.r, _ = os.Open(rsrc.pathroot + rsrc.path)
-		}
+	if rsrc.r == nil && rsrc.rsinfo!=nil {
+		rsrc.r=rsrc.rsinfo.Reader(rsrc)
 	}
 	if rs, rsok := rsrc.r.(io.Seeker); rsok {
 		n, err = rs.Seek(offset, whence)
@@ -446,6 +434,10 @@ func (rsrc *Resource) Close() (err error) {
 	}
 	if rsrc.rbuf != nil {
 		rsrc.rbuf = nil
+	}
+	if rsrc.rsinfo!=nil {
+		rsrc.rsinfo.Close()
+		rsrc.rsinfo=nil
 	}
 	return
 }
