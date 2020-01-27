@@ -63,3 +63,76 @@ func (rsinfo *ResourceInfo) Reader(rsrc *Resource) (r io.Reader) {
 	}
 	return
 }
+
+type ResourceInfoHandler struct {
+}
+
+func (rsifihndlr *ResourceInfoHandler) nextResourceRoots(resourcepath string) (nxtrspath string, rmningrspath string) {
+	if len(reqst.rootpaths) > 0 && resourcepath != "" {
+		nxtrspath = ""
+		rmningrspath = ""
+		for _, respath := range reqst.rootpaths {
+			if respath != "" {
+				if _, rspathok := roots[respath]; rspathok {
+					if strings.HasPrefix(resourcepath, "/") {
+						if strings.HasPrefix(respath, "/") && strings.HasPrefix(resourcepath, respath) {
+							if len(respath) > len(nxtrspath) {
+								nxtrspath = respath
+								rmningrspath = resourcepath[len(respath):]
+							}
+						} else if strings.HasPrefix(resourcepath, "/"+respath) {
+							if len(respath) > len(nxtrspath) {
+								nxtrspath = respath
+								rmningrspath = resourcepath[len(respath)+1:]
+							}
+						}
+					} else if strings.HasPrefix(resourcepath, respath) {
+						if len(respath) > len(nxtrspath) {
+							nxtrspath = respath
+							rmningrspath = resourcepath[len(respath):]
+						}
+					}
+				}
+			}
+		}
+	}
+	return
+}
+
+type ResourcesManager struct {
+	resources map[string]*ResourceInfoHandler
+}
+
+func newResourcesManager() (rsrcsmngr *ResourcesManager) {
+	rsrcsmngr = &ResourcesManager{resources: map[string]*ResourceInfoHandler{}}
+	return
+}
+
+func (rsrcsmngr *ResourcesManager) MapResourceRoot(a ...interface{}) {
+	for len(a) >= 2 && len(a)%2 == 0 {
+		if rspath, rspathok := a[0].(string); rspathok {
+			if rspath != "" {
+				if rsroot, rsrootok := a[1].(string); rsrootok {
+					if rsroot != "" {
+
+						a = a[2:]
+					}
+				} else {
+					break
+				}
+			} else {
+				break
+			}
+		} else {
+			break
+		}
+	}
+}
+
+var rsrcsmngr *ResourcesManager
+
+func init() {
+	if rsrcsmngr == nil {
+		rsrcsmngr = newResourcesManager()
+	}
+}
