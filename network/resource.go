@@ -22,7 +22,7 @@ type Resource struct {
 	readBuffer      []byte
 	readBufferi     int
 	readBufferl     int
-	readRuneBuffer  []byte
+	readRuneBuffer  []rsrRune
 	readRuneBufferi int
 	readRuneBufferl int
 	rbuf            *bufio.Reader
@@ -32,6 +32,20 @@ type Resource struct {
 	disableActive   bool
 	pipeR           *io.PipeReader
 	pipeW           *io.PipeWriter
+}
+
+type rsrRune struct {
+	rsrrerr error
+	rsrsize int
+	rsrr    rune
+}
+
+func (rsrr rsrRune) ReadRune() (rune, int, error) {
+	return rsrr.rsrr, rsrr.rsrsize, rsrr.rsrrerr
+}
+
+func newRsrRune(r rune, size int, err error) rsrRune {
+	return rsrRune{rsrrerr: err, rsrsize: size, rsrr: r}
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
@@ -55,9 +69,41 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 		}(rsrc.r)
 		rsrc.rbuf = bufio.NewReader(rsrc.pipeR)
 	}
-	r, size, err = rsrc.rbuf.ReadRune()
+	if rsrc.readRuneBufferi == 0 || (rsrc.readRuneBufferl > 0 && rsrc.readRuneBufferi == rsrc.readRuneBufferl) {
+		if rsrc.readRuneBufferi > 0 {
+			rsrc.readRuneBufferi = 0
+		}
+		if rsrc.readRuneBuffer == nil {
+			rsrc.readRuneBuffer = make([]rsrRune, 81920)
+		}
+		rsrc.readRuneBufferl = 0
+		for {
+			rr, rsize, rerr := rsrc.rbuf.ReadRune()
+			if rsize > 0 {
+				rsrc.readRuneBuffer[rsrc.readBufferl] = newRsrRune(rr, rsize, rerr)
+				rsrc.readRuneBufferl++
+			}
+			if rerr != nil || rsrc.readBufferl == len(rsrc.readRuneBuffer) {
+				r = 0
+				size = 0
+				err = nil
+				break
+			}
+		}
+		if rsrc.readBufferl == 0 {
+			r = 0
+			size = 0
+			err = io.EOF
+			return
+		}
+	}
+	if rsrc.readRuneBufferi < rsrc.readBufferl {
+		r, size, err = rsrc.readRuneBuffer[rsrc.readRuneBufferi].ReadRune()
+		rsrc.readRuneBufferi++
+	}
 	return
 }
+
 func (rsrc *Resource) IsActiveContent() (active bool) {
 	var ext = filepath.Ext(rsrc.path)
 	if atvExtns != nil {
@@ -416,6 +462,9 @@ func (rsrc *Resource) Close() (err error) {
 	}
 	if rsrc.readBuffer != nil {
 		rsrc.readBuffer = nil
+	}
+	if rsrc.readRuneBuffer != nil {
+		rsrc.readRuneBuffer = nil
 	}
 	if rsrc.rbuf != nil {
 		rsrc.rbuf = nil
