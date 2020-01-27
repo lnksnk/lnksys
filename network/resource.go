@@ -382,7 +382,7 @@ func (rsrc *Resource) internalRead(p []byte) (n int, err error) {
 					}
 				}
 				if rsrc.readBufferl>0 {
-					fmt.Print(rsrc.readBuffer[:rsrc.readBufferl])
+					fmt.Print(string(rsrc.readBuffer[:rsrc.readBufferl]))
 				}
 			} else {
 				rsrc.reqst.resourcesOffset -= rsrc.Size()
