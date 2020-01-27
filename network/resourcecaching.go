@@ -99,12 +99,34 @@ func (rsifihndlr *ResourceInfoHandler) nextResourceRoots(reqst *Request, resourc
 	return
 }
 
-type ResourcesManager struct {
+type rootType int
+
+type RootHandler struct {
+	rootpath  string
 	resources map[string]*ResourceInfoHandler
 }
 
+func newRootHandler(root string) (rthndlr *RootHandler) {
+	if root != "" {
+		if fi, fierr := os.Stat(root); fierr == nil {
+			if fi.IsDir() {
+				if !strings.HasSuffix(root, "/") {
+					root += "/"
+				}
+			} else {
+
+			}
+		}
+	}
+	return
+}
+
+type ResourcesManager struct {
+	roots map[string]*RootHandler
+}
+
 func newResourcesManager() (rsrcsmngr *ResourcesManager) {
-	rsrcsmngr = &ResourcesManager{resources: map[string]*ResourceInfoHandler{}}
+	rsrcsmngr = &ResourcesManager{roots: map[string]*RootHandler{}}
 	return
 }
 
