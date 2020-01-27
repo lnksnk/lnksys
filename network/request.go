@@ -611,7 +611,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			reqst.preWriteHeader()
 			reqst.preWriteHeader = nil
 		}
-		if reqst.wpipeR==nil && reqst.wpipeW==nil {
+		/*if reqst.wpipeR==nil && reqst.wpipeW==nil {
 			reqst.wpipeR,reqst.wpipeW=io.Pipe()
 			go func(wpipeR *io.PipeReader,wo io.Writer){
 				defer func() {
@@ -642,7 +642,8 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 		}
 		if reqst.wpipeW!=nil {
 			n,err=reqst.wpipeW.Write(p)
-		}
+		}*/
+		n,err=reqst.w.Write(p)
 	}
 	return
 }
