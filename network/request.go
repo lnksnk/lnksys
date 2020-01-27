@@ -623,11 +623,12 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 				for {
 					np,nperr:=wpipeR.Read(npp)
 					if np>0 {
-						if nwp, nwperr := wo.Write(npp[:n]); nwp > 0 && nwperr == nil {
+						if nwp, nwperr := wo.Write(npp[:n]); nwp > 0 {
 							if f, ok := wo.(http.Flusher); ok {
 								f.Flush()
 							}
-						} else if nwperr!=nil {
+						}
+						if nwperr!=nil {
 							nperr=nwperr
 						}
 					}
