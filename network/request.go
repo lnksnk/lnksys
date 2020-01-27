@@ -616,6 +616,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			go func(wpipeR *io.PipeReader,wo io.Writer){
 				defer func() {
 					if rcvr:=recover(); rcvr!=nil {
+						reqst.interuptRequest=true
 					}
 					wpipeR.Close()
 				}()
