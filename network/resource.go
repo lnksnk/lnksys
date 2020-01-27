@@ -83,7 +83,10 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 				rsrc.readRuneBuffer[rsrc.readBufferl] = newRsrRune(rr, rsize, rerr)
 				rsrc.readRuneBufferl++
 			}
-			if rerr != nil || rsrc.readBufferl == len(rsrc.readRuneBuffer) {
+			if rsrc.readBufferl == len(rsrc.readRuneBuffer) {
+				break
+			}
+			if rerr != nil {
 				r = 0
 				size = 0
 				err = nil
