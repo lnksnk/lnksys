@@ -628,7 +628,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 								f.Flush()
 							}
 						}
-						if nwperr!=nil {
+						if nperr!=nil {
 							nperr=nwperr
 						}
 					}
