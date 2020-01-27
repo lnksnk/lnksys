@@ -651,9 +651,6 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 		if reqst.wpipeW!=nil {
 			n,err=reqst.wpipeW.Write(p)
 			err=<-reqst.wpipeE
-		}
-		if reqst.wpipeW!=nil {
-			n,err=reqst.wpipeW.Write(p)
 		} else {
 			n,err=reqst.w.Write(p)
 		}
