@@ -69,7 +69,7 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 		}(rsrc.r)
 		rsrc.rbuf = bufio.NewReader(rsrc.pipeR)
 	}
-	if rsrc.readRuneBufferi == 0 || (rsrc.readRuneBufferl > 0 && rsrc.readRuneBufferi == rsrc.readRuneBufferl) {
+	/*if rsrc.readRuneBufferi == 0 || (rsrc.readRuneBufferl > 0 && rsrc.readRuneBufferi == rsrc.readRuneBufferl) {
 		if rsrc.readRuneBufferi > 0 {
 			rsrc.readRuneBufferi = 0
 		}
@@ -100,7 +100,8 @@ func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
 	if rsrc.readRuneBufferi < rsrc.readRuneBufferl {
 		r, size, err = rsrc.readRuneBuffer[rsrc.readRuneBufferi].ReadRune()
 		rsrc.readRuneBufferi++
-	}
+	}*/
+	r, size, err = rsrc.rbuf.ReadRune()
 	return
 }
 
