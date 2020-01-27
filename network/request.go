@@ -296,7 +296,7 @@ func (reqst *Request) ExecuteRequest() {
 	} else {
 		reqst.Active.Reset()
 	}
-
+	var isFirtsRS=false
 	for {
 		if len(reqst.resourcepaths) > 0 {
 			var nextrs = reqst.resourcepaths[0]
@@ -310,6 +310,9 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.lastResourcePathAdded = nextrs[:strings.LastIndex(nextrs, "/")+1]
 			}
 			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
+				if !isFirtsRS {
+					isFirtsRS=true
+				}
 				if isAtv {
 					if atverr := func(nxtrs *Resource) (fnerr error) {
 						defer func() {
@@ -334,6 +337,12 @@ func (reqst *Request) ExecuteRequest() {
 						break
 					}
 				} else {
+					if isFirtsRS {
+						if reqst.preWriteHeader==nil {
+							reqst.RequestHeaders().Set("Content-Length",fmt.Sprintf("%d",nxtrs.Size()))
+						}
+						isFirtsRS=false
+					}
 					reqst.Print(nxtrs)
 				}
 			}
