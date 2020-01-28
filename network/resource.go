@@ -254,6 +254,10 @@ func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
 					}
 				}
 			}
+		} else {
+			if !disableActive {
+				disableActive = true
+			}
 		}
 		return
 	}
