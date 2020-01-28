@@ -121,8 +121,8 @@ var qrqstlck *sync.Mutex
 
 func queryRequest(reqst *Request) {
 	//if reqst.listener == nil {
-		qrqstlck.Lock()
-		defer qrqstlck.Unlock()
+		//qrqstlck.Lock()
+		//defer qrqstlck.Unlock()
 		go func(rqst*Request,done chan bool){
 			defer func(){
 				done<-true
