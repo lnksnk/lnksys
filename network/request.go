@@ -119,13 +119,14 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 var qrqstlck *sync.Mutex
 
 func queryRequest(reqst *Request) {
-	if reqst.listener == nil {
+	/*if reqst.listener == nil {
 		qrqstlck.Lock()
 		defer qrqstlck.Unlock()
 		reqstsQueue <- reqst
 	} else {
 		reqst.listener.QueueRequest(reqst)
-	}
+	}*/
+	reqst.ExecuteRequest()
 }
 
 func QueuedRequestToExecute(reqst *Request) {
@@ -155,7 +156,7 @@ func HttpRequestHandler(reqst *Request) (hndlr http.Handler) {
 
 func (reqst *Request) IsActiveContent(ext string) (active bool) {
 	ext = filepath.Ext(ext)
-	active = strings.Index(",.html,.htm,.xml,.svg,.css,.js,.json,", ","+ext+",") > -1
+	active = strings.Index(",.html,.htm,.xml,.svg,.css,.js,.json,.csv,", ","+ext+",") > -1
 	return
 }
 
