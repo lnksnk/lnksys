@@ -237,7 +237,7 @@ func (reqst *Request) ExecuteRequest() {
 	}
 
 	var disableActive = false
-
+	var isMultiMedia=false
 	if reqstContentType == "application/json" {
 
 	} else {
@@ -259,7 +259,9 @@ func (reqst *Request) ExecuteRequest() {
 		reqst.forceRead = isAtv
 	}
 	var mimedetails = mime.FindMimeTypeByExt(reqst.r.URL.Path, ".txt", "text/plain")
-
+	if len(mimedetails)>0 && strings.HasPrefix(mimedetails[0],"video/") || strings.HasPrefix(mimedetails[0],"audio/")  {
+		isMultiMedia=true
+	}
 	var contentencoding = ""
 
 	reqst.w.Header().Set("Cache-Control", "no-store")
