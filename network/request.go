@@ -113,20 +113,20 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}(w.(http.CloseNotifier).CloseNotify(), r.Context())
 	}
-	//QueuedRequestToExecute(reqst)
-	reqst.ExecuteRequest()
+	QueuedRequestToExecute(reqst)
+	//reqst.ExecuteRequest()
 }
 
 var qrqstlck *sync.Mutex
 
 func queryRequest(reqst *Request) {
-	if reqst.listener == nil {
+	//if reqst.listener == nil {
 		qrqstlck.Lock()
 		defer qrqstlck.Unlock()
 		reqstsQueue <- reqst
-	} else {
-		reqst.listener.QueueRequest(reqst)
-	}
+	//} else {
+	//	reqst.listener.QueueRequest(reqst)
+	//}
 	<-reqst.done
 }
 
