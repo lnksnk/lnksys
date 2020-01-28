@@ -282,6 +282,9 @@ func (reqst *Request) ExecuteRequest() {
 			if reqst.w.Header().Get("Content-Type")=="" {
 				reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
+			if isMultiMedia {
+				
+			}
 			reqst.w.WriteHeader(200)
 		}
 	}
