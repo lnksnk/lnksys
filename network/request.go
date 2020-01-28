@@ -653,9 +653,6 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 							nwp, nwperr := wo.Write(npp[npi:npi+(np-npi)]);
 							if nwp > 0 {
 								npi+=nwp
-								if f, ok := wo.(http.Flusher); ok {
-									f.Flush()
-								}
 							}
 							if nwperr!=nil {
 								nperr=nwperr
@@ -671,6 +668,11 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 		}
 		if reqst.wpipeW!=nil {
 			n,err=reqst.wpipeW.Write(p)
+			if err==nil {
+				if f, ok := reqst.w.(http.Flusher); ok {
+					f.Flush()
+				}
+			}
 		} else {
 			n,err=reqst.w.Write(p)
 		}
