@@ -270,7 +270,9 @@ func (reqst *Request) ExecuteRequest() {
 		}()
 		reqst.preWriteHeader = func() {
 			reqst.w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
-			reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
+			if reqst.w.Header().Get("Content-Type")=="" {
+				reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
+			}
 			reqst.w.WriteHeader(200)
 		}
 	}
