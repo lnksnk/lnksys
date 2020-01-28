@@ -109,7 +109,7 @@ func (lstnrsvr *lstnrserver) listenAndServe() {
 		if err == nil && ln != nil {
 			srvr.Serve(ln)
 		}*/
-		srvr.listenAndServe()
+		srvr.ListenAndServe()
 	}(lstnrsvr.httpsvr)
 }
 
