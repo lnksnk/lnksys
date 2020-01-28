@@ -669,9 +669,9 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 		if reqst.wpipeW!=nil {
 			n,err=reqst.wpipeW.Write(p)
 			if err==nil {
-				if f, ok := reqst.w.(http.Flusher); ok {
+				/*if f, ok := reqst.w.(http.Flusher); ok {
 					f.Flush()
-				}
+				}*/
 			}
 		} else {
 			n,err=reqst.w.Write(p)
