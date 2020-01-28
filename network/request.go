@@ -123,12 +123,12 @@ func queryRequest(reqst *Request) {
 	//if reqst.listener == nil {
 		//qrqstlck.Lock()
 		//defer qrqstlck.Unlock()
-		go func(rqst*Request,done chan bool){
-			defer func(){
-				done<-true
-			}()
+		//go func(rqst*Request,done chan bool){
+		//	defer func(){
+		//		done<-true
+		//	}()
 			reqst.ExecuteRequest()
-		}(reqst,reqst.done)
+		//}(reqst,reqst.done)
 		//reqstsQueue <- reqst
 	//} else {
 	//	reqst.listener.QueueRequest(reqst)
