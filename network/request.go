@@ -113,38 +113,7 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}(w.(http.CloseNotifier).CloseNotify(), r.Context())
 	}
-	QueuedRequestToExecute(reqst)
-	//reqst.ExecuteRequest()
-}
-
-var qrqstlck *sync.Mutex
-
-func queryRequest(reqst *Request) {
-	//if reqst.listener == nil {
-		//qrqstlck.Lock()
-		//defer qrqstlck.Unlock()
-		//go func(rqst*Request,done chan bool){
-		//	defer func(){
-		//		done<-true
-		//	}()
-			reqst.ExecuteRequest()
-		//}(reqst,reqst.done)
-		//reqstsQueue <- reqst
-	//} else {
-	//	reqst.listener.QueueRequest(reqst)
-	//}
-	//<-reqst.done
-}
-
-func QueuedRequestToExecute(reqst *Request) {
-	queryRequest(reqst)
-}
-
-func ExecuteQueuedRequest(reqst *Request) {
-	go func(rqst *Request) {
-		rqst.ExecuteRequest()
-		rqst.done <- true
-	}(reqst)
+	reqst.ExecuteRequest()
 }
 
 func (reqst *Request) Interupted() bool {
@@ -162,7 +131,10 @@ func HttpRequestHandler(reqst *Request) (hndlr http.Handler) {
 
 func (reqst *Request) IsActiveContent(ext string) (active bool) {
 	ext = filepath.Ext(ext)
-	active = strings.Index(",.html,.htm,.xml,.svg,.css,.js,.json,.csv,", ","+ext+",") > -1
+	if _,active=atvExtns[ext]; active {
+		active=atvExtns[ext]
+	}
+	//active = strings.Index(",.html,.htm,.xml,.svg,.css,.js,.json,.csv,", ","+ext+",") > -1
 	return
 }
 
@@ -186,7 +158,6 @@ func (reqst *Request) AddResource(resource ...string) {
 	if len(resource) > 0 {
 		var lastrsri = len(reqst.resourcepaths)
 		var resi = 0
-
 		for len(resource) > 0 {
 			var res = resource[0]
 			resi = 0
@@ -715,8 +686,6 @@ func (reqst *Request) PopulateParameters() {
 	parameters.LoadParametersFromHTTPRequest(reqst.params, reqst.r)
 }
 
-var reqstsQueue chan *Request
-
 var shutdownEnv func()
 
 func RegisterShutdownEnv(shuttingdownEnv func()) {
@@ -756,25 +725,7 @@ func MapActiveExtension(a ...string) {
 func init() {
 	if atvExtns == nil {
 		atvExtns = map[string]bool{}
-		MapActiveExtension(strings.Split(".html,.htm,.xml,.svg,.css,.js,.json,.txt", ",")...)
-	}
-	if reqstsQueue == nil {
-		qrqstlck = &sync.Mutex{}
-		reqstsQueue = make(chan *Request, runtime.NumCPU()*4)
-		func() {
-			var nmcpus = runtime.NumCPU()
-			for nmcpus > 0 {
-				nmcpus--
-				go func() {
-					for {
-						select {
-						case reqst := <-reqstsQueue:
-							ExecuteQueuedRequest(reqst)
-						}
-					}
-				}()
-			}
-		}()
+		MapActiveExtension(strings.Split(".html,.htm,.xml,.svg,.css,.js,.json,.txt,.csv", ",")...)
 	}
 
 	active.MapGlobals("MAPRoots", func(a ...string) {

@@ -8,11 +8,11 @@ import (
 	"time"
 
 	active "github.com/efjoubert/lnksys/iorw/active"
+	"github.com/efjoubert/lnksys/network/gzip"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"net"
 	"os"
-	"github.com/efjoubert/lnksys/network/gzip"
 )
 
 /*Listening interface
@@ -205,20 +205,6 @@ func InvokeListener(host string) {
 func init() {
 	if lstnr == nil {
 		lstnr = &Listener{queuedRequests: make(chan *Request, runtime.NumCPU()*4), qrqstlck: &sync.Mutex{}, srvlck: &sync.Mutex{}}
-		func(qlstnr *Listener) {
-			var nmcpus = runtime.NumCPU()
-			for nmcpus > 0 {
-				nmcpus--
-				go func() {
-					for {
-						select {
-						case reqst := <-qlstnr.queuedRequests:
-							ExecuteQueuedRequest(reqst)
-						}
-					}
-				}()
-			}
-		}(lstnr)
 	}
 	active.MapGlobals("InvokeListener", InvokeListener)
 }
