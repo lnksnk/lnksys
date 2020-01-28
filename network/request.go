@@ -133,7 +133,7 @@ func queryRequest(reqst *Request) {
 	//} else {
 	//	reqst.listener.QueueRequest(reqst)
 	//}
-	<-reqst.done
+	//<-reqst.done
 }
 
 func QueuedRequestToExecute(reqst *Request) {
