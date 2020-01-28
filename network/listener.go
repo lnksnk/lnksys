@@ -12,6 +12,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 	"net"
 	"os"
+	"github.com/NYTimes/gziphandler"
 )
 
 /*Listening interface
@@ -43,7 +44,7 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 		IdleTimeout:       10 * time.Second,
 		WriteTimeout:      2 * time.Minute,
 		Addr:              host,
-		Handler:           h2c.NewHandler(hndlr, serverh2),
+		Handler:           h2c.NewHandler(gziphandler.GzipHandler(hndlr), serverh2),
 		ConnContext: func(ctx context.Context, c net.Conn) (cntx context.Context) {
 			cntx = ctx
 			return
