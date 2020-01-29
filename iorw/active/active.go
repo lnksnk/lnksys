@@ -268,6 +268,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 					for {
 						select {
 						case rne := <-prsr.atvrchan:
+							fmt.Print(string(rne))
 							processRune(prsr.parsingLevel, rne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
 						case rdne := <-prsr.atvrprcrone:
 							if rdne {
