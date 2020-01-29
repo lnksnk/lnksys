@@ -427,16 +427,15 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 				defer func() {
 					pipeatvw.Close()
 				}()
-				for len(atvxctr.activeBuffer) > 0 {
-					cde := string(atvxctr.activeBuffer[0])
+				for _, atvcd := range atvxctr.activeBuffer {
+					cde := string(atvcd)
 					code += cde
-					atvxctr.activeBuffer = atvxctr.activeBuffer[1:]
-					iorw.FPrint(pipeatvw, cde)
+					pipeatvw.Write([]byte(cde))
+					//iorw.FPrint(pipeatvw, cde)
 				}
 			}()
 
-			var coderdr = pipeatvr //strings.NewReader(code)
-			var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
+			var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", pipeatvr, 0)
 			pipeatvr.Close()
 			pipeatvr = nil
 			pipeatvw = nil
