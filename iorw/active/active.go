@@ -256,30 +256,31 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 		defer atvprsr.lck.Unlock()
 		var canCheckDone = false
 		var prcrune = func(rn rune) {
-			if !canCheckDone {
-				canCheckDone = true
-			}
-			if atvprsr.atvrprcrone == nil {
-				atvprsr.atvrprcrone = make(chan bool, 1)
-			}
-			if atvprsr.atvrchan == nil {
-				atvprsr.atvrchan = make(chan rune)
-				go func(prsr *activeParser) {
-					for {
-						select {
-						case rne := <-prsr.atvrchan:
-							fmt.Print(string(rne))
-							processRune(prsr.parsingLevel, rne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
-						case rdne := <-prsr.atvrprcrone:
-							if rdne {
-								prsr.atvrprcrone <- rdne
-								return
-							}
-						}
-					}
-				}(atvprsr)
-			}
-			atvprsr.atvrchan <- rn
+			//if !canCheckDone {
+			//	canCheckDone = true
+			//}
+			//if atvprsr.atvrprcrone == nil {
+			//	atvprsr.atvrprcrone = make(chan bool, 1)
+			//}
+			//if atvprsr.atvrchan == nil {
+			//	atvprsr.atvrchan = make(chan rune)
+			//	go func(prsr *activeParser) {
+			//		for {
+			//			select {
+			//			case rne := <-prsr.atvrchan:
+			//				fmt.Print(string(rne))
+			//				processRune(prsr.parsingLevel, rne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
+			//			case rdne := <-prsr.atvrprcrone:
+			//				if rdne {
+			//					prsr.atvrprcrone <- rdne
+			//					return
+			//				}
+			//			}
+			//		}
+			//	}(atvprsr)
+			//}
+			//atvprsr.atvrchan <- rn
+			processRune(atvprsr.parsingLevel, rn, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
 		}
 		var stopReading = false
 		for _, d := range a {
