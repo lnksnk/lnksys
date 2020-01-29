@@ -262,19 +262,19 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 			}
 			if atvprsr.atvrchan == nil {
 				atvprsr.atvrchan = make(chan rune)
-				go func() {
+				go func(prsr *activeParser) {
 					for {
 						select {
-						case rne := <-atvprsr.atvrchan:
-							processRune(atvprsr.parsingLevel, rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
-						case rdne := <-atvprsr.atvrprcrone:
+						case rne := <-prsr.atvrchan:
+							processRune(prsr.parsingLevel, rne, prsr, prsr.runeLabel, prsr.runeLabelI, prsr.runePrvR)
+						case rdne := <-prsr.atvrprcrone:
 							if rdne {
-								atvprsr.atvrprcrone <- rdne
+								prsr.atvrprcrone <- rdne
 								return
 							}
 						}
 					}
-				}()
+				}(atvprsr)
 			}
 		}
 		var stopReading = false
