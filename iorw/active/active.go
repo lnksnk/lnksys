@@ -246,7 +246,6 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	if len(a) > 0 {
 		atvprsr.lck.Lock()
 		defer atvprsr.lck.Unlock()
-		//atvprsr.atvbufrdr().Print(a...)
 		var stopReading = false
 		for _, d := range a {
 			if rnrd, rnrdrok := d.(io.RuneReader); rnrdrok {
@@ -427,14 +426,13 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 				defer func() {
 					pipeatvw.Close()
 				}()
-				for _, atvcd := range atvxctr.activeBuffer {
-					cde := string(atvcd)
+				for len(atvxctr.activeBuffer) > 0 {
+					cde := string(atvxctr.activeBuffer[0])
 					code += cde
-					pipeatvw.Write([]byte(cde))
-					//iorw.FPrint(pipeatvw, cde)
+					atvxctr.activeBuffer = atvxctr.activeBuffer[1:]
+					iorw.FPrint(pipeatvw, cde)
 				}
 			}()
-
 			var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", pipeatvr, 0)
 			pipeatvr.Close()
 			pipeatvr = nil
