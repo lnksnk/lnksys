@@ -374,92 +374,92 @@ func wrappingupActiveParsing(atvprsr *activeParser) {
 }
 
 func (atvprsr *activeParser) ACommit() (acerr error) {
-	if atvprsr.atvrdr != nil {
-		atvprsr.lck.Lock()
-		defer func() {
-			if err := recover(); err != nil {
-				acerr = fmt.Errorf("Panic: %+v\n", err)
+	//if atvprsr.atvrdr != nil {
+	atvprsr.lck.Lock()
+	defer func() {
+		if err := recover(); err != nil {
+			acerr = fmt.Errorf("Panic: %+v\n", err)
+		}
+		wrappingupActiveParsing(atvprsr)
+		atvprsr.lck.Unlock()
+	}()
+	if atvxctr := preppingActiveParsing(atvprsr); atvxctr != nil && atvxctr.foundCode {
+		if atvprsr.atv != nil {
+			if atvprsr.atv.vm == nil {
+				atvprsr.atv.vm = goja.New()
 			}
-			wrappingupActiveParsing(atvprsr)
-			atvprsr.lck.Unlock()
-		}()
-		if atvxctr := preppingActiveParsing(atvprsr); atvxctr != nil && atvxctr.foundCode {
-			if atvprsr.atv != nil {
-				if atvprsr.atv.vm == nil {
-					atvprsr.atv.vm = goja.New()
-				}
-				atvprsr.atv.vm.Set("out", atvprsr.atv)
-				atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
-					cPrint(a...)
-				})
-				atvprsr.atv.vm.Set("CPrintln", func(a ...interface{}) {
-					cPrint(a...)
-					cPrint("\r\n")
-				})
-				atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
-					atvxctr.PassivePrint(atvprsr.atv, fromOffset, toOffset)
-				})
-				if len(atvprsr.atv.activeMap) > 0 {
-					for k, v := range atvprsr.atv.activeMap {
-						if atvprsr.atv.vm.Get(k) != v {
-							atvprsr.atv.vm.Set(k, v)
-						}
+			atvprsr.atv.vm.Set("out", atvprsr.atv)
+			atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
+				cPrint(a...)
+			})
+			atvprsr.atv.vm.Set("CPrintln", func(a ...interface{}) {
+				cPrint(a...)
+				cPrint("\r\n")
+			})
+			atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
+				atvxctr.PassivePrint(atvprsr.atv, fromOffset, toOffset)
+			})
+			if len(atvprsr.atv.activeMap) > 0 {
+				for k, v := range atvprsr.atv.activeMap {
+					if atvprsr.atv.vm.Get(k) != v {
+						atvprsr.atv.vm.Set(k, v)
 					}
 				}
-				if len(activeGlobalMap) > 0 {
-					for k, v := range activeGlobalMap {
-						if atvprsr.atv.vm.Get(k) != v {
-							atvprsr.atv.vm.Set(k, v)
-						}
+			}
+			if len(activeGlobalMap) > 0 {
+				for k, v := range activeGlobalMap {
+					if atvprsr.atv.vm.Get(k) != v {
+						atvprsr.atv.vm.Set(k, v)
 					}
 				}
-				var code = ""
-				//if len(atvxctr.activeBuffer) > 0 {
-				//	for _, atvb := range atvxctr.activeBuffer {
-				//		code += string(atvb)
-				//	}
-				//}
+			}
+			var code = ""
+			//if len(atvxctr.activeBuffer) > 0 {
+			//	for _, atvb := range atvxctr.activeBuffer {
+			//		code += string(atvb)
+			//	}
+			//}
 
-				var nxtprm *goja.Program = nil
-				var nxtprmerr error = nil
-				pipeatvr, pipeatvw := io.Pipe()
-				go func() {
-					defer func() {
-						pipeatvw.Close()
-					}()
-					for len(atvxctr.activeBuffer) > 0 {
-						cde := string(atvxctr.activeBuffer[0])
-						code += cde
-						atvxctr.activeBuffer = atvxctr.activeBuffer[1:]
-						iorw.FPrint(pipeatvw, cde)
-					}
+			var nxtprm *goja.Program = nil
+			var nxtprmerr error = nil
+			pipeatvr, pipeatvw := io.Pipe()
+			go func() {
+				defer func() {
+					pipeatvw.Close()
 				}()
-
-				var coderdr = pipeatvr //strings.NewReader(code)
-				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
-				pipeatvr.Close()
-				pipeatvr = nil
-				pipeatvw = nil
-				if parsedprgmerr == nil {
-					nxtprm, nxtprmerr = goja.CompileAST(parsedprgm, false)
-				} else {
-					nxtprmerr = parsedprgmerr
-					fmt.Println(nxtprmerr)
-					fmt.Println(code)
-					acerr = nxtprmerr
+				for len(atvxctr.activeBuffer) > 0 {
+					cde := string(atvxctr.activeBuffer[0])
+					code += cde
+					atvxctr.activeBuffer = atvxctr.activeBuffer[1:]
+					iorw.FPrint(pipeatvw, cde)
 				}
+			}()
 
-				if acerr == nil && nxtprm != nil {
-					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
-					if vmerr != nil {
-						fmt.Println(vmerr)
-						fmt.Println(code)
-						acerr = vmerr
-					}
+			var coderdr = pipeatvr //strings.NewReader(code)
+			var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
+			pipeatvr.Close()
+			pipeatvr = nil
+			pipeatvw = nil
+			if parsedprgmerr == nil {
+				nxtprm, nxtprmerr = goja.CompileAST(parsedprgm, false)
+			} else {
+				nxtprmerr = parsedprgmerr
+				fmt.Println(nxtprmerr)
+				fmt.Println(code)
+				acerr = nxtprmerr
+			}
+
+			if acerr == nil && nxtprm != nil {
+				var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
+				if vmerr != nil {
+					fmt.Println(vmerr)
+					fmt.Println(code)
+					acerr = vmerr
 				}
 			}
 		}
 	}
+	//}
 	return
 }
 
