@@ -246,7 +246,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	if len(a) > 0 {
 		atvprsr.lck.Lock()
 		defer atvprsr.lck.Unlock()
-		atvprsr.atvbufrdr().Print(a...)
+		//atvprsr.atvbufrdr().Print(a...)
 		var stopReading = false
 		for _, d := range a {
 			if rnrd, rnrdrok := d.(io.RuneReader); rnrdrok {
