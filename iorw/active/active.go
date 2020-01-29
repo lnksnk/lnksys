@@ -24,7 +24,7 @@ type activeExecutor struct {
 }
 
 func newActiveExecutor(atv *Active) (atvxctr *activeExecutor) {
-	atvxctr = &activeExecutor{atv: atv, foundCode: false, hasCode: false, passiveBufferOffset: 0, lastPassiveBufferOffset: 0, codeBufferOffset: 0, lastCodeBufferOffset: 0}
+	atvxctr = &activeExecutor{atv: atv, foundCode: false, hasCode: false, passiveBufferOffset: 0, lastPassiveBufferOffset: 0, activeBufferOffset: 0, lastActiveBufferOffset: 0}
 	return
 }
 
