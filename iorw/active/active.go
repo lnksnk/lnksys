@@ -124,7 +124,8 @@ type activeParser struct {
 	psvLabelI        []int
 	psvPrvR          []rune
 
-	atvxctr []*activeExecutor
+	atvxctr  []*activeExecutor
+	prgrmmap map[string]*goja.Program
 }
 
 func (atvprsr *activeParser) atvxctor(prsnglvl int) (atvxctr *activeExecutor) {
@@ -225,20 +226,35 @@ func (atvprsr *activeParser) Close() {
 	if atvprsr.atv != nil {
 		atvprsr.atv = nil
 	}
-	if atvprsr.lck!=nil {
-		atvprsr.lck=nil
+	if atvprsr.lck != nil {
+		atvprsr.lck = nil
+	}
+	if atvprsr.prgrmmap != nil {
+		if len(atvprsr.prgrmmap) > 0 {
+			var prmkeys = []string{}
+			for prmk, _ := range atvprsr.prgrmmap {
+				prmkeys = append(prmkeys, prmk)
+				atvprsr.prgrmmap[prmk] = nil
+			}
+			for len(prmkeys) > 0 {
+				delete(atvprsr.prgrmmap, prmkeys[0])
+				prmkeys = prmkeys[1:]
+			}
+			prmkeys = nil
+		}
+		atvprsr.prgrmmap = nil
 	}
 }
 
 func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
-	if len(a)>0 {
+	if len(a) > 0 {
 		atvprsr.lck.Lock()
 		defer atvprsr.lck.Unlock()
 		atvprsr.atvbufrdr().Print(a...)
 		var stopReading = false
-		for _,d:=range a {
-			if rnrd,rnrdrok:=d.(io.RuneReader); rnrdrok {
-				if atvprsr.atvrdr!=nil {
+		for _, d := range a {
+			if rnrd, rnrdrok := d.(io.RuneReader); rnrdrok {
+				if atvprsr.atvrdr != nil {
 					for {
 						if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 							if rnsize > 0 {
@@ -247,7 +263,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 						} else {
 							if rnerr != io.EOF {
 								err = rnerr
-								stopReading=true
+								stopReading = true
 							}
 							break
 						}
@@ -264,7 +280,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 					} else {
 						if rnerr != io.EOF {
 							err = rnerr
-							stopReading=true
+							stopReading = true
 						}
 						break
 					}
@@ -276,7 +292,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 				break
 			}
 		}
-		if atvprsr.atvrdr!=nil {
+		if atvprsr.atvrdr != nil {
 			for {
 				if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 					if rnsize > 0 {
@@ -399,30 +415,33 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 					}
 				}
 				var code = atvxctr.activeCode().String()
-				var coderdr = strings.NewReader(code)
-				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
-				if parsedprgmerr == nil {
-					var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
-					if prgmerr == nil {
-						var _, vmerr = atvprsr.atv.vm.RunProgram(prgm)
-						if vmerr != nil {
-							fmt.Println(vmerr)
-							fmt.Println(code)
-							acerr = vmerr
-						}
-					} else {
-						fmt.Println(prgmerr)
-						fmt.Println(code)
-						acerr = prgmerr
-					}
-					prgm = nil
-				} else {
-					fmt.Println(parsedprgmerr)
-					fmt.Println(code)
-					acerr = parsedprgmerr
+				if atvprsr.prgrmmap == nil {
+					atvprsr.prgrmmap = map[string]*goja.Program{}
 				}
-				parsedprgm = nil
-				atvprsr.atv.vm = nil
+				var nxtprm *goja.Program = nil
+				var nxtprmerr error = nil
+				nxtprm = atvprsr.prgrmmap[code]
+				if nxtprm == nil {
+					var coderdr = strings.NewReader(code)
+					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
+					if parsedprgmerr == nil {
+						nxtprm, nxtprmerr = goja.CompileAST(parsedprgm, false)
+						atvprsr.prgrmmap[code] = nxtprm
+					} else {
+						nxtprmerr = parsedprgmerr
+						fmt.Println(nxtprmerr)
+						fmt.Println(code)
+						acerr = nxtprmerr
+					}
+				}
+				if acerr == nil && nxtprm != nil {
+					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
+					if vmerr != nil {
+						fmt.Println(vmerr)
+						fmt.Println(code)
+						acerr = vmerr
+					}
+				}
 			}
 		}
 	}
@@ -815,7 +834,7 @@ func (atv *Active) Reset() {
 func (atv *Active) Close() {
 	if atv.atvprsr != nil {
 		atv.atvprsr.Close()
-		atv.atvprsr=nil
+		atv.atvprsr = nil
 	}
 
 	if atv.printer != nil {
