@@ -132,7 +132,9 @@ type activeParser struct {
 	psvLabelI        []int
 	psvPrvR          []rune
 
-	atvxctr []*activeExecutor
+	atvxctr     []*activeExecutor
+	atvrchan    chan rune
+	atvrprcrone chan bool
 }
 
 func (atvprsr *activeParser) atvxctor(prsnglvl int) (atvxctr *activeExecutor) {
@@ -240,12 +242,41 @@ func (atvprsr *activeParser) Close() {
 	if atvprsr.lck != nil {
 		atvprsr.lck = nil
 	}
+	if atvprsr.atvrchan != nil {
+		close(atvprsr.atvrchan)
+	}
+	if atvprsr.atvrprcrone != nil {
+		close(atvprsr.atvrprcrone)
+	}
 }
 
 func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 	if len(a) > 0 {
 		atvprsr.lck.Lock()
 		defer atvprsr.lck.Unlock()
+		var canCheckDone = false
+		var prcrune = func(rn rune) {
+			canCheckDone = true
+			if atvprsr.atvrprcrone == nil {
+				atvprsr.atvrprcrone = make(chan bool, 1)
+			}
+			if atvprsr.atvrchan == nil {
+				atvprsr.atvrchan = make(chan rune)
+				go func() {
+					for {
+						select {
+						case rne := <-atvprsr.atvrchan:
+							processRune(atvprsr.parsingLevel, rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+						case rdne := <-atvprsr.atvrprcrone:
+							if rdne {
+								atvprsr.atvrprcrone <- rdne
+								return
+							}
+						}
+					}
+				}()
+			}
+		}
 		var stopReading = false
 		for _, d := range a {
 			if rnrd, rnrdrok := d.(io.RuneReader); rnrdrok {
@@ -253,7 +284,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 					for {
 						if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 							if rnsize > 0 {
-								processRune(atvprsr.parsingLevel, rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+								prcrune(rne)
 							}
 						} else {
 							if rnerr != io.EOF {
@@ -270,7 +301,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 				for {
 					if rne, rnsize, rnerr := rnrd.ReadRune(); rnerr == nil {
 						if rnsize > 0 {
-							processRune(atvprsr.parsingLevel, rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+							prcrune(rne)
 						}
 					} else {
 						if rnerr != io.EOF {
@@ -291,7 +322,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 			for {
 				if rne, rnsize, rnerr := atvprsr.atvrdr.ReadRune(); rnerr == nil {
 					if rnsize > 0 {
-						processRune(atvprsr.parsingLevel, rne, atvprsr, atvprsr.runeLabel, atvprsr.runeLabelI, atvprsr.runePrvR)
+						prcrune(rne)
 					}
 				} else {
 					if rnerr != io.EOF {
@@ -300,6 +331,10 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 					break
 				}
 			}
+		}
+		if canCheckDone {
+			atvprsr.atvrprcrone <- true
+			<-atvprsr.atvrprcrone
 		}
 	}
 	return
