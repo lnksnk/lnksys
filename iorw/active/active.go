@@ -20,7 +20,12 @@ type activeExecutor struct {
 	passiveBufferOffset     int64
 	lastPassiveBufferOffset int64
 	atv                     *Active
-	prgrm                   *goja.Program
+	prgrm                   chan *goja.Program
+	prgrmerr                chan error
+	pipeprgrminw            *io.PipeWriter
+	pipeprgrminr            *io.PipeReader
+	pipeprgrmoutw           *io.PipeWriter
+	pipeprgrmoutr           *io.PipeReader
 }
 
 func newActiveExecutor(atv *Active) (atvxctr *activeExecutor) {
@@ -33,6 +38,16 @@ func (atvxctr *activeExecutor) passiveBuf() [][]rune {
 		atvxctr.passiveBuffer = [][]rune{}
 	}
 	return atvxctr.passiveBuffer
+}
+
+func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
+	if atvxctr.pipeprgrminw == nil && atvxctr.pipeprgrminr == nil && atvxctr.pipeprgrmoutw == nil && atvxctr.pipeprgrmoutr == nil && atvxctr.prgrm == nil && atvxctr.prgrmerr == nil {
+		atvxctr.prgrm = make(chan *goja.Program, 1)
+		atvxctr.prgrmerr = make(chan error, 1)
+		atvxctr.pipeprgrminr, atvxctr.pipeprgrminw = io.Pipe()
+		atvxctr.pipeprgrmoutr, atvxctr.pipeprgrmoutw = io.Pipe()
+
+	}
 }
 
 func (atvxctr *activeExecutor) activeBuf() [][]rune {
