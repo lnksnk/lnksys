@@ -256,7 +256,9 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 		defer atvprsr.lck.Unlock()
 		var canCheckDone = false
 		var prcrune = func(rn rune) {
-			canCheckDone = true
+			if !canCheckDone {
+				canCheckDone = true
+			}
 			if atvprsr.atvrprcrone == nil {
 				atvprsr.atvrprcrone = make(chan bool, 1)
 			}
@@ -276,6 +278,7 @@ func (atvprsr *activeParser) APrint(a ...interface{}) (err error) {
 					}
 				}(atvprsr)
 			}
+			atvprsr.atvrchan <- rn
 		}
 		var stopReading = false
 		for _, d := range a {
