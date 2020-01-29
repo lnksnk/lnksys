@@ -42,13 +42,6 @@ func (atvxctr *activeExecutor) activeBuf() [][]rune {
 	return atvxctr.activeBuffer
 }
 
-/*func (atvxctr *activeExecutor) activeCode() *iorw.BufferedRW {
-	if atvxctr.curAtvCde == nil {
-		atvxctr.curAtvCde = iorw.NewBufferedRW(81920, nil)
-	}
-	return atvxctr.curAtvCde
-}*/
-
 func (atvxctr *activeExecutor) close() {
 	if atvxctr.passiveBuffer != nil {
 		for len(atvxctr.passiveBuffer) > 0 {
@@ -70,7 +63,6 @@ func (atvxctr *activeExecutor) close() {
 }
 
 func (atvxctr *activeExecutor) PassivePrint(atv *Active, fromOffset int64, toOffset int64) {
-
 	if len(atvxctr.passiveBuffer) > 0 {
 		if fromOffset >= 0 && toOffset <= atvxctr.passiveBufferOffset {
 			var psi = int(0)
@@ -140,8 +132,7 @@ type activeParser struct {
 	psvLabelI        []int
 	psvPrvR          []rune
 
-	atvxctr  []*activeExecutor
-	prgrmmap map[string]*goja.Program
+	atvxctr []*activeExecutor
 }
 
 func (atvprsr *activeParser) atvxctor(prsnglvl int) (atvxctr *activeExecutor) {
@@ -248,21 +239,6 @@ func (atvprsr *activeParser) Close() {
 	}
 	if atvprsr.lck != nil {
 		atvprsr.lck = nil
-	}
-	if atvprsr.prgrmmap != nil {
-		if len(atvprsr.prgrmmap) > 0 {
-			var prmkeys = []string{}
-			for prmk, _ := range atvprsr.prgrmmap {
-				prmkeys = append(prmkeys, prmk)
-				atvprsr.prgrmmap[prmk] = nil
-			}
-			for len(prmkeys) > 0 {
-				delete(atvprsr.prgrmmap, prmkeys[0])
-				prmkeys = prmkeys[1:]
-			}
-			prmkeys = nil
-		}
-		atvprsr.prgrmmap = nil
 	}
 }
 
@@ -438,30 +414,41 @@ func (atvprsr *activeParser) ACommit() (acerr error) {
 					}
 				}
 				var code = ""
-				if len(atvxctr.activeBuffer) > 0 {
-					for _, atvb := range atvxctr.activeBuffer {
-						code += string(atvb)
-					}
-				}
-				if atvprsr.prgrmmap == nil {
-					atvprsr.prgrmmap = map[string]*goja.Program{}
-				}
+				//if len(atvxctr.activeBuffer) > 0 {
+				//	for _, atvb := range atvxctr.activeBuffer {
+				//		code += string(atvb)
+				//	}
+				//}
+
 				var nxtprm *goja.Program = nil
 				var nxtprmerr error = nil
-				nxtprm = atvprsr.prgrmmap[code]
-				if nxtprm == nil {
-					var coderdr = strings.NewReader(code)
-					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
-					if parsedprgmerr == nil {
-						nxtprm, nxtprmerr = goja.CompileAST(parsedprgm, false)
-						atvprsr.prgrmmap[code] = nxtprm
-					} else {
-						nxtprmerr = parsedprgmerr
-						fmt.Println(nxtprmerr)
-						fmt.Println(code)
-						acerr = nxtprmerr
+				pipeatvr, pipeatvw := io.Pipe()
+				go func() {
+					defer func() {
+						pipeatvw.Close()
+					}()
+					for len(atvxctr.activeBuffer) > 0 {
+						cde := string(atvxctr.activeBuffer[0])
+						code += cde
+						atvxctr.activeBuffer = atvxctr.activeBuffer[1:]
+						iorw.FPrint(pipeatvw, cde)
 					}
+				}()
+
+				var coderdr = pipeatvr //strings.NewReader(code)
+				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
+				pipeatvr.Close()
+				pipeatvr = nil
+				pipeatvw = nil
+				if parsedprgmerr == nil {
+					nxtprm, nxtprmerr = goja.CompileAST(parsedprgm, false)
+				} else {
+					nxtprmerr = parsedprgmerr
+					fmt.Println(nxtprmerr)
+					fmt.Println(code)
+					acerr = nxtprmerr
 				}
+
 				if acerr == nil && nxtprm != nil {
 					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
 					if vmerr != nil {
