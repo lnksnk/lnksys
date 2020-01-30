@@ -107,7 +107,7 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		reqst.rqstlck.Unlock()
 		reqst.Close()
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}()
 	reqst.rqstlck.Lock()
 	var wi interface{} = w
