@@ -262,9 +262,9 @@ func (reqst *Request) ExecuteRequest() {
 			}
 		}()
 		reqst.preWriteHeader = func() {
-			reqst.w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
-			if reqst.w.Header().Get("Content-Type") == "" {
-				reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
+			reqst.ResponseHeader().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
+			if reqst.ResponeHeader().Get("Content-Type") == "" {
+				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
 			if isMultiMedia {
 
@@ -310,7 +310,7 @@ func (reqst *Request) ExecuteRequest() {
 			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
 				if isFirtsRS {
 					if !isAtv {
-						reqst.ResponseHeaders().Set("Content-Length", fmt.Sprintf("%d", nxtrs.Size()))
+						reqst.ResponseHeader().Set("Content-Length", fmt.Sprintf("%d", nxtrs.Size()))
 					}
 					isFirtsRS = false
 				}
