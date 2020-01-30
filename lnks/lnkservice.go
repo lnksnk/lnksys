@@ -6,6 +6,7 @@ import (
 	"github.com/efjoubert/lnksys/env"
 	"github.com/efjoubert/lnksys/network"
 	"github.com/efjoubert/lnksys/service"
+	"os"
 )
 
 //LnkService LnkService
@@ -73,7 +74,7 @@ func (lnksrvs *LnkService) stopLnkService(args ...string) {
 }
 
 func RunService(args ...string) {
-	var lnksrvs, err = lnks.NewLnkService("", "", "", RunBroker)
+	var lnksrvs, err = NewLnkService("", "", "", RunBroker)
 	if err == nil {
 		err = lnksrvs.Execute(args...)
 	}
