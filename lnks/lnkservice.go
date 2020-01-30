@@ -76,7 +76,7 @@ func (lnksrvs *LnkService) stopLnkService(args ...string) {
 }
 
 func RunService(args ...string) {
-	runtimedbg.SetGCPercent(50)
+	runtimedbg.SetGCPercent(25)
 	if len(args) == 0 {
 		args = os.Args
 	}
