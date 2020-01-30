@@ -602,7 +602,7 @@ func (atv *Active) APrint(a ...interface{}) (err error) {
 	return
 }
 
-func (atv *Active) ACommit(a...interface{}) (err error) {
+func (atv *Active) ACommit(a ...interface{}) (err error) {
 	if atv.atvprsr != nil {
 		err = atv.atvprsr.ACommit(a...)
 	}
@@ -724,7 +724,7 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 	var atvxctr *activeExecutor = nil
 	var curatvxctr = func() *activeExecutor {
 		if atvxctr == nil {
-			atvprsr.atvxctor(processlvl)
+			atvxctr = atvprsr.atvxctor(processlvl)
 		}
 		return atvxctr
 	}
