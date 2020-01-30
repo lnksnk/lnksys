@@ -602,9 +602,9 @@ func (atv *Active) APrint(a ...interface{}) (err error) {
 	return
 }
 
-func (atv *Active) ACommit() (err error) {
+func (atv *Active) ACommit(a...interface{}) (err error) {
 	if atv.atvprsr != nil {
-		err = atv.atvprsr.ACommit()
+		err = atv.atvprsr.ACommit(a...)
 	}
 	return
 }
