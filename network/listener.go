@@ -40,7 +40,7 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 	var server = &http.Server{
 		ReadHeaderTimeout: 20 * time.Second,
 		ReadTimeout:       1 * time.Minute,
-		IdleTimeout:       10 * time.Second,
+		IdleTimeout:       1 * time.Minute,
 		WriteTimeout:      2 * time.Minute,
 		Addr:              host,
 		Handler:           h2c.NewHandler(gzip.GzipHandler(hndlr), serverh2),
