@@ -44,19 +44,15 @@ func (atvxctr *activeExecutor) passiveBuf() [][]rune {
 
 func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 	if len(atvrnes) > 0 {
-		if atvxctr.pipeprgrminw == nil && atvxctr.pipeprgrminr == nil && atvxctr.pipeprgrmoutw == nil && atvxctr.pipeprgrmoutr == nil && atvxctr.prgrm == nil && atvxctr.prgrmerr == nil {
+		if atvxctr.pipeprgrminw == nil && atvxctr.pipeprgrminr == nil && atvxctr.prgrm == nil && atvxctr.prgrmerr == nil {
 			atvxctr.prgrm = make(chan *goja.Program, 1)
 			atvxctr.prgrmerr = make(chan error, 1)
 			atvxctr.pipeprgrminr, atvxctr.pipeprgrminw = io.Pipe()
-			atvxctr.pipeprgrmoutr, atvxctr.pipeprgrmoutw = io.Pipe()
+			//atvxctr.pipeprgrmoutr, atvxctr.pipeprgrmoutw = io.Pipe()
 			go func() {
 				defer atvxctr.pipeprgrmoutr.Close()
 
-				go func() {
-					defer atvxctr.pipeprgrmoutw.Close()
-					io.Copy(atvxctr.pipeprgrmoutw, atvxctr.pipeprgrminr)
-				}()
-				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", atvxctr.pipeprgrmoutr, 0)
+				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", atvxctr.pipeprgrminr, 0)
 				if parsedprgmerr == nil {
 					nxtprm, nxtprmerr := goja.CompileAST(parsedprgm, false)
 					atvxctr.prgrm <- nxtprm
