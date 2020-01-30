@@ -22,6 +22,7 @@ type activeExecutor struct {
 	atv                     *Active
 	prgrm                   chan *goja.Program
 	prgrmerr                chan error
+	prgrmbufin				*bufio.Writer
 	pipeprgrminw            *io.PipeWriter
 	pipeprgrminr            *io.PipeReader
 	pipeprgrmoutw           *io.PipeWriter
@@ -41,12 +42,35 @@ func (atvxctr *activeExecutor) passiveBuf() [][]rune {
 }
 
 func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
-	if atvxctr.pipeprgrminw == nil && atvxctr.pipeprgrminr == nil && atvxctr.pipeprgrmoutw == nil && atvxctr.pipeprgrmoutr == nil && atvxctr.prgrm == nil && atvxctr.prgrmerr == nil {
-		atvxctr.prgrm = make(chan *goja.Program, 1)
-		atvxctr.prgrmerr = make(chan error, 1)
-		atvxctr.pipeprgrminr, atvxctr.pipeprgrminw = io.Pipe()
-		atvxctr.pipeprgrmoutr, atvxctr.pipeprgrmoutw = io.Pipe()
+	if len(atvrnes)>0 {
+		if atvxctr.pipeprgrminw == nil && atvxctr.pipeprgrminr == nil && atvxctr.pipeprgrmoutw == nil && atvxctr.pipeprgrmoutr == nil && atvxctr.prgrm == nil && atvxctr.prgrmerr == nil {
+			atvxctr.prgrm = make(chan *goja.Program, 1)
+			atvxctr.prgrmerr = make(chan error, 1)
+			atvxctr.pipeprgrminr, atvxctr.pipeprgrminw = io.Pipe()
+			atvxctr.pipeprgrmoutr, atvxctr.pipeprgrmoutw = io.Pipe()
+			go func(){
+				defer atvxctr.pipeprgrmoutw.Close()
+				io.Copy(atvxctr.pipeprgrmoutw,atvxctr.pipeprgrminr)
+			}()
 
+			go func() {
+				defer atvxctr.pipeprgrmoutr.Close()
+				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", atvxctr.pipeprgrmoutr, 0)
+				if parsedprgmerr == nil {
+					nxtprm, nxtprmerr := goja.CompileAST(parsedprgm, false)
+					atvxctr.prgrm<-nxtprm
+					atvxctr.prgrmerr<-nxtprm
+				} else {
+					atvxctr.prgrm<-nil
+					atvxctr.prgrmerr<-parsedprgmerr
+				}
+			}()
+			atvxctr.prgrmbufin=bufio.NewWriter(atvxctr.pipeprgrminw)
+		}
+		for _,rn:=range atvrnes {
+			atvxctr.prgrmbufin.WriteRune(rn)
+		}
+		atvxctr.prgrmbufin.Flush()
 	}
 }
 
@@ -403,91 +427,92 @@ func wrappingupActiveParsing(atvprsr *activeParser) {
 	}
 }
 
-func (atvprsr *activeParser) ACommit() (acerr error) {
-	//if atvprsr.atvrdr != nil {
-	//atvprsr.lck.Lock()
-	defer func() {
-		if err := recover(); err != nil {
-			acerr = fmt.Errorf("Panic: %+v\n", err)
-		}
-		wrappingupActiveParsing(atvprsr)
-		//atvprsr.lck.Unlock()
-	}()
-	if atvxctr := preppingActiveParsing(atvprsr); atvxctr != nil && atvxctr.foundCode {
-		if atvprsr.atv != nil {
-			if atvprsr.atv.vm == nil {
-				atvprsr.atv.vm = goja.New()
+func (atvprsr *activeParser) ACommit(a...interface{}) (acerr error) {
+	if len(a) > 0 {
+		acerr=atvprsr.APrint(a...);
+	}
+	if acerr==nil {
+		defer func() {
+			if err := recover(); err != nil {
+				acerr = fmt.Errorf("Panic: %+v\n", err)
 			}
-			atvprsr.atv.vm.Set("out", atvprsr.atv)
-			atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
-				cPrint(a...)
-			})
-			atvprsr.atv.vm.Set("CPrintln", func(a ...interface{}) {
-				cPrint(a...)
-				cPrint("\r\n")
-			})
-			atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
-				atvxctr.PassivePrint(atvprsr.atv, fromOffset, toOffset)
-			})
-			if len(atvprsr.atv.activeMap) > 0 {
-				for k, v := range atvprsr.atv.activeMap {
-					if atvprsr.atv.vm.Get(k) != v {
-						atvprsr.atv.vm.Set(k, v)
+			wrappingupActiveParsing(atvprsr)
+			//atvprsr.lck.Unlock()
+		}()
+		if atvxctr := preppingActiveParsing(atvprsr); atvxctr != nil && atvxctr.foundCode {
+			if atvprsr.atv != nil {
+				if atvprsr.atv.vm == nil {
+					atvprsr.atv.vm = goja.New()
+				}
+				atvprsr.atv.vm.Set("out", atvprsr.atv)
+				atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
+					cPrint(a...)
+				})
+				atvprsr.atv.vm.Set("CPrintln", func(a ...interface{}) {
+					cPrint(a...)
+					cPrint("\r\n")
+				})
+				atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
+					atvxctr.PassivePrint(atvprsr.atv, fromOffset, toOffset)
+				})
+				if len(atvprsr.atv.activeMap) > 0 {
+					for k, v := range atvprsr.atv.activeMap {
+						if atvprsr.atv.vm.Get(k) != v {
+							atvprsr.atv.vm.Set(k, v)
+						}
 					}
 				}
-			}
-			if len(activeGlobalMap) > 0 {
-				for k, v := range activeGlobalMap {
-					if atvprsr.atv.vm.Get(k) != v {
-						atvprsr.atv.vm.Set(k, v)
+				if len(activeGlobalMap) > 0 {
+					for k, v := range activeGlobalMap {
+						if atvprsr.atv.vm.Get(k) != v {
+							atvprsr.atv.vm.Set(k, v)
+						}
 					}
 				}
-			}
-			var code = ""
-			//if len(atvxctr.activeBuffer) > 0 {
-			//	for _, atvb := range atvxctr.activeBuffer {
-			//		code += string(atvb)
-			//	}
-			//}
+				var code = ""
 
-			var nxtprm *goja.Program = nil
-			var nxtprmerr error = nil
-			pipeatvr, pipeatvw := io.Pipe()
-			go func() {
-				defer func() {
-					pipeatvw.Close()
+				var nxtprm *goja.Program = nil
+				var nxtprmerr error = nil
+				
+				//nxtprm<-atvxctr.prgrm
+				//acerr<-atvxctr.prgrmerr
+				
+				pipeatvr, pipeatvw := io.Pipe()
+				go func() {
+					defer func() {
+						pipeatvw.Close()
+					}()
+					for len(atvxctr.activeBuffer) > 0 {
+						cde := string(atvxctr.activeBuffer[0])
+						code += cde
+						atvxctr.activeBuffer = atvxctr.activeBuffer[1:]
+						iorw.FPrint(pipeatvw, cde)
+					}
 				}()
-				for len(atvxctr.activeBuffer) > 0 {
-					cde := string(atvxctr.activeBuffer[0])
-					code += cde
-					atvxctr.activeBuffer = atvxctr.activeBuffer[1:]
-					iorw.FPrint(pipeatvw, cde)
-				}
-			}()
-			var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", pipeatvr, 0)
-			pipeatvr.Close()
-			pipeatvr = nil
-			pipeatvw = nil
-			if parsedprgmerr == nil {
-				nxtprm, nxtprmerr = goja.CompileAST(parsedprgm, false)
-			} else {
-				nxtprmerr = parsedprgmerr
-				fmt.Println(nxtprmerr)
-				fmt.Println(code)
-				acerr = nxtprmerr
-			}
-
-			if acerr == nil && nxtprm != nil {
-				var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
-				if vmerr != nil {
-					fmt.Println(vmerr)
+				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", pipeatvr, 0)
+				pipeatvr.Close()
+				pipeatvr = nil
+				pipeatvw = nil
+				if parsedprgmerr == nil {
+					nxtprm, nxtprmerr = goja.CompileAST(parsedprgm, false)
+				} else {
+					nxtprmerr = parsedprgmerr
+					fmt.Println(nxtprmerr)
 					fmt.Println(code)
-					acerr = vmerr
+					acerr = nxtprmerr
+				}
+
+				if acerr == nil && nxtprm != nil {
+					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
+					if vmerr != nil {
+						fmt.Println(vmerr)
+						fmt.Println(code)
+						acerr = vmerr
+					}
 				}
 			}
 		}
 	}
-	//}
 	return
 }
 
@@ -590,37 +615,40 @@ func (atv *Active) APrintln(a ...interface{}) {
 
 func capturePassiveContent(psvcntlvl int, atvprsr *activeParser, p []rune) (n int, err error) {
 	var pl = len(p)
-	for n < pl {
-		if atvprsr.atvxctor(psvcntlvl).foundCode {
-			if len(atvprsr.passiveRune) == 0 {
-				atvprsr.passiveRune = make([]rune, 81920)
-			}
-			if n < pl && atvprsr.passiveRunei < len(atvprsr.passiveRune) {
-				if (pl - n) >= (len(atvprsr.passiveRune) - atvprsr.passiveRunei) {
-					var cl = copy(atvprsr.passiveRune[atvprsr.passiveRunei:atvprsr.passiveRunei+(len(atvprsr.passiveRune)-atvprsr.passiveRunei)], p[n:n+(len(atvprsr.passiveRune)-atvprsr.passiveRunei)])
-					atvprsr.passiveRunei += cl
-					n += cl
-					atvprsr.atvxctor(psvcntlvl).passiveBufferOffset += int64(cl)
-				} else if (pl - n) < (len(atvprsr.passiveRune) - atvprsr.passiveRunei) {
-					var cl = copy(atvprsr.passiveRune[atvprsr.passiveRunei:atvprsr.passiveRunei+(pl-n)], p[n:n+(pl-n)])
-					atvprsr.passiveRunei += cl
-					n += cl
-					atvprsr.atvxctor(psvcntlvl).passiveBufferOffset += int64(cl)
+	if pl>0 {
+		atvxctr:=atvprsr.atvxctor(psvcntlvl)
+		for n < pl {
+			if atvxctr.foundCode {
+				if len(atvprsr.passiveRune) == 0 {
+					atvprsr.passiveRune = make([]rune, 81920)
 				}
-				if len(atvprsr.passiveRune) == atvprsr.passiveRunei {
-					var psvRunes = make([]rune, atvprsr.passiveRunei)
-					copy(psvRunes, atvprsr.passiveRune[0:atvprsr.passiveRunei])
-					atvprsr.atvxctor(psvcntlvl).passiveBuf()
-					atvprsr.atvxctor(psvcntlvl).passiveBuffer = append(atvprsr.atvxctor(psvcntlvl).passiveBuffer, psvRunes)
-					psvRunes = nil
-					atvprsr.passiveRunei = 0
+				if n < pl && atvprsr.passiveRunei < len(atvprsr.passiveRune) {
+					if (pl - n) >= (len(atvprsr.passiveRune) - atvprsr.passiveRunei) {
+						var cl = copy(atvprsr.passiveRune[atvprsr.passiveRunei:atvprsr.passiveRunei+(len(atvprsr.passiveRune)-atvprsr.passiveRunei)], p[n:n+(len(atvprsr.passiveRune)-atvprsr.passiveRunei)])
+						atvprsr.passiveRunei += cl
+						n += cl
+						atvxctr.passiveBufferOffset += int64(cl)
+					} else if (pl - n) < (len(atvprsr.passiveRune) - atvprsr.passiveRunei) {
+						var cl = copy(atvprsr.passiveRune[atvprsr.passiveRunei:atvprsr.passiveRunei+(pl-n)], p[n:n+(pl-n)])
+						atvprsr.passiveRunei += cl
+						n += cl
+						atvxctr.passiveBufferOffset += int64(cl)
+					}
+					if len(atvprsr.passiveRune) == atvprsr.passiveRunei {
+						var psvRunes = make([]rune, atvprsr.passiveRunei)
+						copy(psvRunes, atvprsr.passiveRune[0:atvprsr.passiveRunei])
+						atvxctr.passiveBuf()
+						atvxctr.passiveBuffer = append(atvxctr.passiveBuffer, psvRunes)
+						psvRunes = nil
+						atvprsr.passiveRunei = 0
+					}
+				} else {
+					break
 				}
 			} else {
-				break
+				atvprsr.atv.Print(string(p))
+				n += pl
 			}
-		} else {
-			atvprsr.atv.Print(string(p))
-			n += pl
 		}
 	}
 	return
@@ -636,20 +664,21 @@ func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
 		capturePassiveContent(psvlvl, atvprsr, atvprsr.psvRunesToParse[0:atvprsr.psvRunesToParsei])
 		atvprsr.psvRunesToParsei = 0
 	}
-	if atvprsr.atvxctor(psvlvl).foundCode {
+	atvxctr:=atvprsr.atvxctor(psvlvl)
+	if atvxctr.foundCode {
 		if force {
 			if atvprsr.passiveRunei > 0 {
 				var psvRunes = make([]rune, atvprsr.passiveRunei)
 				copy(psvRunes, atvprsr.passiveRune[0:atvprsr.passiveRunei])
-				atvprsr.atvxctor(psvlvl).passiveBuf()
-				atvprsr.atvxctor(psvlvl).passiveBuffer = append(atvprsr.atvxctor(atvprsr.parsingLevel).passiveBuffer, psvRunes)
+				atvxctr.passiveBuf()
+				atvxctr.passiveBuffer = append(atvxctr.passiveBuffer, psvRunes)
 				psvRunes = nil
 				atvprsr.passiveRunei = 0
 			}
 		}
 
-		if atvprsr.atvxctor(psvlvl).lastPassiveBufferOffset < atvprsr.atvxctor(psvlvl).passiveBufferOffset {
-			for _, arune := range []rune(fmt.Sprintf("PassivePrint(%d,%d);", atvprsr.atvxctor(psvlvl).lastPassiveBufferOffset, atvprsr.atvxctor(psvlvl).passiveBufferOffset)) {
+		if atvxctr.lastPassiveBufferOffset < atvxctr.passiveBufferOffset {
+			for _, arune := range []rune(fmt.Sprintf("PassivePrint(%d,%d);", atvxctr.lastPassiveBufferOffset, atvxctr.passiveBufferOffset)) {
 				if len(atvprsr.runesToParse) == 0 {
 					atvprsr.runesToParse = make([]rune, 81920)
 				}
@@ -660,14 +689,8 @@ func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
 					atvprsr.runesToParsei = 0
 				}
 			}
-			atvprsr.atvxctor(psvlvl).lastPassiveBufferOffset = atvprsr.atvxctor(psvlvl).passiveBufferOffset
+			atvxctr.lastPassiveBufferOffset = atvxctr.passiveBufferOffset
 		}
-	}
-}
-
-func (atv *Active) PassivePrint(psvbuflvl int, fromOffset int64, toOffset int64) {
-	if atv.atvprsr != nil {
-		atv.atvprsr.PassivePrint(psvbuflvl, fromOffset, toOffset)
 	}
 }
 
@@ -676,25 +699,34 @@ func processUnparsedPassiveContent(psvlvl int, atvprsr *activeParser, p []rune) 
 	if pl > 0 {
 		flushActiveCode(psvlvl, atvprsr, false)
 	}
-	for n < pl && atvprsr.psvRunesToParsei < len(atvprsr.psvRunesToParse) {
-		if (pl - n) >= (len(atvprsr.psvRunesToParse) - atvprsr.psvRunesToParsei) {
-			var cl = copy(atvprsr.psvRunesToParse[atvprsr.psvRunesToParsei:atvprsr.psvRunesToParsei+(len(atvprsr.psvRunesToParse)-atvprsr.psvRunesToParsei)], p[n:n+(len(atvprsr.psvRunesToParse)-atvprsr.psvRunesToParsei)])
-			n += cl
-			atvprsr.psvRunesToParsei += cl
-		} else if (pl - n) < (len(atvprsr.psvRunesToParse) - atvprsr.psvRunesToParsei) {
-			var cl = copy(atvprsr.psvRunesToParse[atvprsr.psvRunesToParsei:atvprsr.psvRunesToParsei+(pl-n)], p[n:n+(pl-n)])
-			n += cl
-			atvprsr.psvRunesToParsei += cl
-		}
-		if atvprsr.psvRunesToParsei > 0 && atvprsr.psvRunesToParsei == len(atvprsr.psvRunesToParse) {
-			capturePassiveContent(psvlvl, atvprsr, atvprsr.psvRunesToParse[0:atvprsr.psvRunesToParsei])
-			atvprsr.psvRunesToParsei = 0
+	if pl>0 {
+		for n < pl && atvprsr.psvRunesToParsei < len(atvprsr.psvRunesToParse) {
+			if (pl - n) >= (len(atvprsr.psvRunesToParse) - atvprsr.psvRunesToParsei) {
+				var cl = copy(atvprsr.psvRunesToParse[atvprsr.psvRunesToParsei:atvprsr.psvRunesToParsei+(len(atvprsr.psvRunesToParse)-atvprsr.psvRunesToParsei)], p[n:n+(len(atvprsr.psvRunesToParse)-atvprsr.psvRunesToParsei)])
+				n += cl
+				atvprsr.psvRunesToParsei += cl
+			} else if (pl - n) < (len(atvprsr.psvRunesToParse) - atvprsr.psvRunesToParsei) {
+				var cl = copy(atvprsr.psvRunesToParse[atvprsr.psvRunesToParsei:atvprsr.psvRunesToParsei+(pl-n)], p[n:n+(pl-n)])
+				n += cl
+				atvprsr.psvRunesToParsei += cl
+			}
+			if atvprsr.psvRunesToParsei > 0 && atvprsr.psvRunesToParsei == len(atvprsr.psvRunesToParse) {
+				capturePassiveContent(psvlvl, atvprsr, atvprsr.psvRunesToParse[0:atvprsr.psvRunesToParsei])
+				atvprsr.psvRunesToParsei = 0
+			}
 		}
 	}
 	return
 }
 
 func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []int, runePrvR []rune) {
+	var atvxctr*activeExecutor=nil
+	var curatvxctr() (*activeExecutor) {
+		if atvxctr==nil {
+			atvprsr.atvxctor(processlvl)
+		}
+		return atvxctr
+	}
 	if runelbli[1] == 0 && runelbli[0] < len(runelbl[0]) {
 		if runelbli[0] > 0 && runelbl[0][runelbli[0]-1] == runePrvR[0] && runelbl[0][runelbli[0]] != rne {
 			processUnparsedPassiveContent(processlvl, atvprsr, runelbl[0][0:runelbli[0]])
@@ -704,7 +736,7 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 		if runelbl[0][runelbli[0]] == rne {
 			runelbli[0]++
 			if len(runelbl[0]) == runelbli[0] {
-				atvprsr.atvxctor(processlvl).hasCode = false
+				curatvxctr().hasCode = false
 			} else {
 				runePrvR[0] = rne
 			}
@@ -732,8 +764,8 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 				runePrvR[0] = rune(0)
 				runelbli[0] = 0
 				runelbli[1] = 0
-				atvprsr.atvxctor(processlvl).hasCode = false
-				atvprsr.atvxctor(processlvl).lastPassiveBufferOffset = atvprsr.atvxctor(processlvl).passiveBufferOffset
+				curatvxctr().hasCode = false
+				curatvxctr().lastPassiveBufferOffset = curatvxctr().passiveBufferOffset
 			} else {
 				runePrvR[0] = rne
 			}
@@ -750,33 +782,37 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 
 func captureActiveCode(atvcdelvl int, atvprsr *activeParser, p []rune) (n int, err error) {
 	var pl = len(p)
-	for n < pl {
-		if len(atvprsr.activeRune) == 0 {
-			atvprsr.activeRune = make([]rune, 81920)
-		}
-		if n < pl && atvprsr.activeRunei < len(atvprsr.activeRune) {
-			if (pl - n) >= (len(atvprsr.activeRune) - atvprsr.activeRunei) {
-				var cl = copy(atvprsr.activeRune[atvprsr.activeRunei:atvprsr.activeRunei+(len(atvprsr.activeRune)-atvprsr.activeRunei)], p[n:n+(len(atvprsr.activeRune)-atvprsr.activeRunei)])
-				atvprsr.activeRunei += cl
-				n += cl
-				atvprsr.atvxctor(atvcdelvl).activeBufferOffset += int64(cl)
-			} else if (pl - n) < (len(atvprsr.activeRune) - atvprsr.activeRunei) {
-				var cl = copy(atvprsr.activeRune[atvprsr.activeRunei:atvprsr.activeRunei+(pl-n)], p[n:n+(pl-n)])
-				atvprsr.activeRunei += cl
-				n += cl
-				atvprsr.atvxctor(atvcdelvl).activeBufferOffset += int64(cl)
+	if pl>0 {
+		atvxctr:=atvprsr.atvxctor(atvcdelvl)
+		for n < pl {
+			if len(atvprsr.activeRune) == 0 {
+				atvprsr.activeRune = make([]rune, 81920)
 			}
-			if len(atvprsr.activeRune) == atvprsr.activeRunei {
-				var atvRunes = make([]rune, atvprsr.activeRunei)
-				copy(atvRunes, atvprsr.activeRune[0:atvprsr.activeRunei])
-				atvprsr.atvxctor(atvcdelvl).activeBuf()
-				atvprsr.atvxctor(atvcdelvl).activeBuffer = append(atvprsr.atvxctor(atvcdelvl).activeBuffer, atvRunes)
-				atvRunes = nil
-				atvprsr.activeRunei = 0
+			if n < pl && atvprsr.activeRunei < len(atvprsr.activeRune) {
+				if (pl - n) >= (len(atvprsr.activeRune) - atvprsr.activeRunei) {
+					var cl = copy(atvprsr.activeRune[atvprsr.activeRunei:atvprsr.activeRunei+(len(atvprsr.activeRune)-atvprsr.activeRunei)], p[n:n+(len(atvprsr.activeRune)-atvprsr.activeRunei)])
+					atvprsr.activeRunei += cl
+					n += cl
+					atvxctr.activeBufferOffset += int64(cl)
+				} else if (pl - n) < (len(atvprsr.activeRune) - atvprsr.activeRunei) {
+					var cl = copy(atvprsr.activeRune[atvprsr.activeRunei:atvprsr.activeRunei+(pl-n)], p[n:n+(pl-n)])
+					atvprsr.activeRunei += cl
+					n += cl
+					atvxctr.activeBufferOffset += int64(cl)
+				}
+				if len(atvprsr.activeRune) == atvprsr.activeRunei {
+					var atvRunes = make([]rune, atvprsr.activeRunei)
+					copy(atvRunes, atvprsr.activeRune[0:atvprsr.activeRunei])
+					atvxctr.activeBuf()
+					atvxctr.activeBuffer = append(atvxctr.activeBuffer, atvRunes)
+					atvRunes = nil
+					atvprsr.activeRunei = 0
+				}
+			} else {
+				break
 			}
-		} else {
-			break
 		}
+		atvxctr=nil
 	}
 	return
 }
