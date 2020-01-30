@@ -109,9 +109,6 @@ type Listener struct {
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer func(){
-		runtime.GC()
-	}()
 	HttpRequestHandler(func() (rqst *Request) {
 		rqst = NewRequest(lstnr, w, r, func() {
 			lstnr.Shutdown()
