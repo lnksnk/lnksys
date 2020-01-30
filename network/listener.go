@@ -131,13 +131,7 @@ func (lstnrsvr *lstnrserver) Shutdown() (err error) {
  */
 type Listener struct {
 	servers        map[string]*lstnrserver
-	queuedRequests chan *Request
-	qrqstlck       *sync.Mutex
 	srvlck         *sync.Mutex
-}
-
-func (lstnr *Listener) QueueRequest(reqst *Request) {
-	lstnr.queuedRequests <- reqst
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -204,7 +198,7 @@ func InvokeListener(host string) {
 
 func init() {
 	if lstnr == nil {
-		lstnr = &Listener{queuedRequests: make(chan *Request, runtime.NumCPU()*4), qrqstlck: &sync.Mutex{}, srvlck: &sync.Mutex{}}
+		lstnr = &Listener{srvlck: &sync.Mutex{}}
 	}
 	active.MapGlobals("InvokeListener", InvokeListener)
 }
