@@ -324,13 +324,9 @@ func (reqst *Request) ExecuteRequest() {
 							reqst.Print(nxtrs)
 						} else {
 							if nxtrs.activeInverse {
-								if fnerr = reqst.Active.APrint("<@", nxtrs, "@>"); fnerr == nil {
-									fnerr = reqst.Active.ACommit()
-								}
+								fnerr = reqst.Active.ACommit("<@", nxtrs, "@>");
 							} else {
-								if fnerr = reqst.Active.APrint(nxtrs); fnerr == nil {
-									fnerr = reqst.Active.ACommit()
-								}
+								fnerr = reqst.Active.ACommit(nxtrs);
 							}
 						}
 						return
