@@ -473,35 +473,36 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 				var code = ""
 
 				var nxtprm *goja.Program = nil
-				var nxtprmerr error = nil
 
 				nxtprm = <-atvxctr.prgrm
 				acerr = <-atvxctr.prgrmerr
 
-				/*pipeatvr, pipeatvw := io.Pipe()
-				go func() {
-					defer func() {
-						pipeatvw.Close()
+				/*
+					var nxtprmerr error = nil
+					pipeatvr, pipeatvw := io.Pipe()
+					go func() {
+						defer func() {
+							pipeatvw.Close()
+						}()
+						for len(atvxctr.activeBuffer) > 0 {
+							cde := string(atvxctr.activeBuffer[0])
+							code += cde
+							atvxctr.activeBuffer = atvxctr.activeBuffer[1:]
+							iorw.FPrint(pipeatvw, cde)
+						}
 					}()
-					for len(atvxctr.activeBuffer) > 0 {
-						cde := string(atvxctr.activeBuffer[0])
-						code += cde
-						atvxctr.activeBuffer = atvxctr.activeBuffer[1:]
-						iorw.FPrint(pipeatvw, cde)
-					}
-				}()
-				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", pipeatvr, 0)
-				pipeatvr.Close()
-				pipeatvr = nil
-				pipeatvw = nil
-				if parsedprgmerr == nil {
-					nxtprm, nxtprmerr = goja.CompileAST(parsedprgm, false)
-				} else {
-					nxtprmerr = parsedprgmerr
-					fmt.Println(nxtprmerr)
-					fmt.Println(code)
-					acerr = nxtprmerr
-				}*/
+					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", pipeatvr, 0)
+					pipeatvr.Close()
+					pipeatvr = nil
+					pipeatvw = nil
+					if parsedprgmerr == nil {
+						nxtprm, nxtprmerr = goja.CompileAST(parsedprgm, false)
+					} else {
+						nxtprmerr = parsedprgmerr
+						fmt.Println(nxtprmerr)
+						fmt.Println(code)
+						acerr = nxtprmerr
+					}*/
 
 				if acerr == nil && nxtprm != nil {
 					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
