@@ -114,6 +114,29 @@ func (atvxctr *activeExecutor) close() {
 	if atvxctr.atv != nil {
 		atvxctr.atv = nil
 	}
+	if atvxctr.prgrmbufin != nil {
+		atvxctr.prgrmbufin = nil
+	}
+	if atvxctr.pipeprgrminw != nil {
+		atvxctr.pipeprgrminw = nil
+	}
+	if atvxctr.pipeprgrminr != nil {
+		atvxctr.pipeprgrminr = nil
+	}
+	if atvxctr.pipeprgrmoutw != nil {
+		atvxctr.pipeprgrmoutw = nil
+	}
+	if atvxctr.pipeprgrmoutr != nil {
+		atvxctr.pipeprgrmoutr = nil
+	}
+	if atvxctr.prgrmerr != nil {
+		close(atvxctr.prgrmerr)
+		atvxctr.prgrmerr = nil
+	}
+	if atvxctr.prgrm != nil {
+		close(atvxctr.prgrm)
+		atvxctr.prgrm = nil
+	}
 }
 
 func (atvxctr *activeExecutor) PassivePrint(atv *Active, fromOffset int64, toOffset int64) {
@@ -390,6 +413,9 @@ func preppingActiveParsing(atvprsr *activeParser) (atvxctr *activeExecutor) {
 	if len(atvprsr.atvxctr) > atvprsr.parsingLevel {
 		if atvprsr.atvxctr[atvprsr.parsingLevel].foundCode {
 			flushActiveCode(atvprsr.parsingLevel, atvprsr, true)
+			if atvxctr.pipeprgrminw != nil {
+				atvxctr.pipeprgrminw.Close()
+			}
 		}
 		atvxctr = atvprsr.atvxctr[atvprsr.parsingLevel]
 	}
