@@ -148,7 +148,7 @@ func (rw *RW) Close() (err error) {
 
 func FPrint(w io.Writer, a ...interface{}) (err error) {
 	if len(a)>0 {
-		pw,pr:=io.Pipe()
+		pr,pw:=io.Pipe()
 		pwrd:=make(chan bool,1)
 		go func(){
 			defer func(){
