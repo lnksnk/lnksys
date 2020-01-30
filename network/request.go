@@ -30,9 +30,9 @@ type Request struct {
 	listener              Listening
 	talker                Talking
 	w                     http.ResponseWriter
-	wpipeR 				  *io.PipeReader
-	wpipeW				  *io.PipeWriter
-	wpipeE 				  chan error
+	wpipeR                *io.PipeReader
+	wpipeW                *io.PipeWriter
+	wpipeE                chan error
 	r                     *http.Request
 	done                  chan bool
 	resourcesOffset       int64
@@ -77,12 +77,26 @@ type Request struct {
 	preWriteHeader       func()
 }
 
-func (reqst *Request) RequestHeaders() http.Header {
+func (reqst *Request) RequestHeader() http.Header {
 	return reqst.r.Header
 }
 
-func (reqst *Request) ResponseHeaders() http.Header {
+func (reqst *Request) ResponseHeader() http.Header {
 	return reqst.w.Header()
+}
+
+func (reqst *Request) RequestHeaders() (hdrs []string) {
+	for h := range reqst.r.Header {
+		hdrs = append(hdrs, h)
+	}
+	return
+}
+
+func (reqst *Request) ResponseHeaders() (hdrs []string) {
+	for h := range reqst.w.Header() {
+		hdrs = append(hdrs, h)
+	}
+	return
 }
 
 func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -130,8 +144,8 @@ func HttpRequestHandler(reqst *Request) (hndlr http.Handler) {
 
 func (reqst *Request) IsActiveContent(ext string) (active bool) {
 	ext = filepath.Ext(ext)
-	if _,active=atvExtns[ext]; active {
-		active=atvExtns[ext]
+	if _, active = atvExtns[ext]; active {
+		active = atvExtns[ext]
 	}
 	//active = strings.Index(",.html,.htm,.xml,.svg,.css,.js,.json,.csv,", ","+ext+",") > -1
 	return
@@ -207,9 +221,9 @@ func (reqst *Request) ExecuteRequest() {
 	}
 
 	var disableActive = false
-	var isMultiMedia=false
+	var isMultiMedia = false
 	if reqstContentType == "application/json" {
-
+		reqst.PopulateParameters()
 	} else {
 		reqst.PopulateParameters()
 		if reqst.params.ContainsParameter("disable-active") {
@@ -229,8 +243,8 @@ func (reqst *Request) ExecuteRequest() {
 		reqst.forceRead = isAtv
 	}
 	var mimedetails = mime.FindMimeTypeByExt(reqst.r.URL.Path, ".txt", "text/plain")
-	if len(mimedetails)>0 && strings.HasPrefix(mimedetails[0],"video/") || strings.HasPrefix(mimedetails[0],"audio/")  {
-		isMultiMedia=true
+	if len(mimedetails) > 0 && strings.HasPrefix(mimedetails[0], "video/") || strings.HasPrefix(mimedetails[0], "audio/") {
+		isMultiMedia = true
 	}
 	var contentencoding = ""
 
@@ -249,7 +263,7 @@ func (reqst *Request) ExecuteRequest() {
 		}()
 		reqst.preWriteHeader = func() {
 			reqst.w.Header().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
-			if reqst.w.Header().Get("Content-Type")=="" {
+			if reqst.w.Header().Get("Content-Type") == "" {
 				reqst.w.Header().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
 			if isMultiMedia {
@@ -280,7 +294,7 @@ func (reqst *Request) ExecuteRequest() {
 	} else {
 		reqst.Active.Reset()
 	}
-	var isFirtsRS=true
+	var isFirtsRS = true
 	for {
 		if len(reqst.resourcepaths) > 0 {
 			var nextrs = reqst.resourcepaths[0]
@@ -296,9 +310,9 @@ func (reqst *Request) ExecuteRequest() {
 			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
 				if isFirtsRS {
 					if !isAtv {
-						reqst.ResponseHeaders().Set("Content-Length",fmt.Sprintf("%d",nxtrs.Size()))
+						reqst.ResponseHeaders().Set("Content-Length", fmt.Sprintf("%d", nxtrs.Size()))
 					}
-					isFirtsRS=false
+					isFirtsRS = false
 				}
 				if isAtv {
 					if atverr := func(nxtrs *Resource) (fnerr error) {
@@ -602,7 +616,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			reqst.preWriteHeader()
 			reqst.preWriteHeader = nil
 		}
-		if reqst.wpipeR==nil && reqst.wpipeW==nil {
+		if reqst.wpipeR == nil && reqst.wpipeW == nil {
 			/*reqst.wpipeR,reqst.wpipeW=io.Pipe()
 			go func(wpipeR *io.PipeReader,wo io.Writer){
 				//var setErr=false
@@ -637,15 +651,15 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 			}(reqst.wpipeR,reqst.w)
 			*/
 		}
-		if reqst.wpipeW!=nil {
-			n,err=reqst.wpipeW.Write(p)
-			if err==nil {
+		if reqst.wpipeW != nil {
+			n, err = reqst.wpipeW.Write(p)
+			if err == nil {
 				/*if f, ok := reqst.w.(http.Flusher); ok {
 					f.Flush()
 				}*/
 			}
 		} else {
-			n,err=reqst.w.Write(p)
+			n, err = reqst.w.Write(p)
 		}
 	}
 	return
@@ -807,17 +821,17 @@ func (reqst *Request) Close() (err error) {
 	if reqst.rootpaths != nil {
 		reqst.rootpaths = nil
 	}
-	if reqst.wpipeR!=nil {
+	if reqst.wpipeR != nil {
 		reqst.wpipeR.Close()
-		reqst.wpipeR=nil
+		reqst.wpipeR = nil
 	}
-	if reqst.wpipeW!=nil {
+	if reqst.wpipeW != nil {
 		reqst.wpipeW.Close()
-		reqst.wpipeW=nil
+		reqst.wpipeW = nil
 	}
-	if reqst.wpipeE!=nil {
+	if reqst.wpipeE != nil {
 		close(reqst.wpipeE)
-		reqst.wpipeE=nil
+		reqst.wpipeE = nil
 	}
 	return
 }
