@@ -405,13 +405,13 @@ func wrappingupActiveParsing(atvprsr *activeParser) {
 
 func (atvprsr *activeParser) ACommit() (acerr error) {
 	//if atvprsr.atvrdr != nil {
-	atvprsr.lck.Lock()
+	//atvprsr.lck.Lock()
 	defer func() {
 		if err := recover(); err != nil {
 			acerr = fmt.Errorf("Panic: %+v\n", err)
 		}
 		wrappingupActiveParsing(atvprsr)
-		atvprsr.lck.Unlock()
+		//atvprsr.lck.Unlock()
 	}()
 	if atvxctr := preppingActiveParsing(atvprsr); atvxctr != nil && atvxctr.foundCode {
 		if atvprsr.atv != nil {
