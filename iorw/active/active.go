@@ -1,6 +1,7 @@
 package active
 
 import (
+	"bufio"
 	"fmt"
 	goja "github.com/dop251/goja"
 	gojaparse "github.com/dop251/goja/parser"
@@ -22,7 +23,7 @@ type activeExecutor struct {
 	atv                     *Active
 	prgrm                   chan *goja.Program
 	prgrmerr                chan error
-	prgrmbufin				*bufio.Writer
+	prgrmbufin              *bufio.Writer
 	pipeprgrminw            *io.PipeWriter
 	pipeprgrminr            *io.PipeReader
 	pipeprgrmoutw           *io.PipeWriter
@@ -42,15 +43,15 @@ func (atvxctr *activeExecutor) passiveBuf() [][]rune {
 }
 
 func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
-	if len(atvrnes)>0 {
+	if len(atvrnes) > 0 {
 		if atvxctr.pipeprgrminw == nil && atvxctr.pipeprgrminr == nil && atvxctr.pipeprgrmoutw == nil && atvxctr.pipeprgrmoutr == nil && atvxctr.prgrm == nil && atvxctr.prgrmerr == nil {
 			atvxctr.prgrm = make(chan *goja.Program, 1)
 			atvxctr.prgrmerr = make(chan error, 1)
 			atvxctr.pipeprgrminr, atvxctr.pipeprgrminw = io.Pipe()
 			atvxctr.pipeprgrmoutr, atvxctr.pipeprgrmoutw = io.Pipe()
-			go func(){
+			go func() {
 				defer atvxctr.pipeprgrmoutw.Close()
-				io.Copy(atvxctr.pipeprgrmoutw,atvxctr.pipeprgrminr)
+				io.Copy(atvxctr.pipeprgrmoutw, atvxctr.pipeprgrminr)
 			}()
 
 			go func() {
@@ -58,16 +59,16 @@ func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", atvxctr.pipeprgrmoutr, 0)
 				if parsedprgmerr == nil {
 					nxtprm, nxtprmerr := goja.CompileAST(parsedprgm, false)
-					atvxctr.prgrm<-nxtprm
-					atvxctr.prgrmerr<-nxtprm
+					atvxctr.prgrm <- nxtprm
+					atvxctr.prgrmerr <- nxtprmerr
 				} else {
-					atvxctr.prgrm<-nil
-					atvxctr.prgrmerr<-parsedprgmerr
+					atvxctr.prgrm <- nil
+					atvxctr.prgrmerr <- parsedprgmerr
 				}
 			}()
-			atvxctr.prgrmbufin=bufio.NewWriter(atvxctr.pipeprgrminw)
+			atvxctr.prgrmbufin = bufio.NewWriter(atvxctr.pipeprgrminw)
 		}
-		for _,rn:=range atvrnes {
+		for _, rn := range atvrnes {
 			atvxctr.prgrmbufin.WriteRune(rn)
 		}
 		atvxctr.prgrmbufin.Flush()
@@ -427,11 +428,11 @@ func wrappingupActiveParsing(atvprsr *activeParser) {
 	}
 }
 
-func (atvprsr *activeParser) ACommit(a...interface{}) (acerr error) {
+func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 	if len(a) > 0 {
-		acerr=atvprsr.APrint(a...);
+		acerr = atvprsr.APrint(a...)
 	}
-	if acerr==nil {
+	if acerr == nil {
 		defer func() {
 			if err := recover(); err != nil {
 				acerr = fmt.Errorf("Panic: %+v\n", err)
@@ -473,10 +474,10 @@ func (atvprsr *activeParser) ACommit(a...interface{}) (acerr error) {
 
 				var nxtprm *goja.Program = nil
 				var nxtprmerr error = nil
-				
+
 				//nxtprm<-atvxctr.prgrm
 				//acerr<-atvxctr.prgrmerr
-				
+
 				pipeatvr, pipeatvw := io.Pipe()
 				go func() {
 					defer func() {
@@ -615,8 +616,8 @@ func (atv *Active) APrintln(a ...interface{}) {
 
 func capturePassiveContent(psvcntlvl int, atvprsr *activeParser, p []rune) (n int, err error) {
 	var pl = len(p)
-	if pl>0 {
-		atvxctr:=atvprsr.atvxctor(psvcntlvl)
+	if pl > 0 {
+		atvxctr := atvprsr.atvxctor(psvcntlvl)
 		for n < pl {
 			if atvxctr.foundCode {
 				if len(atvprsr.passiveRune) == 0 {
@@ -664,7 +665,7 @@ func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
 		capturePassiveContent(psvlvl, atvprsr, atvprsr.psvRunesToParse[0:atvprsr.psvRunesToParsei])
 		atvprsr.psvRunesToParsei = 0
 	}
-	atvxctr:=atvprsr.atvxctor(psvlvl)
+	atvxctr := atvprsr.atvxctor(psvlvl)
 	if atvxctr.foundCode {
 		if force {
 			if atvprsr.passiveRunei > 0 {
@@ -699,7 +700,7 @@ func processUnparsedPassiveContent(psvlvl int, atvprsr *activeParser, p []rune) 
 	if pl > 0 {
 		flushActiveCode(psvlvl, atvprsr, false)
 	}
-	if pl>0 {
+	if pl > 0 {
 		for n < pl && atvprsr.psvRunesToParsei < len(atvprsr.psvRunesToParse) {
 			if (pl - n) >= (len(atvprsr.psvRunesToParse) - atvprsr.psvRunesToParsei) {
 				var cl = copy(atvprsr.psvRunesToParse[atvprsr.psvRunesToParsei:atvprsr.psvRunesToParsei+(len(atvprsr.psvRunesToParse)-atvprsr.psvRunesToParsei)], p[n:n+(len(atvprsr.psvRunesToParse)-atvprsr.psvRunesToParsei)])
@@ -720,9 +721,9 @@ func processUnparsedPassiveContent(psvlvl int, atvprsr *activeParser, p []rune) 
 }
 
 func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []int, runePrvR []rune) {
-	var atvxctr*activeExecutor=nil
-	var curatvxctr=func() (*activeExecutor) {
-		if atvxctr==nil {
+	var atvxctr *activeExecutor = nil
+	var curatvxctr = func() *activeExecutor {
+		if atvxctr == nil {
 			atvprsr.atvxctor(processlvl)
 		}
 		return atvxctr
@@ -782,8 +783,8 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 
 func captureActiveCode(atvcdelvl int, atvprsr *activeParser, p []rune) (n int, err error) {
 	var pl = len(p)
-	if pl>0 {
-		atvxctr:=atvprsr.atvxctor(atvcdelvl)
+	if pl > 0 {
+		atvxctr := atvprsr.atvxctor(atvcdelvl)
 		for n < pl {
 			if len(atvprsr.activeRune) == 0 {
 				atvprsr.activeRune = make([]rune, 81920)
@@ -812,7 +813,7 @@ func captureActiveCode(atvcdelvl int, atvprsr *activeParser, p []rune) (n int, e
 				break
 			}
 		}
-		atvxctr=nil
+		atvxctr = nil
 	}
 	return
 }
