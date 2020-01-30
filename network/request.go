@@ -14,7 +14,7 @@ import (
 	db "github.com/efjoubert/lnksys/db"
 	iorw "github.com/efjoubert/lnksys/iorw"
 	active "github.com/efjoubert/lnksys/iorw/active"
-	gzip "github.com/efjoubert/lnksys/network/gzip"
+	//gzip "github.com/efjoubert/lnksys/network/gzip"
 	mime "github.com/efjoubert/lnksys/network/mime"
 	parameters "github.com/efjoubert/lnksys/parameters"
 )
