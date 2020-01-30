@@ -475,10 +475,10 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 				var nxtprm *goja.Program = nil
 				var nxtprmerr error = nil
 
-				//nxtprm<-atvxctr.prgrm
-				//acerr<-atvxctr.prgrmerr
+				nxtprm = <-atvxctr.prgrm
+				acerr = <-atvxctr.prgrmerr
 
-				pipeatvr, pipeatvw := io.Pipe()
+				/*pipeatvr, pipeatvw := io.Pipe()
 				go func() {
 					defer func() {
 						pipeatvw.Close()
@@ -501,7 +501,7 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 					fmt.Println(nxtprmerr)
 					fmt.Println(code)
 					acerr = nxtprmerr
-				}
+				}*/
 
 				if acerr == nil && nxtprm != nil {
 					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
@@ -802,11 +802,13 @@ func captureActiveCode(atvcdelvl int, atvprsr *activeParser, p []rune) (n int, e
 					atvxctr.activeBufferOffset += int64(cl)
 				}
 				if len(atvprsr.activeRune) == atvprsr.activeRunei {
-					var atvRunes = make([]rune, atvprsr.activeRunei)
+					/*var atvRunes = make([]rune, atvprsr.activeRunei)
 					copy(atvRunes, atvprsr.activeRune[0:atvprsr.activeRunei])
 					atvxctr.activeBuf()
 					atvxctr.activeBuffer = append(atvxctr.activeBuffer, atvRunes)
 					atvRunes = nil
+					*/
+					atvxctr.captureActiveRunes(atvprsr.activeRune[0:atvprsr.activeRunei])
 					atvprsr.activeRunei = 0
 				}
 			} else {
@@ -825,11 +827,13 @@ func flushActiveCode(atvcdelvl int, atvprsr *activeParser, force bool) {
 	}
 	if force {
 		if atvprsr.activeRunei > 0 {
-			var atvRunes = make([]rune, atvprsr.activeRunei)
+			atvprsr.atvxctor(atvcdelvl).captureActiveRunes(atvprsr.activeRune[0:atvprsr.activeRunei])
+			/*var atvRunes = make([]rune, atvprsr.activeRunei)
 			copy(atvRunes, atvprsr.activeRune[0:atvprsr.activeRunei])
 			atvprsr.atvxctor(atvcdelvl).activeBuf()
 			atvprsr.atvxctor(atvcdelvl).activeBuffer = append(atvprsr.atvxctor(atvprsr.parsingLevel).activeBuffer, atvRunes)
 			atvRunes = nil
+			*/
 			atvprsr.activeRunei = 0
 		}
 	}
