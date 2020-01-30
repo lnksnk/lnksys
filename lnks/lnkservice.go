@@ -7,6 +7,8 @@ import (
 	"github.com/efjoubert/lnksys/network"
 	"github.com/efjoubert/lnksys/service"
 	"os"
+	//runtime "runtime"
+	runtimedbg "runtime/debug"
 )
 
 //LnkService LnkService
@@ -74,6 +76,7 @@ func (lnksrvs *LnkService) stopLnkService(args ...string) {
 }
 
 func RunService(args ...string) {
+	runtimedbg.SetGCPercent(50)
 	if len(args) == 0 {
 		args = os.Args
 	}
