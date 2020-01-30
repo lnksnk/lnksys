@@ -14,19 +14,6 @@ func main() {
 	//runtimedbg.SetGCPercent(25)
 	//runtime.GOMAXPROCS(runtime.NumCPU() * 8)
 
-	RunService(os.Args...)
+	lnks.RunService(os.Args...)
 }
 
-func RunService(args ...string) {
-	var lnksrvs, err = lnks.NewLnkService("", "", "", RunBroker)
-	if err == nil {
-		err = lnksrvs.Execute(args...)
-	}
-	if err != nil {
-		println(err)
-	}
-}
-
-func RunBroker(exename string, exealias string, args ...string) {
-	network.BrokerServeHttp(os.Stdout, os.Stdin, exename, exealias, args...)
-}

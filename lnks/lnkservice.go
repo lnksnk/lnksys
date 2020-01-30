@@ -71,3 +71,17 @@ func (lnksrvs *LnkService) stopLnkService(args ...string) {
 		env.ShutdownEnvironment()
 	}
 }
+
+func RunService(args ...string) {
+	var lnksrvs, err = lnks.NewLnkService("", "", "", RunBroker)
+	if err == nil {
+		err = lnksrvs.Execute(args...)
+	}
+	if err != nil {
+		println(err)
+	}
+}
+
+func RunBroker(exename string, exealias string, args ...string) {
+	network.BrokerServeHttp(os.Stdout, os.Stdin, exename, exealias, args...)
+}
