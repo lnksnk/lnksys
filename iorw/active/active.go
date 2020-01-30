@@ -721,7 +721,7 @@ func processUnparsedPassiveContent(psvlvl int, atvprsr *activeParser, p []rune) 
 
 func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []int, runePrvR []rune) {
 	var atvxctr*activeExecutor=nil
-	var curatvxctr() (*activeExecutor) {
+	var curatvxctr=func() (*activeExecutor) {
 		if atvxctr==nil {
 			atvprsr.atvxctor(processlvl)
 		}
