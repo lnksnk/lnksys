@@ -8,7 +8,6 @@ import (
 	"time"
 
 	active "github.com/efjoubert/lnksys/iorw/active"
-	"github.com/efjoubert/lnksys/network/gzip"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 	"net"
@@ -43,11 +42,7 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 		IdleTimeout:       1 * time.Minute,
 		WriteTimeout:      2 * time.Minute,
 		Addr:              host,
-		Handler:           h2c.NewHandler(gzip.GzipHandler(hndlr), serverh2),
-		ConnContext: func(ctx context.Context, c net.Conn) (cntx context.Context) {
-			cntx = ctx
-			return
-		}}
+		Handler:           h2c.NewHandler(hndlr, serverh2)}
 
 	server.SetKeepAlivesEnabled(true)
 	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2}
