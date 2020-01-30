@@ -222,16 +222,16 @@ func (reqst *Request) ExecuteRequest() {
 
 	var disableActive = false
 	var isMultiMedia = false
-	if reqstContentType == "application/json" {
-		reqst.PopulateParameters()
-	} else {
+	//if reqstContentType == "application/json" {
+	//	reqst.PopulateParameters()
+	//} else {
 		reqst.PopulateParameters()
 		if reqst.params.ContainsParameter("disable-active") {
 			if disableAtv := reqst.params.Parameter("disable-active"); len(disableAtv) == 1 && strings.ToUpper(disableAtv[0]) == "Y" {
 				disableActive = true
 			}
 		}
-	}
+	//}
 	if isAtv {
 		if reqst.rqstContent == nil {
 			if reqst.r.Body != nil {
