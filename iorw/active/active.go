@@ -413,11 +413,13 @@ func preppingActiveParsing(atvprsr *activeParser) (atvxctr *activeExecutor) {
 	if len(atvprsr.atvxctr) > atvprsr.parsingLevel {
 		if atvprsr.atvxctr[atvprsr.parsingLevel].foundCode {
 			flushActiveCode(atvprsr.parsingLevel, atvprsr, true)
+			atvxctr = atvprsr.atvxctr[atvprsr.parsingLevel]
 			if atvxctr.pipeprgrminw != nil {
 				atvxctr.pipeprgrminw.Close()
 			}
+		} else {
+			atvxctr = atvprsr.atvxctr[atvprsr.parsingLevel]
 		}
-		atvxctr = atvprsr.atvxctr[atvprsr.parsingLevel]
 	}
 
 	atvprsr.parsingLevel++
