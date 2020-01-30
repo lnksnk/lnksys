@@ -147,40 +147,30 @@ func (rw *RW) Close() (err error) {
 }
 
 func FPrint(w io.Writer, a ...interface{}) (err error) {
-	if len(a)>0 {
-		pr,pw:=io.Pipe()
-		defer pw.Close()
-		go func(){
-			defer pr.Close()
-			p:=make([]byte,4096)
-			io.CopyBuffer(w,pr,p)
-			p=nil
-		}()
-		for _, d := range a {
-			if r, rok := d.(io.Reader); rok {
-				io.Copy(pw, r)
-			} else if rnrdr, rnrdrok := d.(io.RuneReader); rnrdrok {
-				for {
-					if rne, rnsize, rnerr := rnrdr.ReadRune(); rnerr == nil {
-						if rnsize > 0 {
-							fmt.Fprint(pw, string(rne))
-						}
-					} else {
-						if rnerr != io.EOF {
-							err = rnerr
-						}
-						break
+	for _, d := range a {
+		if r, rok := d.(io.Reader); rok {
+			io.Copy(w, r)
+		} else if rnrdr, rnrdrok := d.(io.RuneReader); rnrdrok {
+			for {
+				if rne, rnsize, rnerr := rnrdr.ReadRune(); rnerr == nil {
+					if rnsize > 0 {
+						fmt.Fprint(w, string(rne))
 					}
+				} else {
+					if rnerr != io.EOF {
+						err = rnerr
+					}
+					break
 				}
-			} else if uarr, uarrok := d.([]uint8); uarrok {
-				fmt.Fprint(pw, string(uarr))
-			} else if runearr, runearrok := d.([]rune); runearrok {
-				fmt.Fprint(pw, string(runearr))
-			} else if barr, barrok := d.([]byte); barrok {
-				fmt.Fprint(pw, string(barr))
-			} else {
-				fmt.Fprint(pw, d)
 			}
+		} else if uarr, uarrok := d.([]uint8); uarrok {
+			fmt.Fprint(w, string(uarr))
+		} else if runearr, runearrok := d.([]rune); runearrok {
+			fmt.Fprint(w, string(runearr))
+		} else if barr, barrok := d.([]byte); barrok {
+			fmt.Fprint(w, string(barr))
+		} else {
+			fmt.Fprint(w, d)
 		}
 	}
 	return
