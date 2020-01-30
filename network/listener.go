@@ -20,7 +20,6 @@ import (
 type Listening interface {
 	Shutdown()
 	ShutdownHost(string)
-	QueueRequest(*Request)
 }
 
 type lstnrserver struct {
@@ -85,31 +84,6 @@ func (tcpln tcpKeepAliveListener) File() (*os.File, error) {
 
 func (lstnrsvr *lstnrserver) listenAndServe() {
 	go func(srvr *http.Server) {
-		/*ln, err := net.Listen("tcp", srvr.Addr)
-		if err != nil {
-			var succeeded bool
-			if runtime.GOOS == "windows" {
-				// Windows has been known to keep sockets open even after closing the listeners.
-				// Tests reveal this error case easily because they call Start() then Stop()
-				// in succession. TODO: Better way to handle this? And why limit this to Windows?
-				for i := 0; i < 20; i++ {
-					time.Sleep(100 * time.Millisecond)
-					ln, err = net.Listen("tcp", srvr.Addr)
-					if err == nil {
-						succeeded = true
-						break
-					}
-				}
-			}
-			if succeeded {
-				if tcpLn, ok := ln.(*net.TCPListener); ok {
-					ln = tcpKeepAliveListener{TCPListener: tcpLn}
-				}
-			}
-		}
-		if err == nil && ln != nil {
-			srvr.Serve(ln)
-		}*/
 		srvr.ListenAndServe()
 	}(lstnrsvr.httpsvr)
 }
@@ -135,11 +109,10 @@ type Listener struct {
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	defer func(){
+		runtime.GC()
+	}()
 	HttpRequestHandler(func() (rqst *Request) {
-		//lstnr.srvlck.Lock()
-		//defer func() {
-		//	lstnr.srvlck.Unlock()
-		//}()
 		rqst = NewRequest(lstnr, w, r, func() {
 			lstnr.Shutdown()
 		}, func() {
