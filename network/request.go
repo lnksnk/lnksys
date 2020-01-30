@@ -215,7 +215,7 @@ func (reqst *Request) RequestContent() *iorw.BufferedRW {
 
 func (reqst *Request) ExecuteRequest() {
 	var isAtv = reqst.IsActiveContent(reqst.r.URL.Path)
-	var reqstContentType = reqst.r.Header.Get("Content-Type")
+	//var reqstContentType = reqst.r.Header.Get("Content-Type")
 	if reqst.bufRW == nil {
 		reqst.bufRW = iorw.NewBufferedRW(int64(maxbufsize), reqst)
 	}
