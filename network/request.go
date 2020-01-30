@@ -215,16 +215,12 @@ func (reqst *Request) RequestContent() *iorw.BufferedRW {
 
 func (reqst *Request) ExecuteRequest() {
 	var isAtv = reqst.IsActiveContent(reqst.r.URL.Path)
-	//var reqstContentType = reqst.r.Header.Get("Content-Type")
 	if reqst.bufRW == nil {
 		reqst.bufRW = iorw.NewBufferedRW(int64(maxbufsize), reqst)
 	}
 
 	var disableActive = false
 	var isMultiMedia = false
-	//if reqstContentType == "application/json" {
-	//	reqst.PopulateParameters()
-	//} else {
 	reqst.PopulateParameters()
 	if reqst.params.ContainsParameter("disable-active") {
 		if disableAtv := reqst.params.Parameter("disable-active"); len(disableAtv) == 1 && strings.ToUpper(disableAtv[0]) == "Y" {
@@ -268,8 +264,9 @@ func (reqst *Request) ExecuteRequest() {
 			}
 			if isMultiMedia {
 
+			} else {
+				reqst.w.WriteHeader(200)
 			}
-			reqst.w.WriteHeader(200)
 		}
 	}
 	if reqst.Active == nil {
@@ -325,7 +322,11 @@ func (reqst *Request) ExecuteRequest() {
 							if nxtrs.activeInverse {
 								fnerr = reqst.Active.ACommit("<@", nxtrs, "@>")
 							} else {
-								fnerr = reqst.Active.ACommit(nxtrs)
+								if isMultiMedia {
+									http.ServeContent(reqst.w, reqst.r, "", time.Now(), nxtrs)
+								} else {
+									fnerr = reqst.Active.ACommit(nxtrs)
+								}
 							}
 						}
 						return
