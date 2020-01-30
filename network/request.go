@@ -136,7 +136,7 @@ func (reqst *Request) Interupted() bool {
 
 func HttpRequestHandler(reqst *Request) (hndlr http.Handler) {
 	if reqst.IsActiveContent(reqst.r.URL.Path) {
-		hndlr = gzip.GzipHandler(reqst)
+		hndlr = reqst// gzip.GzipHandler(reqst)
 	} else {
 		hndlr = reqst
 	}
