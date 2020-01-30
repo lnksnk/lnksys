@@ -51,8 +51,8 @@ func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 			//atvxctr.pipeprgrmoutr, atvxctr.pipeprgrmoutw = io.Pipe()
 			go func() {
 				defer atvxctr.pipeprgrmoutr.Close()
-
-				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", atvxctr.pipeprgrminr, 0)
+				var bufr = bufio.NewReader(atvxctr.pipeprgrminr)
+				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", bufr, 0)
 				if parsedprgmerr == nil {
 					nxtprm, nxtprmerr := goja.CompileAST(parsedprgm, false)
 					atvxctr.prgrm <- nxtprm
