@@ -107,7 +107,6 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		reqst.rqstlck.Unlock()
 		reqst.Close()
-		time.Sleep(10 * time.Millisecond)
 	}()
 	reqst.rqstlck.Lock()
 	var wi interface{} = w
@@ -136,7 +135,7 @@ func (reqst *Request) Interupted() bool {
 
 func HttpRequestHandler(reqst *Request) (hndlr http.Handler) {
 	if reqst.IsActiveContent(reqst.r.URL.Path) {
-		hndlr = reqst// gzip.GzipHandler(reqst)
+		hndlr = reqst // gzip.GzipHandler(reqst)
 	} else {
 		hndlr = reqst
 	}
@@ -226,12 +225,12 @@ func (reqst *Request) ExecuteRequest() {
 	//if reqstContentType == "application/json" {
 	//	reqst.PopulateParameters()
 	//} else {
-		reqst.PopulateParameters()
-		if reqst.params.ContainsParameter("disable-active") {
-			if disableAtv := reqst.params.Parameter("disable-active"); len(disableAtv) == 1 && strings.ToUpper(disableAtv[0]) == "Y" {
-				disableActive = true
-			}
+	reqst.PopulateParameters()
+	if reqst.params.ContainsParameter("disable-active") {
+		if disableAtv := reqst.params.Parameter("disable-active"); len(disableAtv) == 1 && strings.ToUpper(disableAtv[0]) == "Y" {
+			disableActive = true
 		}
+	}
 	//}
 	if isAtv {
 		if reqst.rqstContent == nil {
@@ -324,9 +323,9 @@ func (reqst *Request) ExecuteRequest() {
 							reqst.Print(nxtrs)
 						} else {
 							if nxtrs.activeInverse {
-								fnerr = reqst.Active.ACommit("<@", nxtrs, "@>");
+								fnerr = reqst.Active.ACommit("<@", nxtrs, "@>")
 							} else {
-								fnerr = reqst.Active.ACommit(nxtrs);
+								fnerr = reqst.Active.ACommit(nxtrs)
 							}
 						}
 						return

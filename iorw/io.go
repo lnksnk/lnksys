@@ -146,7 +146,7 @@ func (rw *RW) Close() (err error) {
 	return
 }
 
-func FPrint(w io.Writer, a ...interface{}) (err error) {
+func PipedFPrint(w io.Reader, a ...interface{}) {
 	if len(a)>0 {
 		func(){
 			pr,pw:=io.Pipe()
@@ -188,6 +188,38 @@ func FPrint(w io.Writer, a ...interface{}) (err error) {
 			pw.Close()
 			<-pwrd
 		}()
+	}
+	return
+}
+
+func FPrint(w io.Writer, a ...interface{}) (err error) {
+	if len(a)>0 {
+		for _, d := range a {
+			if r, rok := d.(io.Reader); rok {
+				io.Copy(w, r)
+			} else if rnrdr, rnrdrok := d.(io.RuneReader); rnrdrok {
+				for {
+					if rne, rnsize, rnerr := rnrdr.ReadRune(); rnerr == nil {
+						if rnsize > 0 {
+							fmt.Fprint(w, string(rne))
+						}
+					} else {
+						if rnerr != io.EOF {
+							err = rnerr
+						}
+						break
+					}
+				}
+			} else if uarr, uarrok := d.([]uint8); uarrok {
+				fmt.Fprint(w, string(uarr))
+			} else if runearr, runearrok := d.([]rune); runearrok {
+				fmt.Fprint(w, string(runearr))
+			} else if barr, barrok := d.([]byte); barrok {
+				fmt.Fprint(w, string(barr))
+			} else {
+				fmt.Fprint(w, d)
+			}
+		}
 	}
 	return
 }
@@ -447,12 +479,12 @@ func (bufRW *BufferedRW) Read(p []byte) (n int, err error) {
 }
 
 func (bufRW *BufferedRW) Println(a ...interface{}) {
-	FPrint(bufRW, a...)
+	PipedFPrint(bufRW, a...)
 	FPrint(bufRW, "\r\n")
 }
 
 func (bufRW *BufferedRW) Print(a ...interface{}) {
-	FPrint(bufRW, a...)
+	PipedFPrint(bufRW, a...)
 }
 
 func (bufRW *BufferedRW) Write(p []byte) (n int, err error) {
