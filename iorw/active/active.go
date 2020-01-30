@@ -65,13 +65,14 @@ func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 			}(atvxctr.pipeprgrminr, atvxctr.pipeprgrminw)
 			//atvxctr.prgrmbufin = bufio.NewWriter(atvxctr.pipeprgrminw)
 		}
-		atvxctr.pipeprgrminw.Write([]byte(string(atvrnes)))
+
 		/*
 			for _, rn := range atvrnes {
 				atvxctr.prgrmbufin.WriteRune(rn)
 			}
 			atvxctr.prgrmbufin.Flush()*/
 	}
+	atvxctr.pipeprgrminw.Write([]byte(string(atvrnes)))
 }
 
 func (atvxctr *activeExecutor) activeBuf() [][]rune {
