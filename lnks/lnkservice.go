@@ -12,11 +12,11 @@ import (
 //LnkService LnkService
 type LnkService struct {
 	*service.Service
-	brkrfnc func(exenme string,exealias string,args ...string)
+	brkrfnc func(exenme string, exealias string, args ...string)
 }
 
 //NewLnkService NewLnkService
-func NewLnkService(name string, displayName string, description string,brokerfunc ...interface{}) (lnksrvs *LnkService, err error) {
+func NewLnkService(name string, displayName string, description string, brokerfunc ...interface{}) (lnksrvs *LnkService, err error) {
 	lnksrvs = &LnkService{}
 	var srv, svrerr = service.NewService(name, displayName, description, func(srvs *service.Service, args ...string) {
 		lnksrvs.startLnkService(args...)
@@ -25,9 +25,9 @@ func NewLnkService(name string, displayName string, description string,brokerfun
 	}, func(srvs *service.Service, args ...string) {
 		lnksrvs.stopLnkService(args...)
 	})
-	if len(brokerfunc)==1 {
-		if brfnc,brfcnok:= brokerfunc[0].(func(exenme string,exealias string,args ...string)); brfcnok {
-			lnksrvs.brkrfnc=brfnc
+	if len(brokerfunc) == 1 {
+		if brfnc, brfcnok := brokerfunc[0].(func(exenme string, exealias string, args ...string)); brfcnok {
+			lnksrvs.brkrfnc = brfnc
 		}
 	}
 	if svrerr == nil {
@@ -61,8 +61,8 @@ func (lnksrvs *LnkService) runLnkService(args ...string) {
 			}
 		}
 	} else if lnksrvs.IsBroker() {
-		if lnksrvs.brkrfnc!=nil {
-			lnksrvs.brkrfnc(lnksrvs.ServiceExeName(),lnksrvs.ServiceName(),args...)
+		if lnksrvs.brkrfnc != nil {
+			lnksrvs.brkrfnc(lnksrvs.ServiceExeName(), lnksrvs.ServiceName(), args...)
 		}
 	}
 }
@@ -74,6 +74,9 @@ func (lnksrvs *LnkService) stopLnkService(args ...string) {
 }
 
 func RunService(args ...string) {
+	if len(args) == 0 {
+		args = os.Args
+	}
 	var lnksrvs, err = NewLnkService("", "", "", RunBroker)
 	if err == nil {
 		err = lnksrvs.Execute(args...)
