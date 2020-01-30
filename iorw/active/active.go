@@ -49,16 +49,10 @@ func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 			atvxctr.prgrmerr = make(chan error, 1)
 			atvxctr.pipeprgrminr, atvxctr.pipeprgrminw = io.Pipe()
 			//atvxctr.pipeprgrmoutr, atvxctr.pipeprgrmoutw = io.Pipe()
-			go func() {
-				defer atvxctr.pipeprgrmoutr.Close()
-				pipeatvr, pipeatvw := io.Pipe()
-				go func() {
-					defer func() {
-						pipeatvw.Close()
-					}()
-					io.Copy(pipeatvw, atvxctr.pipeprgrminr)
-				}()
-				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", pipeatvr, 0)
+			go func(pin *io.PipeReader, po *io.PipeWriter) {
+				defer po.Close()
+
+				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", pin, 0)
 
 				if parsedprgmerr == nil {
 					nxtprm, nxtprmerr := goja.CompileAST(parsedprgm, false)
@@ -68,13 +62,15 @@ func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 					atvxctr.prgrm <- nil
 					atvxctr.prgrmerr <- parsedprgmerr
 				}
-			}()
-			atvxctr.prgrmbufin = bufio.NewWriter(atvxctr.pipeprgrminw)
+			}(atvxctr.pipeprgrminr, atvxctr.pipeprgrminw)
+			//atvxctr.prgrmbufin = bufio.NewWriter(atvxctr.pipeprgrminw)
 		}
-		for _, rn := range atvrnes {
-			atvxctr.prgrmbufin.WriteRune(rn)
-		}
-		atvxctr.prgrmbufin.Flush()
+		atvxctr.pipeprgrminw.Write([]byte(string(atvrnes)))
+		/*
+			for _, rn := range atvrnes {
+				atvxctr.prgrmbufin.WriteRune(rn)
+			}
+			atvxctr.prgrmbufin.Flush()*/
 	}
 }
 
