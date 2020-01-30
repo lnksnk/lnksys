@@ -48,11 +48,14 @@ func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 			atvxctr.prgrm = make(chan *goja.Program, 1)
 			atvxctr.prgrmerr = make(chan error, 1)
 			atvxctr.pipeprgrminr, atvxctr.pipeprgrminw = io.Pipe()
-			//atvxctr.pipeprgrmoutr, atvxctr.pipeprgrmoutw = io.Pipe()
+			atvxctr.pipeprgrmoutr, atvxctr.pipeprgrmoutw = io.Pipe()
 			go func(pin *io.PipeReader, po *io.PipeWriter) {
 				defer po.Close()
-
-				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", pin, 0)
+				go func() {
+					defer atvxctr.pipeprgrmoutw.Close()
+					io.Copy(atvxctr.pipeprgrmoutw, atvxctr.pipeprgrminr)
+				}()
+				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", atvxctr.pipeprgrmoutr, 0)
 
 				if parsedprgmerr == nil {
 					nxtprm, nxtprmerr := goja.CompileAST(parsedprgm, false)
