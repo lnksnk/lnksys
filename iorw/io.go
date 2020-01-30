@@ -153,7 +153,8 @@ func FPrint(w io.Writer, a ...interface{}) (err error) {
 		go func(){
 			defer pr.Close()
 			p:=make([]byte,4096)
-			io.CopyBuffer(w,pr)
+			io.CopyBuffer(w,pr,p)
+			p=nil
 		}()
 		for _, d := range a {
 			if r, rok := d.(io.Reader); rok {
