@@ -146,7 +146,7 @@ func (rw *RW) Close() (err error) {
 	return
 }
 
-func PipedFPrint(w io.Reader, a ...interface{}) {
+func PipedFPrint(w io.Writer, a ...interface{}) (err error){
 	if len(a)>0 {
 		func(){
 			pr,pw:=io.Pipe()
