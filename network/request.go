@@ -263,7 +263,7 @@ func (reqst *Request) ExecuteRequest() {
 		}()
 		reqst.preWriteHeader = func() {
 			reqst.ResponseHeader().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
-			if reqst.ResponeHeader().Get("Content-Type") == "" {
+			if reqst.ResponseHeader().Get("Content-Type") == "" {
 				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
 			if isMultiMedia {
