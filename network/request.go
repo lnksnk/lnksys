@@ -277,7 +277,8 @@ func (reqst *Request) ExecuteRequest() {
 			}
 
 			if isMultiMedia {
-
+				reqst.ResponseHeader().Set("Content-Encoding", "identity")
+				reqst.ResponseHeader().Set("Accept-Ranges", "bytes")
 			} else {
 				reqst.w.WriteHeader(statusCode)
 			}
