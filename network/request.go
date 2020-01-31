@@ -281,12 +281,7 @@ func (reqst *Request) ExecuteRequest() {
 			}
 
 			if isMultiMedia {
-				if reqst.ResponseHeader().Get("Content-Encoding") != "identity" {
-					reqst.ResponseHeader().Set("Content-Encoding", "identity")
-				}
-				if reqst.ResponseHeader().Get("Accept-Ranges") == "" {
-					reqst.ResponseHeader().Set("Accept-Ranges", acceptedrange)
-				}
+
 			} else {
 				reqst.w.WriteHeader(statusCode)
 			}
