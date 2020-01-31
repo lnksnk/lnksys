@@ -288,7 +288,7 @@ func (reqst *Request) ExecuteRequest() {
 						reqst.ResponseHeader().Set("Accept-Ranges", acceptedrange)
 					}
 					if len(rangeunit) > 1 {
-						if strings.Index(rangeunit[1], "=") > 0 {
+						if strings.Index(rangeunit[1], "-") > 0 {
 							if offset, offseterr := strconv.ParseInt(rangeunit[1][:strings.Index(rangeunit[1], "=")], 10, 64); offseterr == nil {
 								if tooffset, tooffseterr := strconv.ParseInt(rangeunit[1][strings.Index(rangeunit[1], "=")+1:], 10, 64); tooffseterr == nil {
 									reqst.readFromOffset = offset
