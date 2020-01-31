@@ -316,7 +316,7 @@ func (reqst *Request) ExecuteRequest() {
 					} else {
 						adjustOffsetBy=rxstlen
 					}
-					curResource.Seek(rxstlen-adjustOffsetBy,0)
+					curResource.Seek(0,0)
 					reqst.readFromOffset+=adjustOffsetBy
 					if reqst.readFromOffset>=reqst.readToOffset {
 						reqst.readFromOffset=-1
@@ -400,7 +400,21 @@ func (reqst *Request) ExecuteRequest() {
 						break
 					}
 				} else {
-					
+					if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
+						rxstlen := curResource.Size()
+						adjustOffsetBy:=int64(0)
+						if rxstlen>=(reqst.readToOffset-reqst.readFromOffset) {
+							adjustOffsetBy=(reqst.readToOffset-reqst.readFromOffset)
+						} else {
+							adjustOffsetBy=rxstlen
+						}
+						curResource.Seek(0,0)
+						reqst.readFromOffset+=adjustOffsetBy
+						if reqst.readFromOffset>=reqst.readToOffset {
+							reqst.readFromOffset=-1
+							reqst.readToOffset=-1
+						} 
+					}	
 					reqst.Print(nxtrs)
 				}
 			}
