@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -14,6 +15,7 @@ import (
 	db "github.com/efjoubert/lnksys/db"
 	iorw "github.com/efjoubert/lnksys/iorw"
 	active "github.com/efjoubert/lnksys/iorw/active"
+
 	//gzip "github.com/efjoubert/lnksys/network/gzip"
 	mime "github.com/efjoubert/lnksys/network/mime"
 	parameters "github.com/efjoubert/lnksys/parameters"
@@ -23,6 +25,8 @@ const maxbufsize int = 81920
 
 type Request struct {
 	rqstlck               *sync.Mutex
+	readFromOffset        int64
+	readToOffset          int64
 	rspnshdrs             map[string]string
 	bufRW                 *iorw.BufferedRW
 	rw                    *iorw.RW
@@ -75,6 +79,14 @@ type Request struct {
 	forceRead            bool
 	busyForcing          bool
 	preWriteHeader       func()
+}
+
+func (reqst *Request) ReadFromOffset() int64 {
+	return reqst.readFromOffset
+}
+
+func (reqst *Request) ReadToOffset() int64 {
+	return reqst.readToOffset
 }
 
 func (reqst *Request) RequestHeader() http.Header {
@@ -214,6 +226,7 @@ func (reqst *Request) RequestContent() *iorw.BufferedRW {
 }
 
 func (reqst *Request) ExecuteRequest() {
+	var curResource *Resource = nil
 	var isAtv = reqst.IsActiveContent(reqst.r.URL.Path)
 	if reqst.bufRW == nil {
 		reqst.bufRW = iorw.NewBufferedRW(int64(maxbufsize), reqst)
@@ -258,14 +271,57 @@ func (reqst *Request) ExecuteRequest() {
 			}
 		}()
 		reqst.preWriteHeader = func() {
+			var statusCode = 200
+			var acceptedrange = ""
+			if isMultiMedia {
+				acceptedrange = "bytes"
+			}
 			reqst.ResponseHeader().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
 			if reqst.ResponseHeader().Get("Content-Type") == "" {
 				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
+			if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
+				var rangeunit = strings.Split(rangeval, "=")
+				if len(rangeunit) > 0 {
+					if reqst.ResponseHeader().Get("Accept-Ranges") == "" {
+						acceptedrange = rangeunit[0]
+						reqst.ResponseHeader().Set("Accept-Ranges", acceptedrange)
+					}
+					if len(rangeunit) > 1 {
+						if strings.Index(rangeunit[1], "=") > 0 {
+							if offset, offseterr := strconv.ParseInt(rangeunit[1][:strings.Index(rangeunit[1], "=")], 10, 64); offseterr == nil {
+								if tooffset, tooffseterr := strconv.ParseInt(rangeunit[1][strings.Index(rangeunit[1], "=")+1:], 10, 64); tooffseterr == nil {
+									reqst.readFromOffset = offset
+									reqst.readToOffset = tooffset
+									statusCode = 206
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if curResource!=nil {
+				if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
+					rxstlen := curResource.Size()
+					adjustOffsetBy:=int64(0)
+					if rxstlen>=(reqst.readToOffset-reqst.readFromOffset) {
+						adjustOffsetBy=(reqst.readToOffset-reqst.readFromOffset)
+					}
+					curResource.Seek(adjustOffsetBy,0)
+					reqst.readFromOffset+=adjustOffsetBy 
+				}
+			}
+
 			if isMultiMedia {
-				reqst.ResponseHeader().Set("Accept-Ranges", "bytes")
+				if reqst.ResponseHeader().Get("Content-Encoding") != "identity" {
+					reqst.ResponseHeader().Set("Content-Encoding", "identity")
+				}
+				if reqst.ResponseHeader().Get("Accept-Ranges") == "" {
+					reqst.ResponseHeader().Set("Accept-Ranges", acceptedrange)
+				}
 			} else {
-				reqst.w.WriteHeader(200)
+				reqst.w.WriteHeader(statusCode)
 			}
 		}
 	}
@@ -305,6 +361,7 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.lastResourcePathAdded = nextrs[:strings.LastIndex(nextrs, "/")+1]
 			}
 			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
+				curResource = nxtrs
 				if isFirtsRS {
 					if !isAtv {
 						reqst.ResponseHeader().Set("Content-Length", fmt.Sprintf("%d", nxtrs.Size()))
@@ -331,6 +388,7 @@ func (reqst *Request) ExecuteRequest() {
 						break
 					}
 				} else {
+					
 					reqst.Print(nxtrs)
 				}
 			}
@@ -660,6 +718,8 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 
 func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
 	reqst = &Request{
+		readFromOffset:       -1,
+		resourcesOffset:      -1,
 		isfirstResource:      true,
 		rqstlck:              &sync.Mutex{},
 		listener:             listener,

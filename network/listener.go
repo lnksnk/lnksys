@@ -35,14 +35,16 @@ func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
 	//srvmutex.Handle("/", hdnlr)
 
 	var serverh2 = &http2.Server{}
-
 	var server = &http.Server{
 		ReadHeaderTimeout: 20 * time.Second,
 		ReadTimeout:       1 * time.Minute,
 		IdleTimeout:       1 * time.Minute,
 		WriteTimeout:      2 * time.Minute,
 		Addr:              host,
-		Handler:           h2c.NewHandler(hndlr, serverh2)}
+		Handler:           h2c.NewHandler(hndlr, serverh2),
+		ConnState: func(cn net.Conn, cnstate http.ConnState) {
+
+		}}
 
 	server.SetKeepAlivesEnabled(true)
 	lstnrsvr = &lstnrserver{httpsvr: server, http2svr: serverh2}
@@ -99,8 +101,8 @@ func (lstnrsvr *lstnrserver) Shutdown() (err error) {
 /*Listener - Listener
  */
 type Listener struct {
-	servers        map[string]*lstnrserver
-	srvlck         *sync.Mutex
+	servers map[string]*lstnrserver
+	srvlck  *sync.Mutex
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
