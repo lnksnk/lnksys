@@ -348,7 +348,7 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				} else {
 					if isMultiMedia {
-						http.ServeContent(reqst.w, reqst.r, "", time.Now(), curResource)
+						http.ServeContent(reqst.w, reqst.r, "", time.Now(), nxtrs)
 					} else {
 						reqst.Print(nxtrs)
 					}
