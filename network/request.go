@@ -310,7 +310,7 @@ func (reqst *Request) ExecuteRequest() {
 				}
 
 				if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
-					rxstlen := curResource.Size()
+					//rxstlen := curResource.Size()
 					curResource.Seek(reqst.readFromOffset,0)
 					//if reqst.lastReadFromOffset>=reqst.readToOffset {
 						reqst.readFromOffset=-1
@@ -395,7 +395,7 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				} else {
 					if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
-						rxstlen := curResource.Size()
+						//rxstlen := curResource.Size()
 						curResource.Seek(reqst.readFromOffset,0)
 						//if reqst.lastReadFromOffset>=reqst.readToOffset {
 							reqst.readFromOffset=-1
