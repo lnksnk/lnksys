@@ -282,7 +282,7 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
 			if curResource!=nil {
-				if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
+				/*if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
 					var rangeunit = strings.Split(rangeval, "=")
 					if len(rangeunit) > 0 {
 						if reqst.ResponseHeader().Get("Accept-Ranges") == "" {
@@ -318,7 +318,7 @@ func (reqst *Request) ExecuteRequest() {
 						reqst.readFromOffset=-1
 						reqst.readToOffset=-1
 					//} 
-				}
+				}*/
 			}
 
 			if isMultiMedia {
