@@ -263,7 +263,7 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
 			if isMultiMedia {
-
+				reqst.ResponseHeader().Set("Accept-Ranges", "bytes")
 			} else {
 				reqst.w.WriteHeader(200)
 			}
@@ -331,15 +331,7 @@ func (reqst *Request) ExecuteRequest() {
 						break
 					}
 				} else {
-					if isMultiMedia {
-						if reqst.preWriteHeader != nil {
-							reqst.preWriteHeader()
-							reqst.preWriteHeader = nil
-						}
-						http.ServeContent(reqst.w, reqst.r, "", time.Now(), nxtrs)
-					} else {
-						reqst.Print(nxtrs)
-					}
+					reqst.Print(nxtrs)
 				}
 			}
 		} else {
