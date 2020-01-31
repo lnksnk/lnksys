@@ -310,6 +310,7 @@ func (reqst *Request) ExecuteRequest() {
 				}
 
 				if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
+					reqst.ResponseHeader().Set("Content-Range",acceptedrange+" "+fmt.Sprintf("%d-%d/*",reqst.readFromOffset,reqst.readToOffset)
 					//rxstlen := curResource.Size()
 					curResource.Seek(reqst.readFromOffset,0)
 					//if reqst.lastReadFromOffset>=reqst.readToOffset {
