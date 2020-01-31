@@ -26,6 +26,7 @@ const maxbufsize int = 81920
 type Request struct {
 	rqstlck               *sync.Mutex
 	readFromOffset        int64
+	lastReadFromOffset    int64
 	readToOffset          int64
 	rspnshdrs             map[string]string
 	bufRW                 *iorw.BufferedRW
@@ -310,18 +311,11 @@ func (reqst *Request) ExecuteRequest() {
 
 				if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
 					rxstlen := curResource.Size()
-					adjustOffsetBy:=int64(0)
-					if rxstlen>=(reqst.readToOffset-reqst.readFromOffset) {
-						adjustOffsetBy=(reqst.readToOffset-reqst.readFromOffset)
-					} else {
-						adjustOffsetBy=rxstlen
-					}
-					curResource.Seek(0,0)
-					reqst.readFromOffset+=adjustOffsetBy
-					if reqst.readFromOffset>=reqst.readToOffset {
+					curResource.Seek(reqst.readFromOffset,0)
+					//if reqst.lastReadFromOffset>=reqst.readToOffset {
 						reqst.readFromOffset=-1
 						reqst.readToOffset=-1
-					} 
+					//} 
 				}
 			}
 
@@ -402,18 +396,11 @@ func (reqst *Request) ExecuteRequest() {
 				} else {
 					if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
 						rxstlen := curResource.Size()
-						adjustOffsetBy:=int64(0)
-						if rxstlen>=(reqst.readToOffset-reqst.readFromOffset) {
-							adjustOffsetBy=(reqst.readToOffset-reqst.readFromOffset)
-						} else {
-							adjustOffsetBy=rxstlen
-						}
-						curResource.Seek(0,0)
-						reqst.readFromOffset+=adjustOffsetBy
-						if reqst.readFromOffset>=reqst.readToOffset {
+						curResource.Seek(reqst.readFromOffset,0)
+						//if reqst.lastReadFromOffset>=reqst.readToOffset {
 							reqst.readFromOffset=-1
 							reqst.readToOffset=-1
-						} 
+						//} 
 					}	
 					reqst.Print(nxtrs)
 				}
@@ -745,6 +732,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
 	reqst = &Request{
 		readFromOffset:       -1,
+		lastReadFromOffset:   -1,
 		resourcesOffset:      -1,
 		isfirstResource:      true,
 		rqstlck:              &sync.Mutex{},
