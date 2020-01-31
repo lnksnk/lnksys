@@ -280,28 +280,36 @@ func (reqst *Request) ExecuteRequest() {
 			if reqst.ResponseHeader().Get("Content-Type") == "" {
 				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
-			if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
-				var rangeunit = strings.Split(rangeval, "=")
-				if len(rangeunit) > 0 {
-					if reqst.ResponseHeader().Get("Accept-Ranges") == "" {
-						acceptedrange = rangeunit[0]
-						reqst.ResponseHeader().Set("Accept-Ranges", acceptedrange)
-					}
-					if len(rangeunit) > 1 {
-						if strings.Index(rangeunit[1], "-") > 0 {
-							if offset, offseterr := strconv.ParseInt(rangeunit[1][:strings.Index(rangeunit[1], "=")], 10, 64); offseterr == nil {
-								if tooffset, tooffseterr := strconv.ParseInt(rangeunit[1][strings.Index(rangeunit[1], "=")+1:], 10, 64); tooffseterr == nil {
-									reqst.readFromOffset = offset
-									reqst.readToOffset = tooffset
-									statusCode = 206
+			if curResource!=nil {
+				if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
+					var rangeunit = strings.Split(rangeval, "=")
+					if len(rangeunit) > 0 {
+						if reqst.ResponseHeader().Get("Accept-Ranges") == "" {
+							acceptedrange = rangeunit[0]
+							reqst.ResponseHeader().Set("Accept-Ranges", acceptedrange)
+						}
+						if len(rangeunit) > 1 {
+							if strings.Index(rangeunit[1], "-") > 0 {
+								if offset, offseterr := strconv.ParseInt(rangeunit[1][:strings.Index(rangeunit[1], "-")], 10, 64); offseterr == nil {
+									if rangeunit[1][strings.Index(rangeunit[1], "-")+1:]=="" {
+										if curResource!=nil {
+											reqst.readFromOffset = offset
+											reqst.readToOffset = curResource.Size()
+											statusCode = 206
+										}
+									} else {
+										if tooffset, tooffseterr := strconv.ParseInt(rangeunit[1][strings.Index(rangeunit[1], "-")+1:], 10, 64); tooffseterr == nil {
+											reqst.readFromOffset = offset
+											reqst.readToOffset = tooffset
+											statusCode = 206
+										}
+									}
 								}
 							}
 						}
 					}
 				}
-			}
 
-			if curResource!=nil {
 				if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
 					rxstlen := curResource.Size()
 					adjustOffsetBy:=int64(0)
