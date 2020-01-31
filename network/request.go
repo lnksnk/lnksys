@@ -326,9 +326,8 @@ func (reqst *Request) ExecuteRequest() {
 				if reqst.ResponseHeader().Get("Accept-Ranges") == "" {
 					reqst.ResponseHeader().Set("Accept-Ranges", acceptedrange)
 				}
-			} else {
-				reqst.w.WriteHeader(statusCode)
 			}
+			reqst.w.WriteHeader(statusCode)
 		}
 	}
 	if reqst.Active == nil {
