@@ -320,7 +320,6 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.lastResourcePathAdded = nextrs[:strings.LastIndex(nextrs, "/")+1]
 			}
 			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
-				curResource = nxtrs
 				if isFirtsRS {
 					if !isAtv {
 						reqst.ResponseHeader().Set("Content-Length", fmt.Sprintf("%d", nxtrs.Size()))
