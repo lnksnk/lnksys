@@ -355,6 +355,10 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				} else {
 					if isMultiMedia {
+						if reqst.preWriteHeader != nil {
+							reqst.preWriteHeader()
+							reqst.preWriteHeader = nil
+						}
 						http.ServeContent(reqst.w, reqst.r, "", time.Now(), nxtrs)
 					} else {
 						reqst.Print(nxtrs)
