@@ -292,11 +292,9 @@ func (reqst *Request) ExecuteRequest() {
 							if strings.Index(rangeunit[1], "-") > 0 {
 								if offset, offseterr := strconv.ParseInt(rangeunit[1][:strings.Index(rangeunit[1], "-")], 10, 64); offseterr == nil {
 									if rangeunit[1][strings.Index(rangeunit[1], "-")+1:]=="" {
-										if curResource!=nil {
 											reqst.readFromOffset = offset
 											reqst.readToOffset = curResource.Size()
 											statusCode = 206
-										}
 									} else {
 										if tooffset, tooffseterr := strconv.ParseInt(rangeunit[1][strings.Index(rangeunit[1], "-")+1:], 10, 64); tooffseterr == nil {
 											reqst.readFromOffset = offset
