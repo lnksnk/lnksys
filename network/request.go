@@ -271,10 +271,6 @@ func (reqst *Request) ExecuteRequest() {
 		}()
 		reqst.preWriteHeader = func() {
 			var statusCode = 200
-			var acceptedrange = ""
-			if isMultiMedia {
-				acceptedrange = "bytes"
-			}
 			reqst.ResponseHeader().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
 			if reqst.ResponseHeader().Get("Content-Type") == "" {
 				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
