@@ -313,9 +313,15 @@ func (reqst *Request) ExecuteRequest() {
 					adjustOffsetBy:=int64(0)
 					if rxstlen>=(reqst.readToOffset-reqst.readFromOffset) {
 						adjustOffsetBy=(reqst.readToOffset-reqst.readFromOffset)
+					} else {
+						adjustOffsetBy=rxstlen
 					}
-					curResource.Seek(adjustOffsetBy,0)
-					reqst.readFromOffset+=adjustOffsetBy 
+					curResource.Seek(rxstlen-adjustOffsetBy,0)
+					reqst.readFromOffset+=adjustOffsetBy
+					if reqst.readFromOffset>=reqst.readToOffset {
+						reqst.readFromOffset=-1
+						reqst.readToOffset=-1
+					} 
 				}
 			}
 
