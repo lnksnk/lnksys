@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
-	//"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -26,7 +25,6 @@ const maxbufsize int = 81920
 type Request struct {
 	rqstlck               *sync.Mutex
 	readFromOffset        int64
-	lastReadFromOffset    int64
 	readToOffset          int64
 	rspnshdrs             map[string]string
 	bufRW                 *iorw.BufferedRW
@@ -281,45 +279,6 @@ func (reqst *Request) ExecuteRequest() {
 			if reqst.ResponseHeader().Get("Content-Type") == "" {
 				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
-			if curResource!=nil {
-				/*if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
-					var rangeunit = strings.Split(rangeval, "=")
-					if len(rangeunit) > 0 {
-						if reqst.ResponseHeader().Get("Accept-Ranges") == "" {
-							acceptedrange = rangeunit[0]
-							reqst.ResponseHeader().Set("Accept-Ranges", acceptedrange)
-						}
-						if len(rangeunit) > 1 {
-							if strings.Index(rangeunit[1], "-") > 0 {
-								if offset, offseterr := strconv.ParseInt(rangeunit[1][:strings.Index(rangeunit[1], "-")], 10, 64); offseterr == nil {
-									if rangeunit[1][strings.Index(rangeunit[1], "-")+1:]=="" {
-											reqst.readFromOffset = offset
-											reqst.readToOffset = curResource.Size()
-											statusCode = 206
-									} else {
-										if tooffset, tooffseterr := strconv.ParseInt(rangeunit[1][strings.Index(rangeunit[1], "-")+1:], 10, 64); tooffseterr == nil {
-											reqst.readFromOffset = offset
-											reqst.readToOffset = tooffset
-											statusCode = 206
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-				if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
-					cntntrange:=acceptedrange+" "+fmt.Sprintf("%d-%d/%d",reqst.readFromOffset,reqst.readToOffset-1,reqst.readToOffset)
-					reqst.ResponseHeader().Set("Content-Range",cntntrange)
-					//rxstlen := curResource.Size()
-					curResource.Seek(reqst.readFromOffset,0)
-					//if reqst.lastReadFromOffset>=reqst.readToOffset {
-						reqst.readFromOffset=-1
-						reqst.readToOffset=-1
-					//} 
-				}*/
-			}
 
 			if isMultiMedia {
 				if reqst.ResponseHeader().Get("Content-Encoding") != "identity" {
@@ -328,8 +287,9 @@ func (reqst *Request) ExecuteRequest() {
 				if reqst.ResponseHeader().Get("Accept-Ranges") == "" {
 					reqst.ResponseHeader().Set("Accept-Ranges", acceptedrange)
 				}
+			} else {
+				reqst.w.WriteHeader(statusCode)
 			}
-			reqst.w.WriteHeader(statusCode)
 		}
 	}
 	if reqst.Active == nil {
@@ -395,15 +355,11 @@ func (reqst *Request) ExecuteRequest() {
 						break
 					}
 				} else {
-					if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
-						//rxstlen := curResource.Size()
-						curResource.Seek(reqst.readFromOffset,0)
-						//if reqst.lastReadFromOffset>=reqst.readToOffset {
-							reqst.readFromOffset=-1
-							reqst.readToOffset=-1
-						//} 
-					}	
-					reqst.Print(nxtrs)
+					if isMultiMedia {
+						http.ServeContent(reqst.w, reqst.r, "", time.Now(), curResource)
+					} else {
+						reqst.Print(nxtrs)
+					}
 				}
 			}
 		} else {
@@ -733,7 +689,6 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
 	reqst = &Request{
 		readFromOffset:       -1,
-		lastReadFromOffset:   -1,
 		resourcesOffset:      -1,
 		isfirstResource:      true,
 		rqstlck:              &sync.Mutex{},
