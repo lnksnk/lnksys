@@ -337,7 +337,15 @@ func (reqst *Request) ExecuteRequest() {
 							if nxtrs.activeInverse {
 								fnerr = reqst.Active.ACommit("<@", nxtrs, "@>")
 							} else {
-								fnerr = reqst.Active.ACommit(nxtrs)
+								if isMultiMedia {
+									if reqst.preWriteHeader != nil {
+										reqst.preWriteHeader()
+										reqst.preWriteHeader = nil
+									}
+									http.ServeContent(reqst.w, reqst.r, "", time.Now(), nxtrs)
+								} else {
+									fnerr = reqst.Active.ACommit(nxtrs)
+								}
 							}
 						}
 						return
