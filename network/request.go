@@ -304,6 +304,7 @@ func (reqst *Request) ExecuteRequest() {
 							curResource.Seek(reqst.readToOffset-rssize+(rssize), 0)
 						}
 					}
+					statusCode = 206
 				}
 			}
 
