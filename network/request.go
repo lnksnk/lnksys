@@ -390,11 +390,12 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				} else {
 					if isMultiMedia {
-						if reqst.preWriteHeader != nil {
+						/*if reqst.preWriteHeader != nil {
 							reqst.preWriteHeader()
 							reqst.preWriteHeader = nil
 						}
-						http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
+						http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)*/
+						reqst.Print(nxtrs)
 						for _, hdr := range reqst.RequestHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.r.Header.Get(hdr))
 						}
