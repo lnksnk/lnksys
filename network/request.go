@@ -300,7 +300,7 @@ func (reqst *Request) ExecuteRequest() {
 					reqst.ResponseHeader().Set("Content-Range", "bytes "+fmt.Sprintf("%d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rssize))
 
 					if reqst.lastReadToOffset < reqst.readToOffset {
-						curResource.Seek(reqst.readToOffset, 0)
+						curResource.Seek(reqst.readFromOffset, 0)
 					}
 					statusCode = 206
 				}
