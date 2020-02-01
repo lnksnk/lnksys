@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -27,7 +26,6 @@ type Request struct {
 	rqstlck               *sync.Mutex
 	readFromOffset        int64
 	readToOffset          int64
-	lastReadToOffset      int64
 	rspnshdrs             map[string]string
 	bufRW                 *iorw.BufferedRW
 	rw                    *iorw.RW
@@ -227,7 +225,7 @@ func (reqst *Request) RequestContent() *iorw.BufferedRW {
 }
 
 func (reqst *Request) ExecuteRequest() {
-	var curResource *Resource = nil
+	//var curResource *Resource = nil
 	var isAtv = reqst.IsActiveContent(reqst.r.URL.Path)
 	if reqst.bufRW == nil {
 		reqst.bufRW = iorw.NewBufferedRW(int64(maxbufsize), reqst)
@@ -278,39 +276,12 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
 
-			if curResource != nil {
-				if rangeval := reqst.RequestHeader().Get("Range"); strings.HasPrefix(rangeval, "bytes=") {
-					rangeval = rangeval[len("bytes="):]
-					if strings.Index(rangeval, "-") > 0 {
-						if noffsetFrom, noffseterr := strconv.ParseInt(rangeval[:strings.Index(rangeval, "-")], 10, 64); noffseterr == nil {
-							reqst.readFromOffset = noffsetFrom
-							reqst.lastReadToOffset = 0
-							rangeval = rangeval[strings.Index(rangeval, "-")+1:]
-							if rangeval == "" {
-								reqst.readToOffset = curResource.Size()
-							} else if noffsetFrom, noffseterr = strconv.ParseInt(rangeval, 10, 64); noffseterr == nil {
-								reqst.readToOffset = noffsetFrom
-							}
-						}
-					}
-				}
-
-				if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
-					rssize := curResource.Size()
-					reqst.ResponseHeader().Set("Content-Range", "bytes "+fmt.Sprintf("%d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rssize))
-
-					if reqst.lastReadToOffset < reqst.readToOffset {
-						curResource.Seek(reqst.readFromOffset, 0)
-					}
-					statusCode = 206
-				}
-			}
-
 			if isMultiMedia {
 				reqst.ResponseHeader().Set("Content-Encoding", "identity")
 				reqst.ResponseHeader().Set("Accept-Ranges", "bytes")
+			} else {
+				reqst.w.WriteHeader(statusCode)
 			}
-			reqst.w.WriteHeader(statusCode)
 		}
 	}
 	if reqst.Active == nil {
@@ -338,9 +309,6 @@ func (reqst *Request) ExecuteRequest() {
 	var isFirtsRS = true
 	for {
 		if len(reqst.resourcepaths) > 0 {
-			if curResource != nil {
-				curResource = nil
-			}
 			var nextrs = reqst.resourcepaths[0]
 			reqst.resourcepaths = reqst.resourcepaths[1:]
 			if !strings.HasPrefix(nextrs, "/") {
@@ -352,7 +320,6 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.lastResourcePathAdded = nextrs[:strings.LastIndex(nextrs, "/")+1]
 			}
 			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
-				curResource = nxtrs
 				if isFirtsRS {
 					if !isAtv {
 						reqst.ResponseHeader().Set("Content-Length", fmt.Sprintf("%d", nxtrs.Size()))
@@ -388,17 +355,18 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				} else {
 					if isMultiMedia {
-						/*if reqst.preWriteHeader != nil {
+						if reqst.preWriteHeader != nil {
 							reqst.preWriteHeader()
 							reqst.preWriteHeader = nil
 						}
-						http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)*/
-						reqst.Print(nxtrs)
+						http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
+						fmt.Println()
+						fmt.Println("REQUEST-HEADERS")
 						for _, hdr := range reqst.RequestHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.r.Header.Get(hdr))
 						}
 						fmt.Println()
-						fmt.Println()
+						fmt.Println("RESPONSE-HEADERS")
 						for _, hdr := range reqst.ResponseHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.w.Header().Get(hdr))
 						}
