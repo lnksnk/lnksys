@@ -359,7 +359,15 @@ func (reqst *Request) ExecuteRequest() {
 							reqst.preWriteHeader()
 							reqst.preWriteHeader = nil
 						}
-						http.ServeContent(reqst.w, reqst.r, "", time.Now(), nxtrs)
+						http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
+						for _, hdr := range reqst.RequestHeaders() {
+							fmt.Printf("%s:%s\r\n", hdr, reqst.r.Header.Get(hdr))
+						}
+						fmt.Println()
+						fmt.Println()
+						for _, hdr := range reqst.ResponseHeaders() {
+							fmt.Printf("%s:%s\r\n", hdr, reqst.w.Header().Get(hdr))
+						}
 					} else {
 						reqst.Print(nxtrs)
 					}
