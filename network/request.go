@@ -297,7 +297,7 @@ func (reqst *Request) ExecuteRequest() {
 
 				if reqst.readFromOffset > -1 && reqst.readFromOffset < reqst.readToOffset {
 					rssize := curResource.Size()
-					reqst.ResponseHeader().Set("Content-Range", "bytes "+fmt.Sprintf("%d-%d/%d", reqst.readToOffset, reqst.readToOffset-1, rssize))
+					reqst.ResponseHeader().Set("Content-Range", "bytes "+fmt.Sprintf("%d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rssize))
 
 					if reqst.lastReadToOffset < reqst.readToOffset {
 						curResource.Seek(reqst.readToOffset, 0)
