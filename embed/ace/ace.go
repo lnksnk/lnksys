@@ -20,7 +20,7 @@ const acejs string = `(function(){function o(n){var i=e;n&&(e[n]||(e[n]={}),i=e[
                         module.exports = window.ace;
                     }
                 });
-			})();`
+            })();`
 
 func AceJS() io.Reader {
 	return strings.NewReader(strings.Replace(acejs, "|'|", "`", -1))
