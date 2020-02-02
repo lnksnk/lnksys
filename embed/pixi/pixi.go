@@ -16,7 +16,7 @@ var PIXI=function(t){"use strict";var e="undefined"!=typeof globalThis?globalThi
 //# sourceMappingURL=pixi.min.js.map`
 
 func PixiJS() io.Reader {
-	return strings.NewReader(strings.replace(pixijs,"|'|","`",-1))
+	return strings.NewReader(strings.Replace(pixijs,"|'|","`",-1))
 }
 
 func PixiFindJS(pixifindjs string) io.Reader {
