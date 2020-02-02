@@ -758,7 +758,7 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 	}
 	if atvprsr.disablePsvRune {
 		runePrvR[0] = rne
-		processUnparsedActiveCode(curatvxctr, atvprsr, runePrvR[0])
+		processUnparsedActiveCode(curatvxctr, atvprsr, runePrvR)
 	} else {
 		if runelbli[1] == 0 && runelbli[0] < len(runelbl[0]) {
 			if runelbli[0] > 0 && runelbl[0][runelbli[0]-1] == runePrvR[0] && runelbl[0][runelbli[0]] != rne {
