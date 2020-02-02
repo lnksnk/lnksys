@@ -225,7 +225,7 @@ func (reqst *Request) RequestContent() *iorw.BufferedRW {
 }
 
 func (reqst *Request) ExecuteRequest() {
-	//var curResource *Resource = nil
+	var curResource *Resource = nil
 	var isAtv = reqst.IsActiveContent(reqst.r.URL.Path)
 	if reqst.bufRW == nil {
 		reqst.bufRW = iorw.NewBufferedRW(int64(maxbufsize), reqst)
@@ -320,6 +320,9 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.lastResourcePathAdded = nextrs[:strings.LastIndex(nextrs, "/")+1]
 			}
 			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
+				if curResource==nil || curResource != nxtrs {
+					curResource = nxtrs
+				}
 				if isFirtsRS {
 					if !isAtv {
 						if !isMultiMedia {
@@ -362,7 +365,7 @@ func (reqst *Request) ExecuteRequest() {
 							reqst.preWriteHeader = nil
 						}
 						http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
-						/*fmt.Println()
+						fmt.Println()
 						fmt.Println("REQUEST-HEADERS")
 						for _, hdr := range reqst.RequestHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.r.Header.Get(hdr))
@@ -371,7 +374,7 @@ func (reqst *Request) ExecuteRequest() {
 						fmt.Println("RESPONSE-HEADERS")
 						for _, hdr := range reqst.ResponseHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.w.Header().Get(hdr))
-						}*/
+						}
 					} else {
 						reqst.Print(nxtrs)
 					}
