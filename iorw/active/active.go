@@ -640,10 +640,10 @@ func (atv *Active) APrintln(a ...interface{}) {
 	atv.APrint("/r/n")
 }
 
-func capturePassiveContent(psvcntlvl int, atvprsr *activeParser, p []rune) (n int, err error) {
+func capturePassiveContent(curatvxctr func() *activeExecutor, atvprsr *activeParser, p []rune) (n int, err error) {
 	var pl = len(p)
 	if pl > 0 {
-		atvxctr := atvprsr.atvxctor(psvcntlvl)
+		atvxctr := curatvxctr()
 		for n < pl {
 			if atvxctr.foundCode {
 				if len(atvprsr.passiveRune) == 0 {
