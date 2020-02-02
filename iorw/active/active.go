@@ -825,7 +825,7 @@ func captureActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser,
 					var cl = copy(atvprsr.activeRune[atvprsr.activeRunei:atvprsr.activeRunei+(len(atvprsr.activeRune)-atvprsr.activeRunei)], p[n:n+(len(atvprsr.activeRune)-atvprsr.activeRunei)])
 					atvprsr.activeRunei += cl
 					n += cl
-					atvxctr.activeBufferOffset += int64(cl)
+					curatvxctr().activeBufferOffset += int64(cl)
 				} else if (pl - n) < (len(atvprsr.activeRune) - atvprsr.activeRunei) {
 					var cl = copy(atvprsr.activeRune[atvprsr.activeRunei:atvprsr.activeRunei+(pl-n)], p[n:n+(pl-n)])
 					atvprsr.activeRunei += cl
@@ -840,7 +840,6 @@ func captureActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser,
 				break
 			}
 		}
-		atvxctr = nil
 	}
 	return
 }
