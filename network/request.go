@@ -366,7 +366,7 @@ func (reqst *Request) ExecuteRequest() {
 							nxtrs.Close()
 						}()
 						if nxtrs.disableActive || disableActive {
-							reqst.Print(nxtrs)
+							iorw.PipedFPrint(reqst, nxtrs)
 						} else {
 							if nxtrs.activeInverse {
 								fnerr = reqst.Active.ACommit("<@", nxtrs, "@>")
