@@ -846,7 +846,7 @@ func captureActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser,
 
 func flushActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser, force bool) {
 	if atvprsr.runesToParsei > 0 {
-		captureActiveCode(curatvxctr(), atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+		captureActiveCode(curatvxctr, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
 		atvprsr.runesToParsei = 0
 	}
 	if force {
@@ -864,16 +864,16 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 				atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 				atvprsr.runesToParsei++
 				if atvprsr.runesToParsei == len(atvprsr.runesToParse) {
-					captureActiveCode(curatvxctr(), atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+					captureActiveCode(curatvxctr, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
 					atvprsr.runesToParsei = 0
 				}
 			} else {
 				if strings.TrimSpace(string(arune)) != "" {
 					if !curatvxctr().foundCode {
-						flushPassiveContent(curatvxctr(), atvprsr, false)
+						flushPassiveContent(curatvxctr, atvprsr, false)
 						curatvxctr().foundCode = true
 					} else {
-						flushPassiveContent(curatvxctr(), atvprsr, false)
+						flushPassiveContent(curatvxctr, atvprsr, false)
 					}
 					curatvxctr().hasCode = true
 					if len(atvprsr.runesToParse) == 0 {
@@ -882,7 +882,7 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 					atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 					atvprsr.runesToParsei++
 					if atvprsr.runesToParsei == len(atvprsr.runesToParse) {
-						captureActiveCode(curatvxctr(), atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+						captureActiveCode(curatvxctr, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
 						atvprsr.runesToParsei = 0
 					}
 				}
