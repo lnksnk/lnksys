@@ -395,7 +395,8 @@ func (reqst *Request) ExecuteRequest() {
 						}
 						//http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
 
-						io.CopyN(reqst, nxtrs, nxtrs.Size())
+						//io.CopyN(reqst, nxtrs, nxtrs.Size())
+						iorw.PipedFPrint(reqst, reqst.Print(nxtrs))
 						/*fmt.Println()
 						fmt.Println("REQUEST-HEADERS")
 						for _, hdr := range reqst.RequestHeaders() {
@@ -407,7 +408,7 @@ func (reqst *Request) ExecuteRequest() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.w.Header().Get(hdr))
 						}*/
 					} else {
-						io.Copy(reqst, nxtrs)
+						iorw.PipedFPrint(reqst, reqst.Print(nxtrs))
 						//reqst.Print(nxtrs)
 					}
 				}
