@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -277,8 +278,36 @@ func (reqst *Request) ExecuteRequest() {
 			}
 
 			if isMultiMedia {
+				acceptedranges := "bytes"
+				if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
+					if strings.Index(rangeval, "=") > 0 {
+						acceptedranges = strings.TrimSpace(rangeval[:strings.Index(rangeval, "=")])
+						rangeval = strings.TrimSpace(rangeval[strings.Index(rangeval, "=")+1:])
+						rangeSize := int64(0)
+						if strings.Index(rangeval, "-") > 0 {
+							if calcOffset, calcOffSetErr := strconv.ParseInt(rangeval[:strings.Index(rangeval, "-")], 10, 16); calcOffSetErr == nil {
+								rangeval = strings.TrimSpace(rangeval[strings.Index(rangeval, "-")+1:])
+								rangeSize = curResource.Size()
+								if rangeval == "" {
+									reqst.readFromOffset = calcOffset
+									reqst.readToOffset = rangeSize
+								} else if nextcalcOffset, nextcalcOffSetErr := strconv.ParseInt(rangeval, 10, 16); nextcalcOffSetErr == nil {
+									reqst.readFromOffset = calcOffset
+									reqst.readToOffset = nextcalcOffset
+								}
+
+							}
+						}
+						if reqst.readFromOffset < reqst.readToOffset {
+							reqst.ResponseHeader().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rangeSize))
+							statusCode = 206
+							curResource.Seek(reqst.readFromOffset, 0)
+						}
+					}
+				}
 				reqst.ResponseHeader().Set("Content-Encoding", "identity")
 				reqst.ResponseHeader().Set("Accept-Ranges", "bytes")
+				reqst.w.WriteHeader(statusCode)
 			} else {
 				reqst.w.WriteHeader(statusCode)
 			}
@@ -320,7 +349,7 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.lastResourcePathAdded = nextrs[:strings.LastIndex(nextrs, "/")+1]
 			}
 			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
-				if curResource==nil || curResource != nxtrs {
+				if curResource == nil || curResource != nxtrs {
 					curResource = nxtrs
 				}
 				if isFirtsRS {
@@ -360,11 +389,13 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				} else {
 					if isMultiMedia {
-						if reqst.preWriteHeader != nil {
+						/*if reqst.preWriteHeader != nil {
 							reqst.preWriteHeader()
 							reqst.preWriteHeader = nil
 						}
 						http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
+						*/
+						reqst.Print(nxtrs)
 						fmt.Println()
 						fmt.Println("REQUEST-HEADERS")
 						for _, hdr := range reqst.RequestHeaders() {
