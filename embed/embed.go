@@ -26,6 +26,7 @@ import (
 	typescript "github.com/efjoubert/lnksys/embed/typescript"
 	video "github.com/efjoubert/lnksys/embed/video"
 	webaction "github.com/efjoubert/lnksys/embed/webaction"
+	pixi "github.com/efjoubert/lnksys/embed/pixi"
 	iorw "github.com/efjoubert/lnksys/iorw"
 )
 
@@ -85,6 +86,8 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	} else if embedjs = anime.AnimeFindJS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = reveal.RevealFindJS(embedfindjs); embedjs != nil {
+		return
+	} else if embedjs = pixi.PixiFindJS(embedfindjs); embedjs != nil {
 		return
 	}
 	return
