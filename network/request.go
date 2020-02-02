@@ -271,7 +271,7 @@ func (reqst *Request) ExecuteRequest() {
 			}
 		}()
 		reqst.preWriteHeader = func() {
-			var statusCode = 200
+			var statusCode = http.StatusOK
 			reqst.ResponseHeader().Set("Last-Modified", time.Now().UTC().Format(http.TimeFormat))
 			if reqst.ResponseHeader().Get("Content-Type") == "" {
 				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
@@ -300,16 +300,16 @@ func (reqst *Request) ExecuteRequest() {
 						}
 						if reqst.readFromOffset < reqst.readToOffset {
 							reqst.ResponseHeader().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rangeSize))
-							statusCode = 206
+							statusCode = http.StatusPartialContent
 							curResource.Seek(reqst.readFromOffset, 0)
 						}
 					}
 				}
 				reqst.ResponseHeader().Set("Content-Encoding", "identity")
 				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
-				reqst.w.WriteHeader(http.StatusPartialContent)
+				reqst.w.WriteHeader(statusCode)
 			} else {
-				reqst.w.WriteHeader(http.StatusOK)
+				reqst.w.WriteHeader(statusCode)
 			}
 		}
 	}
