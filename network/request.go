@@ -285,13 +285,13 @@ func (reqst *Request) ExecuteRequest() {
 						rangeval = strings.TrimSpace(rangeval[strings.Index(rangeval, "=")+1:])
 						rangeSize := int64(0)
 						if strings.Index(rangeval, "-") > 0 {
-							if calcOffset, calcOffSetErr := strconv.ParseInt(rangeval[:strings.Index(rangeval, "-")], 10, 16); calcOffSetErr == nil {
+							if calcOffset, calcOffSetErr := strconv.ParseInt(rangeval[:strings.Index(rangeval, "-")], 10, 64); calcOffSetErr == nil {
 								rangeval = strings.TrimSpace(rangeval[strings.Index(rangeval, "-")+1:])
 								rangeSize = curResource.Size()
 								if rangeval == "" {
 									reqst.readFromOffset = calcOffset
 									reqst.readToOffset = rangeSize
-								} else if nextcalcOffset, nextcalcOffSetErr := strconv.ParseInt(rangeval, 10, 16); nextcalcOffSetErr == nil {
+								} else if nextcalcOffset, nextcalcOffSetErr := strconv.ParseInt(rangeval, 10, 64); nextcalcOffSetErr == nil {
 									reqst.readFromOffset = calcOffset
 									reqst.readToOffset = nextcalcOffset
 								}
