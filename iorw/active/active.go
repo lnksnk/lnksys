@@ -393,8 +393,10 @@ func preppingActiveParsing(atvprsr *activeParser) (atvxctr *activeExecutor) {
 	flushPassiveContent(atvprsr.parsingLevel, atvprsr, true)
 	if len(atvprsr.atvxctr) > atvprsr.parsingLevel {
 		if atvprsr.atvxctr[atvprsr.parsingLevel].foundCode {
-			flushActiveCode(atvprsr.parsingLevel, atvprsr, true)
 			atvxctr = atvprsr.atvxctr[atvprsr.parsingLevel]
+			flushActiveCode(func() *activeExecutor {
+				return atvxctr
+			}, atvprsr, true)
 			if atvxctr.pipeprgrminw != nil {
 				atvxctr.pipeprgrminw.Close()
 			}
@@ -679,17 +681,17 @@ func capturePassiveContent(psvcntlvl int, atvprsr *activeParser, p []rune) (n in
 	return
 }
 
-func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
+func flushPassiveContent(curatvxctr func() *activeExecutor, atvprsr *activeParser, force bool) {
 	if atvprsr.runesToParsei > 0 {
-		processUnparsedPassiveContent(psvlvl, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+		processUnparsedPassiveContent(curatvxctr(), atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
 		atvprsr.runesToParsei = 0
 	}
 
 	if atvprsr.psvRunesToParsei > 0 {
-		capturePassiveContent(psvlvl, atvprsr, atvprsr.psvRunesToParse[0:atvprsr.psvRunesToParsei])
+		capturePassiveContent(curatvxctr(), atvprsr, atvprsr.psvRunesToParse[0:atvprsr.psvRunesToParsei])
 		atvprsr.psvRunesToParsei = 0
 	}
-	atvxctr := atvprsr.atvxctor(psvlvl)
+	atvxctr := curatvxctr()
 	if atvxctr.foundCode {
 		if force {
 			if atvprsr.passiveRunei > 0 {
@@ -710,7 +712,9 @@ func flushPassiveContent(psvlvl int, atvprsr *activeParser, force bool) {
 				atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 				atvprsr.runesToParsei++
 				if atvprsr.runesToParsei == len(atvprsr.runesToParse) {
-					captureActiveCode(psvlvl, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+					captureActiveCode(func() *activeExecutor {
+						return atvxctr
+					}, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
 					atvprsr.runesToParsei = 0
 				}
 			}
