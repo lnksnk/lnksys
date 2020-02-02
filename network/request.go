@@ -299,15 +299,15 @@ func (reqst *Request) ExecuteRequest() {
 							}
 						}
 						if reqst.readFromOffset < reqst.readToOffset {
-							reqst.ResponseHeader().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rangeSize))
-							statusCode = http.StatusPartialContent
-							curResource.Seek(reqst.readFromOffset, 0)
+							//reqst.ResponseHeader().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rangeSize))
+							//statusCode = http.StatusPartialContent
+							//curResource.Seek(reqst.readFromOffset, 0)
 						}
 					}
 				}
 				reqst.ResponseHeader().Set("Content-Encoding", "identity")
 				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
-				reqst.w.WriteHeader(statusCode)
+				//reqst.w.WriteHeader(statusCode)
 			} else {
 				reqst.w.WriteHeader(statusCode)
 			}
@@ -392,9 +392,9 @@ func (reqst *Request) ExecuteRequest() {
 						/*if reqst.preWriteHeader != nil {
 							reqst.preWriteHeader()
 							reqst.preWriteHeader = nil
-						}
+						}*/
 						http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
-						*/
+
 						reqst.Print(nxtrs)
 						fmt.Println()
 						fmt.Println("REQUEST-HEADERS")
