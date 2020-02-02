@@ -6,14 +6,16 @@ import (
 	"sync"
 
 	ace "github.com/efjoubert/lnksys/embed/ace"
+	anime "github.com/efjoubert/lnksys/embed/anime"
+	reveal "github.com/efjoubert/lnksys/embed/reveal"
 	babel "github.com/efjoubert/lnksys/embed/babel"
 	babylon "github.com/efjoubert/lnksys/embed/babylon"
+	blockui "github.com/efjoubert/lnksys/embed/blockui"
 	bootstrap "github.com/efjoubert/lnksys/embed/bootstrap"
 	chart "github.com/efjoubert/lnksys/embed/chart"
 	falcor "github.com/efjoubert/lnksys/embed/falcor"
 	fontawesome "github.com/efjoubert/lnksys/embed/fontawesome"
 	jquery "github.com/efjoubert/lnksys/embed/jquery"
-	typescript "github.com/efjoubert/lnksys/embed/typescript"
 	jspanel "github.com/efjoubert/lnksys/embed/jspanel"
 	jss "github.com/efjoubert/lnksys/embed/jss"
 	materialdb "github.com/efjoubert/lnksys/embed/materialdb"
@@ -21,10 +23,10 @@ import (
 	require "github.com/efjoubert/lnksys/embed/require"
 	rxjs "github.com/efjoubert/lnksys/embed/rxjs"
 	three "github.com/efjoubert/lnksys/embed/three"
+	typescript "github.com/efjoubert/lnksys/embed/typescript"
 	video "github.com/efjoubert/lnksys/embed/video"
-	iorw "github.com/efjoubert/lnksys/iorw"
 	webaction "github.com/efjoubert/lnksys/embed/webaction"
-	blockui "github.com/efjoubert/lnksys/embed/blockui"
+	iorw "github.com/efjoubert/lnksys/iorw"
 )
 
 var cachedResources map[string]*iorw.BufferedRW
@@ -74,11 +76,15 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 		return
 	} else if embedjs = chart.ChartFindJS(embedfindjs); embedjs != nil {
 		return
-	} else if embedjs = webaction.WebactionFindJS(embedfindjs); embedjs!=nil {
+	} else if embedjs = webaction.WebactionFindJS(embedfindjs); embedjs != nil {
 		return
-	} else if embedjs = blockui.BlockuiFindJS(embedfindjs); embedjs!=nil {
+	} else if embedjs = blockui.BlockuiFindJS(embedfindjs); embedjs != nil {
 		return
-	} else if embedjs=typescript.TypescriptFindJS(embedfindjs); embedjs!=nil {
+	} else if embedjs = typescript.TypescriptFindJS(embedfindjs); embedjs != nil {
+		return
+	} else if embedjs = anime.AnimeFindJS(embedfindjs); embedjs != nil {
+		return
+	} else if embedjs = reveal.RevealFindJS(embedfindjs); embedjs != nil {
 		return
 	}
 	return
