@@ -307,9 +307,9 @@ func (reqst *Request) ExecuteRequest() {
 				}
 				reqst.ResponseHeader().Set("Content-Encoding", "identity")
 				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
-				reqst.w.WriteHeader(statusCode)
+				reqst.w.WriteHeader(http.StatusPartialContent)
 			} else {
-				reqst.w.WriteHeader(statusCode)
+				reqst.w.WriteHeader(http.StatusOK)
 			}
 		}
 	}
