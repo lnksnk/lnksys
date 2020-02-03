@@ -11,7 +11,7 @@ func PhaserJS() io.Reader {
 	return strings.NewReader(strings.Replace(phaserjs,"|'|","`",-1))
 }
 
-func PhaserindJS(phaserfindjs string) io.Reader {
+func PhaserFindJS(phaserfindjs string) io.Reader {
 	if strings.LastIndex(phaserfindjs, "/") >= 0 {
 		phaserfindjs = phaserfindjs[strings.LastIndex(phaserfindjs, "/")+1:]
 	}
