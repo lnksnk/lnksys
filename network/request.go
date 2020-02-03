@@ -260,7 +260,7 @@ func (reqst *Request) ExecuteRequest() {
 
 	var disableActive = false
 	var isMultiMedia = false
-	var acceptedencoding = reqst.RequestHeader().Get("Accept-Encoding")
+	//var acceptedencoding = reqst.RequestHeader().Get("Accept-Encoding")
 	reqst.PopulateParameters()
 	if reqst.params.ContainsParameter("disable-active") {
 		if disableAtv := reqst.params.Parameter("disable-active"); len(disableAtv) == 1 && strings.ToUpper(disableAtv[0]) == "Y" {
