@@ -27,6 +27,7 @@ import (
 	video "github.com/efjoubert/lnksys/embed/video"
 	webaction "github.com/efjoubert/lnksys/embed/webaction"
 	pixi "github.com/efjoubert/lnksys/embed/pixi"
+	pdf "github.com/efjoubert/lnksys/embed/pdf"
 	iorw "github.com/efjoubert/lnksys/iorw"
 )
 
@@ -88,6 +89,8 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	} else if embedjs = reveal.RevealFindJS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = pixi.PixiFindJS(embedfindjs); embedjs != nil {
+		return
+	} else if embedjs = pdf.PdfFindJS(embedfindjs); embedjs != nil {
 		return
 	}
 	return
