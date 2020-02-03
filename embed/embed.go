@@ -28,6 +28,7 @@ import (
 	webaction "github.com/efjoubert/lnksys/embed/webaction"
 	pixi "github.com/efjoubert/lnksys/embed/pixi"
 	pdf "github.com/efjoubert/lnksys/embed/pdf"
+	phaser "github.com/efjoubert/lnksys/embed/phaser"
 	iorw "github.com/efjoubert/lnksys/iorw"
 )
 
@@ -91,6 +92,8 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	} else if embedjs = pixi.PixiFindJS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = pdf.PdfFindJS(embedfindjs); embedjs != nil {
+		return
+	} else if embedjs = phaser.PhaserFindJS(embedfindjs); embedjs != nil {
 		return
 	}
 	return
