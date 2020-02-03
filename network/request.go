@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -176,7 +177,7 @@ func (reqst *Request) Interupted() bool {
 }
 
 func HttpRequestHandler(reqst *Request) (hndlr http.Handler) {
-	hndlr = reqst
+	hdnlr = reqst
 	return
 }
 
@@ -260,7 +261,7 @@ func (reqst *Request) ExecuteRequest() {
 
 	var disableActive = false
 	var isMultiMedia = false
-	//var acceptedencoding = reqst.RequestHeader().Get("Accept-Encoding")
+	var acceptedencoding = reqst.RequestHeader().Get("Accept-Encoding")
 	reqst.PopulateParameters()
 	if reqst.params.ContainsParameter("disable-active") {
 		if disableAtv := reqst.params.Parameter("disable-active"); len(disableAtv) == 1 && strings.ToUpper(disableAtv[0]) == "Y" {
@@ -305,7 +306,7 @@ func (reqst *Request) ExecuteRequest() {
 			}
 
 			if isMultiMedia {
-				/*acceptedranges := "bytes"
+				acceptedranges := "bytes"
 				if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
 					if strings.Index(rangeval, "=") > 0 {
 						acceptedranges = strings.TrimSpace(rangeval[:strings.Index(rangeval, "=")])
@@ -334,13 +335,13 @@ func (reqst *Request) ExecuteRequest() {
 				}
 				reqst.ResponseHeader().Set("Content-Encoding", "identity")
 				acceptedencoding = "identity"
-				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)*/
+				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
 			}
-			/*if strings.Index(acceptedencoding, "gzip") >= 0 {
+			if strings.Index(acceptedencoding, "gzip") >= 0 {
 				reqst.ResponseHeader().Set("Content-Encoding", "gzip")
 				gzw = &gzipResponseWriter{ResponseWriter: reqst.w, Writer: gzip.NewWriter(reqst.w)}
 				reqst.w = gzw
-			}*/
+			}
 			reqst.w.WriteHeader(statusCode)
 		}
 	}
@@ -424,7 +425,7 @@ func (reqst *Request) ExecuteRequest() {
 							reqst.preWriteHeader()
 							reqst.preWriteHeader = nil
 						}
-						http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
+						//http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
 						/*fmt.Println()
 						fmt.Println("REQUEST-HEADERS")
 						for _, hdr := range reqst.RequestHeaders() {
