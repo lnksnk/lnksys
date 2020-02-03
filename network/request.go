@@ -254,6 +254,7 @@ func (reqst *Request) RequestContent() *iorw.BufferedRW {
 }
 
 func (reqst *Request) ExecuteRequest() {
+	var gzw *gzipResponseWriter
 	var curResource *Resource = nil
 	var isAtv = reqst.IsActiveContent(reqst.r.URL.Path)
 	if reqst.bufRW == nil {
@@ -340,7 +341,8 @@ func (reqst *Request) ExecuteRequest() {
 			}
 			if strings.Index(acceptedencoding, "gzip") >= 0 {
 				reqst.ResponseHeader().Set("Content-Encoding", "gzip")
-				reqst.w = &gzipResponseWriter{ResponseWriter: reqst.w, Writer: gzip.NewWriter(reqst.w)}
+				gzw = &gzipResponseWriter{ResponseWriter: reqst.w, Writer: gzip.NewWriter(reqst.w)}
+				reqst.w = gzw
 			}
 			reqst.w.WriteHeader(statusCode)
 		}
@@ -448,6 +450,9 @@ func (reqst *Request) ExecuteRequest() {
 		} else {
 			break
 		}
+	}
+	if gzw != nil {
+		gzw.Flush()
 	}
 }
 
