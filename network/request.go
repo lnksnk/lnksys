@@ -37,6 +37,9 @@ func (w *gzipResponseWriter) CloseNotify() <-chan bool {
 
 func (w *gzipResponseWriter) Write(b []byte) (n int, err error) {
 	n, err = w.Writer.Write(b)
+	if err == io.EOF {
+		w.Flush()
+	}
 	return
 }
 
