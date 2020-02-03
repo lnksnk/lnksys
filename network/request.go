@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -278,7 +279,7 @@ func (reqst *Request) ExecuteRequest() {
 
 			if isMultiMedia {
 				acceptedranges := "bytes"
-				/*if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
+				if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
 					if strings.Index(rangeval, "=") > 0 {
 						acceptedranges = strings.TrimSpace(rangeval[:strings.Index(rangeval, "=")])
 						rangeval = strings.TrimSpace(rangeval[strings.Index(rangeval, "=")+1:])
@@ -302,10 +303,10 @@ func (reqst *Request) ExecuteRequest() {
 							curResource.Seek(reqst.readFromOffset, 0)
 						}
 					}
-				}*/
+				}
 				reqst.ResponseHeader().Set("Content-Encoding", "identity")
 				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
-				//reqst.w.WriteHeader(statusCode)
+				reqst.w.WriteHeader(statusCode)
 			} else {
 				reqst.w.WriteHeader(statusCode)
 			}
@@ -387,27 +388,24 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				} else {
 					if isMultiMedia {
-						if reqst.preWriteHeader != nil {
+						/*if reqst.preWriteHeader != nil {
 							reqst.preWriteHeader()
 							reqst.preWriteHeader = nil
-						}
-
-						fmt.Println()
+						}*/
+						//http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
+						/*fmt.Println()
 						fmt.Println("REQUEST-HEADERS")
 						for _, hdr := range reqst.RequestHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.r.Header.Get(hdr))
 						}
-						fmt.Println()
-
-						http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
-
+						fmt.Println()*/
 						//io.CopyN(reqst, nxtrs, nxtrs.Size())
-						//iorw.FPrint(reqst, nxtrs)
+						iorw.FPrint(reqst, nxtrs)
 
-						fmt.Println("RESPONSE-HEADERS")
+						/*fmt.Println("RESPONSE-HEADERS")
 						for _, hdr := range reqst.ResponseHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.w.Header().Get(hdr))
-						}
+						}*/
 					} else {
 						iorw.PipedFPrint(reqst, nxtrs)
 						//reqst.Print(nxtrs)
