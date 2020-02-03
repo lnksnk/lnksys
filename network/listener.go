@@ -101,7 +101,6 @@ func (lstnrsvr *lstnrserver) Shutdown() (err error) {
 	lstnrsvr.httpsvr.Close()
 	lstnrsvr.httpsvr = nil
 	lstnrsvr.http2svr = nil
-	//lstnrsvr.srvmx = nil
 	return
 }
 
