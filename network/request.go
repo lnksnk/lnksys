@@ -2,9 +2,11 @@ package network
 
 import (
 	"bufio"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -16,10 +18,27 @@ import (
 	iorw "github.com/efjoubert/lnksys/iorw"
 	active "github.com/efjoubert/lnksys/iorw/active"
 
-	//gzip "github.com/efjoubert/lnksys/network/gzip"
 	mime "github.com/efjoubert/lnksys/network/mime"
 	parameters "github.com/efjoubert/lnksys/parameters"
 )
+
+type gzipResponseWriter struct {
+	io.Writer
+	http.ResponseWriter
+}
+
+func (w *gzipResponseWriter) WriteHeader(status int) {
+	w.Header().Del("Content-Length")
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *gzipResponseWriter) CloseNotify() <-chan bool {
+	return w.ResponseWriter.(http.CloseNotifier).CloseNotify()
+}
+
+func (w *gzipResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}
 
 const maxbufsize int = 81920
 
@@ -234,6 +253,7 @@ func (reqst *Request) ExecuteRequest() {
 
 	var disableActive = false
 	var isMultiMedia = false
+	var acceptedencoding = reqst.RequestHeader().Get("Accept-Encoding")
 	reqst.PopulateParameters()
 	if reqst.params.ContainsParameter("disable-active") {
 		if disableAtv := reqst.params.Parameter("disable-active"); len(disableAtv) == 1 && strings.ToUpper(disableAtv[0]) == "Y" {
@@ -306,11 +326,13 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				}
 				reqst.ResponseHeader().Set("Content-Encoding", "identity")
+				acceptedencoding = "identity"
 				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
-				reqst.w.WriteHeader(statusCode)
-			} else {
-				reqst.w.WriteHeader(statusCode)
 			}
+			if strings.Index(acceptedencoding, "gzip") > 0 {
+				reqst.w = &gzipResponseWriter{ResponseWriter: reqst.w, Writer: gzip.NewWriter(ioutil.Discard)}
+			}
+			reqst.w.WriteHeader(statusCode)
 		}
 	}
 	if reqst.Active == nil {
