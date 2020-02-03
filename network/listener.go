@@ -157,7 +157,7 @@ func (lstnr *Listener) ListenAndServer(host string) {
 		if _, hssrv := lstnr.servers[host]; hssrv {
 			return
 		}
-		var server = newLstnrServer(host, lstnr)
+		var server = newLstnrServer(host, lstnr, true)
 		server.listenAndServe()
 		lstnr.servers[host] = server
 
