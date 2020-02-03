@@ -176,7 +176,7 @@ func (reqst *Request) Interupted() bool {
 }
 
 func HttpRequestHandler(reqst *Request) (hndlr http.Handler) {
-	hdnlr = reqst
+	hndlr = reqst
 	return
 }
 
