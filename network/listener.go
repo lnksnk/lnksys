@@ -3,15 +3,17 @@ package network
 import (
 	"context"
 	"net/http"
+
 	//"runtime"
 	"sync"
 	"time"
 
+	"net"
+	"os"
+
 	active "github.com/efjoubert/lnksys/iorw/active"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
-	"net"
-	"os"
 )
 
 /*Listening interface
@@ -28,20 +30,25 @@ type lstnrserver struct {
 	sema chan struct{}
 }
 
-func newLstnrServer(host string, hndlr http.Handler) (lstnrsvr *lstnrserver) {
+func newLstnrServer(host string, hndlr http.Handler, ish2 ...bool) (lstnrsvr *lstnrserver) {
 
 	//var srvmutex = http.NewServeMux()
 
 	//srvmutex.Handle("/", hdnlr)
 
 	var serverh2 = &http2.Server{}
+
+	if len(ish2) == 1 && ish2[0] {
+		hndlr = h2c.NewHandler(hndlr, serverh2)
+	}
+
 	var server = &http.Server{
 		ReadHeaderTimeout: 20 * time.Second,
 		ReadTimeout:       1 * time.Minute,
 		IdleTimeout:       1 * time.Minute,
 		WriteTimeout:      2 * time.Minute,
 		Addr:              host,
-		Handler:           h2c.NewHandler(hndlr, serverh2),
+		Handler:           hndlr,
 		ConnState: func(cn net.Conn, cnstate http.ConnState) {
 
 		}}
