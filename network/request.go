@@ -401,7 +401,7 @@ func (reqst *Request) ExecuteRequest() {
 						}
 						fmt.Println()*/
 						//io.CopyN(reqst, nxtrs, nxtrs.Size())
-						iorw.FPrint(reqst, nxtrs)
+						iorw.PipedFPrint(reqst, nxtrs)
 
 						/*fmt.Println("RESPONSE-HEADERS")
 						for _, hdr := range reqst.ResponseHeaders() {
