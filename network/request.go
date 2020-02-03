@@ -329,6 +329,7 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
 			}
 			if strings.Index(acceptedencoding, "gzip") >= 0 {
+				reqst.ResponseHeader().Set("Content-Encoding", "gzip")
 				reqst.w = &gzipResponseWriter{ResponseWriter: reqst.w, Writer: gzip.NewWriter(reqst.w)}
 			}
 			reqst.w.WriteHeader(statusCode)
