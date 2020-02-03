@@ -35,8 +35,15 @@ func (w *gzipResponseWriter) CloseNotify() <-chan bool {
 	return w.ResponseWriter.(http.CloseNotifier).CloseNotify()
 }
 
-func (w *gzipResponseWriter) Write(b []byte) (int, error) {
-	return w.Writer.Write(b)
+func (w *gzipResponseWriter) Write(b []byte) (n int, err error) {
+	n, err = w.Writer.Write(b)
+	return
+}
+
+func (w *gzipResponseWriter) Flush() {
+	if f, fok := w.ResponseWriter.(http.Flusher); fok {
+		f.Flush()
+	}
 }
 
 const maxbufsize int = 81920
