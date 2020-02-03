@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -330,7 +329,7 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
 			}
 			if strings.Index(acceptedencoding, "gzip") >= 0 {
-				reqst.w = &gzipResponseWriter{ResponseWriter: reqst.w, Writer: gzip.NewWriter(ioutil.Discard)}
+				reqst.w = &gzipResponseWriter{ResponseWriter: reqst.w, Writer: gzip.NewWriter(reqst.w)}
 			}
 			reqst.w.WriteHeader(statusCode)
 		}
