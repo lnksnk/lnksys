@@ -299,6 +299,7 @@ func (reqst *Request) ExecuteRequest() {
 							}
 						}
 						if reqst.readFromOffset < reqst.readToOffset {
+							reqst.ResponseHeader().Set("Content-Length", fmt.Sprintf("%d", reqst.readToOffset-reqst.readFromOffset))
 							reqst.ResponseHeader().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rangeSize))
 							statusCode = http.StatusPartialContent
 							curResource.Seek(reqst.readFromOffset, 0)
