@@ -37,21 +37,18 @@ func (w *gzipResponseWriter) CloseNotify() <-chan bool {
 
 func (w *gzipResponseWriter) Write(b []byte) (n int, err error) {
 	n, err = w.Writer.Write(b)
-	if err == io.EOF {
-		if gzw, gzwok := w.Writer.(*gzip.Writer); gzwok {
-			err = gzw.Flush()
-		}
-		if err == nil {
-			w.Flush()
-			err = io.EOF
-		}
-	}
 	return
 }
 
 func (w *gzipResponseWriter) Flush() {
-	if f, fok := w.ResponseWriter.(http.Flusher); fok {
-		f.Flush()
+	err := error(nil)
+	if gzw, gzwok := w.Writer.(*gzip.Writer); gzwok {
+		err = gzw.Flush()
+	}
+	if err == nil {
+		if f, fok := w.ResponseWriter.(http.Flusher); fok {
+			f.Flush()
+		}
 	}
 }
 
