@@ -305,7 +305,9 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				}
 				reqst.ResponseHeader().Set("Content-Encoding", "identity")
-				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
+				if reqst.readFromOffset == -1 && reqst.readToOffset == -1 {
+					reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
+				}
 				reqst.w.WriteHeader(statusCode)
 			} else {
 				reqst.w.WriteHeader(statusCode)
