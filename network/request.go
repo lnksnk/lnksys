@@ -295,7 +295,6 @@ func (reqst *Request) ExecuteRequest() {
 									reqst.readFromOffset = calcOffset
 									reqst.readToOffset = nextcalcOffset
 								}
-
 							}
 						}
 						if reqst.readFromOffset < reqst.readToOffset {
@@ -394,15 +393,15 @@ func (reqst *Request) ExecuteRequest() {
 							reqst.preWriteHeader = nil
 						}
 						//http.ServeContent(reqst.w, reqst.r, reqst.r.URL.Path, time.Now(), nxtrs)
-
-						//io.CopyN(reqst, nxtrs, nxtrs.Size())
-						iorw.PipedFPrint(reqst, nxtrs)
 						fmt.Println()
 						fmt.Println("REQUEST-HEADERS")
 						for _, hdr := range reqst.RequestHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.r.Header.Get(hdr))
 						}
 						fmt.Println()
+						//io.CopyN(reqst, nxtrs, nxtrs.Size())
+						iorw.FPrint(reqst, nxtrs)
+
 						fmt.Println("RESPONSE-HEADERS")
 						for _, hdr := range reqst.ResponseHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.w.Header().Get(hdr))
