@@ -397,7 +397,7 @@ func (reqst *Request) ExecuteRequest() {
 
 						//io.CopyN(reqst, nxtrs, nxtrs.Size())
 						iorw.PipedFPrint(reqst, nxtrs)
-						/*fmt.Println()
+						fmt.Println()
 						fmt.Println("REQUEST-HEADERS")
 						for _, hdr := range reqst.RequestHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.r.Header.Get(hdr))
@@ -406,7 +406,7 @@ func (reqst *Request) ExecuteRequest() {
 						fmt.Println("RESPONSE-HEADERS")
 						for _, hdr := range reqst.ResponseHeaders() {
 							fmt.Printf("%s:%s\r\n", hdr, reqst.w.Header().Get(hdr))
-						}*/
+						}
 					} else {
 						iorw.PipedFPrint(reqst, nxtrs)
 						//reqst.Print(nxtrs)
