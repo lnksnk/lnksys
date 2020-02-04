@@ -16,9 +16,9 @@ type activeExecutor struct {
 	activeBuffer            [][]rune
 	activeBufferOffset      int64
 	lastActiveBufferOffset  int64
-	foundCdeTxt bool
-	cdeTxt rune
-	pvrCdeTxt rune
+	foundCdeTxt             bool
+	cdeTxt                  rune
+	pvrCdeTxt               rune
 	hasCode                 bool
 	foundCode               bool
 	passiveBufferOffset     int64
@@ -34,7 +34,7 @@ type activeExecutor struct {
 }
 
 func newActiveExecutor(atv *Active) (atvxctr *activeExecutor) {
-	atvxctr = &activeExecutor{atv: atv, foundCode: false, hasCode: false, passiveBufferOffset: 0, lastPassiveBufferOffset: 0, activeBufferOffset: 0, lastActiveBufferOffset: 0,foundCdeTxt:false,cdeTxt:rune(0)}
+	atvxctr = &activeExecutor{atv: atv, foundCode: false, hasCode: false, passiveBufferOffset: 0, lastPassiveBufferOffset: 0, activeBufferOffset: 0, lastActiveBufferOffset: 0, foundCdeTxt: false, cdeTxt: rune(0)}
 	return
 }
 
@@ -863,22 +863,22 @@ func flushActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser, f
 
 func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser, p []rune) (err error) {
 	if len(p) > 0 {
-		atvxctr:=curatvxctr()
-		foundCdeTxt:=atvxctr.foundCdeTxt
-		cdeTxt:=atvxctr.cdeTxt
-		pvrCdeTxt:=atvxctr.pvrCdeTxt
+		atvxctr := curatvxctr()
+		foundCdeTxt := atvxctr.foundCdeTxt
+		cdeTxt := atvxctr.cdeTxt
+		pvrCdeTxt := atvxctr.pvrCdeTxt
 		for _, arune := range p {
 			if foundCdeTxt {
-				if pvrCdeTxt!=rune('\\') && cdeTxt==arune {
-					foundCdeTxt=false
+				if pvrCdeTxt != rune('\\') && cdeTxt == arune {
+					foundCdeTxt = false
 				}
 			} else {
-				if pvrCdeTxt!=rune('\') && arune==rune('\"') || arune==rune('\'') {
-					cdeTxt=arune
-					foundCdeTxt=true
+				if pvrCdeTxt != rune('\\') && arune == rune('"') || arune == rune('\'') {
+					cdeTxt = arune
+					foundCdeTxt = true
 				}
 			}
-			pvrCdeTxt=arune
+			pvrCdeTxt = arune
 			if atvxctr.hasCode {
 				atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 				atvprsr.runesToParsei++
@@ -907,10 +907,10 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 				}
 			}
 		}
-		atvxctr=nil
-		atvxctr.foundCdeTxt=foundCdeTxt
-		atvxctr.cdeTxt=cdeTxt
-		atvxctr.pvrCdeTxt=pvrCdeTxt
+		atvxctr = nil
+		atvxctr.foundCdeTxt = foundCdeTxt
+		atvxctr.cdeTxt = cdeTxt
+		atvxctr.pvrCdeTxt = pvrCdeTxt
 	}
 	return
 }
