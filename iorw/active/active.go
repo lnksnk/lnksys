@@ -867,6 +867,8 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 			if foundCdeTxt {
 				if pvrCdeTxt != rune('\\') && cdeTxt == arune {
 					foundCdeTxt = false
+					cdeTxt = rune(0)
+					pvrCdeTxt = rune(0)
 				}
 			} else {
 				if pvrCdeTxt != rune('\\') && arune == rune('"') || arune == rune('\'') {
