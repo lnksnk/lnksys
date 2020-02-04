@@ -863,18 +863,23 @@ func flushActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser, f
 
 func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser, p []rune) (err error) {
 	if len(p) > 0 {
+		atvxctr:=curatvxctr()
+		foundCdeTxt:=atvxctr.foundCdeTxt
+		cdeTxt:=atvxctr.cdeTxt
+		pvrCdeTxt:=atvxctr.pvrCdeTxt
 		for _, arune := range p {
 			if foundCdeTxt {
-				if cdeTxt==arune {
+				if pvrCdeTxt!=rune('\\') && cdeTxt==arune {
 					foundCdeTxt=false
 				}
 			} else {
-				if arune==rune('\"') || arune==rune('\'') {
+				if pvrCdeTxt!=rune('\\') && arune==rune('\"') || arune==rune('\'') {
 					cdeTxt=arune
 					foundCdeTxt=true
 				}
 			}
-			if curatvxctr().hasCode {
+			pvrCdeTxt=arune
+			if atvxctr.hasCode {
 				atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 				atvprsr.runesToParsei++
 				if atvprsr.runesToParsei == len(atvprsr.runesToParse) {
@@ -883,13 +888,13 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 				}
 			} else {
 				if strings.TrimSpace(string(arune)) != "" {
-					if !curatvxctr().foundCode {
+					if !atvxctr.foundCode {
 						flushPassiveContent(curatvxctr, atvprsr, false)
-						curatvxctr().foundCode = true
+						atvxctr.foundCode = true
 					} else {
 						flushPassiveContent(curatvxctr, atvprsr, false)
 					}
-					curatvxctr().hasCode = true
+					atvxctr.hasCode = true
 					if len(atvprsr.runesToParse) == 0 {
 						atvprsr.runesToParse = make([]rune, 81920)
 					}
@@ -902,6 +907,10 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 				}
 			}
 		}
+		atvxctr=nil
+		atvxctr.foundCdeTxt=foundCdeTxt
+		atvxctr.cdeTxt=cdeTxt
+		atvxctr.pvrCdeTxt=pvrCdeTxt
 	}
 	return
 }
