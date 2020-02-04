@@ -505,33 +505,6 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 				nxtprm = <-atvxctr.prgrm
 				acerr = <-atvxctr.prgrmerr
 
-				/*
-					var nxtprmerr error = nil
-					pipeatvr, pipeatvw := io.Pipe()
-					go func() {
-						defer func() {
-							pipeatvw.Close()
-						}()
-						for len(atvxctr.activeBuffer) > 0 {
-							cde := string(atvxctr.activeBuffer[0])
-							code += cde
-							atvxctr.activeBuffer = atvxctr.activeBuffer[1:]
-							iorw.FPrint(pipeatvw, cde)
-						}
-					}()
-					var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", pipeatvr, 0)
-					pipeatvr.Close()
-					pipeatvr = nil
-					pipeatvw = nil
-					if parsedprgmerr == nil {
-						nxtprm, nxtprmerr = goja.CompileAST(parsedprgm, false)
-					} else {
-						nxtprmerr = parsedprgmerr
-						fmt.Println(nxtprmerr)
-						fmt.Println(code)
-						acerr = nxtprmerr
-					}*/
-
 				if acerr == nil && nxtprm != nil {
 					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
 					if vmerr != nil {
@@ -545,65 +518,6 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 	}
 	return
 }
-
-/*func commitActiveExecutor(atv *Active, atvxctr *activeExecutor) (acerr error) {
-	if atv != nil {
-		if atv.vm == nil {
-			atv.vm = goja.New()
-		}
-		atv.vm.Set("out", atv)
-		atv.vm.Set("CPrint", func(a ...interface{}) {
-			cPrint(a...)
-		})
-		atv.vm.Set("CPrintln", func(a ...interface{}) {
-			cPrint(a...)
-			cPrint("\r\n")
-		})
-		atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
-			atvxctr.PassivePrint(atv, fromOffset, toOffset)
-		})
-		if len(atv.activeMap) > 0 {
-			for k, v := range atv.activeMap {
-				if atv.vm.Get(k) != v {
-					atv.vm.Set(k, v)
-				}
-			}
-		}
-		if len(activeGlobalMap) > 0 {
-			for k, v := range activeGlobalMap {
-				if atv.vm.Get(k) != v {
-					atv.vm.Set(k, v)
-				}
-			}
-		}
-		var code = atvxctr.activeCode().String()
-		var coderdr = strings.NewReader(code)
-		var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", coderdr, 0)
-		if parsedprgmerr == nil {
-			var prgm, prgmerr = goja.CompileAST(parsedprgm, false)
-			if prgmerr == nil {
-				var _, vmerr = atv.vm.RunProgram(prgm)
-				if vmerr != nil {
-					fmt.Println(vmerr)
-					fmt.Println(code)
-					acerr = vmerr
-				}
-			} else {
-				fmt.Println(prgmerr)
-				fmt.Println(code)
-				acerr = prgmerr
-			}
-			prgm = nil
-		} else {
-			fmt.Println(parsedprgmerr)
-			fmt.Println(code)
-			acerr = parsedprgmerr
-		}
-		parsedprgm = nil
-		atv.vm = nil
-	}
-	return acerr
-}*/
 
 func (atvprsr *activeParser) PassivePrint(psvbuflvl int, fromOffset int64, toOffset int64) {
 	if len(atvprsr.atvxctr) > psvbuflvl {
@@ -754,13 +668,11 @@ func processUnparsedPassiveContent(curatvxctr func() *activeExecutor, atvprsr *a
 func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []int, runePrvR []rune) {
 	var atvxctr *activeExecutor = nil
 	var curatvxctr = func() *activeExecutor {
-		if atvxctr == nil {
-			atvxctr = atvprsr.atvxctor(processlvl)
-		}
-		return atvxctr
+		return atvprsr.atvxctor(processlvl)
 	}
 
-	if (atvxctr == nil || !atvxctr.foundCdeTxt) && (runelbli[1] == 0 && runelbli[0] < len(runelbl[0])) {
+	atvxctr = curatvxctr()
+	if (!atvxctr.foundCdeTxt) && (runelbli[1] == 0 && runelbli[0] < len(runelbl[0])) {
 		if runelbli[0] > 0 && runelbl[0][runelbli[0]-1] == runePrvR[0] && runelbl[0][runelbli[0]] != rne {
 			processUnparsedPassiveContent(curatvxctr, atvprsr, runelbl[0][0:runelbli[0]])
 			runelbli[0] = 0
@@ -781,13 +693,13 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 			runePrvR[0] = rne
 			processUnparsedPassiveContent(curatvxctr, atvprsr, runePrvR)
 		}
-	} else if (atvxctr != nil && atvxctr.foundCdeTxt) || (runelbli[0] == len(runelbl[0]) && runelbli[1] < len(runelbl[1])) {
+	} else if (atvxctr.foundCdeTxt) || (runelbli[0] == len(runelbl[0]) && runelbli[1] < len(runelbl[1])) {
 		if runelbli[1] > 0 && runelbl[1][runelbli[1]-1] == runePrvR[0] && runelbl[1][runelbli[1]] != rne {
 			processUnparsedActiveCode(curatvxctr, atvprsr, runelbl[1][0:runelbli[1]])
 			runelbli[1] = 0
 			runePrvR[0] = rune(0)
 		}
-		if (atvxctr == nil || !atvxctr.foundCdeTxt) && runelbl[1][runelbli[1]] == rne {
+		if (!atvxctr.foundCdeTxt) && runelbl[1][runelbli[1]] == rne {
 			runelbli[1]++
 			if runelbli[1] == len(runelbl[1]) {
 				if atvprsr.runesToParsei > 0 {
