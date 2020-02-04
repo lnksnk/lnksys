@@ -873,7 +873,7 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 					foundCdeTxt=false
 				}
 			} else {
-				if pvrCdeTxt!=rune('\\') && arune==rune('\"') || arune==rune('\'') {
+				if pvrCdeTxt!=rune('\') && arune==rune('\"') || arune==rune('\'') {
 					cdeTxt=arune
 					foundCdeTxt=true
 				}
