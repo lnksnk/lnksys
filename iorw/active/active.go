@@ -777,15 +777,18 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 		pvrCdeTxt := atvxctr.pvrCdeTxt
 		for _, arune := range p {
 			if foundCdeTxt {
+				fmt.Print(string(arune))
 				if pvrCdeTxt != rune('\\') && cdeTxt == arune {
 					foundCdeTxt = false
 					cdeTxt = rune(0)
-					pvrCdeTxt = rune(0)
+					fmt.Println()
 				}
 			} else {
 				if pvrCdeTxt != rune('\\') && arune == rune('"') || arune == rune('\'') {
 					cdeTxt = arune
 					foundCdeTxt = true
+					fmt.Println()
+					fmt.Print(string(arune))
 				}
 			}
 			pvrCdeTxt = arune
