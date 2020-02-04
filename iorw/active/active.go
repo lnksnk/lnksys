@@ -759,60 +759,56 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 		}
 		return atvxctr
 	}
-	if atvprsr.disablePsvRune {
-		runePrvR[0] = rne
-		processUnparsedActiveCode(curatvxctr, atvprsr, runePrvR)
-	} else {
-		if runelbli[1] == 0 && runelbli[0] < len(runelbl[0]) {
-			if runelbli[0] > 0 && runelbl[0][runelbli[0]-1] == runePrvR[0] && runelbl[0][runelbli[0]] != rne {
+
+	if (atvxctr == nil || !atvxctr.foundCdeTxt) && (runelbli[1] == 0 && runelbli[0] < len(runelbl[0])) {
+		if runelbli[0] > 0 && runelbl[0][runelbli[0]-1] == runePrvR[0] && runelbl[0][runelbli[0]] != rne {
+			processUnparsedPassiveContent(curatvxctr, atvprsr, runelbl[0][0:runelbli[0]])
+			runelbli[0] = 0
+			runePrvR[0] = rune(0)
+		}
+		if runelbl[0][runelbli[0]] == rne {
+			runelbli[0]++
+			if len(runelbl[0]) == runelbli[0] {
+				curatvxctr().hasCode = false
+			} else {
+				runePrvR[0] = rne
+			}
+		} else {
+			if runelbli[0] > 0 {
 				processUnparsedPassiveContent(curatvxctr, atvprsr, runelbl[0][0:runelbli[0]])
 				runelbli[0] = 0
+			}
+			runePrvR[0] = rne
+			processUnparsedPassiveContent(curatvxctr, atvprsr, runePrvR)
+		}
+	} else if (atvxctr != nil && atvxctr.foundCdeTxt) || (runelbli[0] == len(runelbl[0]) && runelbli[1] < len(runelbl[1])) {
+		if runelbli[1] > 0 && runelbl[1][runelbli[1]-1] == runePrvR[0] && runelbl[1][runelbli[1]] != rne {
+			processUnparsedActiveCode(curatvxctr, atvprsr, runelbl[1][0:runelbli[1]])
+			runelbli[1] = 0
+			runePrvR[0] = rune(0)
+		}
+		if (atvxctr == nil || !atvxctr.foundCdeTxt) && runelbl[1][runelbli[1]] == rne {
+			runelbli[1]++
+			if runelbli[1] == len(runelbl[1]) {
+				if atvprsr.runesToParsei > 0 {
+					captureActiveCode(curatvxctr, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
+					atvprsr.runesToParsei = 0
+				}
 				runePrvR[0] = rune(0)
-			}
-			if runelbl[0][runelbli[0]] == rne {
-				runelbli[0]++
-				if len(runelbl[0]) == runelbli[0] {
-					curatvxctr().hasCode = false
-				} else {
-					runePrvR[0] = rne
-				}
+				runelbli[0] = 0
+				runelbli[1] = 0
+				curatvxctr().hasCode = false
+				curatvxctr().lastPassiveBufferOffset = curatvxctr().passiveBufferOffset
 			} else {
-				if runelbli[0] > 0 {
-					processUnparsedPassiveContent(curatvxctr, atvprsr, runelbl[0][0:runelbli[0]])
-					runelbli[0] = 0
-				}
 				runePrvR[0] = rne
-				processUnparsedPassiveContent(curatvxctr, atvprsr, runePrvR)
 			}
-		} else if runelbli[0] == len(runelbl[0]) && runelbli[1] < len(runelbl[1]) {
-			if runelbli[1] > 0 && runelbl[1][runelbli[1]-1] == runePrvR[0] && runelbl[1][runelbli[1]] != rne {
+		} else {
+			if runelbli[1] > 0 {
 				processUnparsedActiveCode(curatvxctr, atvprsr, runelbl[1][0:runelbli[1]])
 				runelbli[1] = 0
-				runePrvR[0] = rune(0)
 			}
-			if runelbl[1][runelbli[1]] == rne {
-				runelbli[1]++
-				if runelbli[1] == len(runelbl[1]) {
-					if atvprsr.runesToParsei > 0 {
-						captureActiveCode(curatvxctr, atvprsr, atvprsr.runesToParse[0:atvprsr.runesToParsei])
-						atvprsr.runesToParsei = 0
-					}
-					runePrvR[0] = rune(0)
-					runelbli[0] = 0
-					runelbli[1] = 0
-					curatvxctr().hasCode = false
-					curatvxctr().lastPassiveBufferOffset = curatvxctr().passiveBufferOffset
-				} else {
-					runePrvR[0] = rne
-				}
-			} else {
-				if runelbli[1] > 0 {
-					processUnparsedActiveCode(curatvxctr, atvprsr, runelbl[1][0:runelbli[1]])
-					runelbli[1] = 0
-				}
-				runePrvR[0] = rne
-				processUnparsedActiveCode(curatvxctr, atvprsr, runePrvR)
-			}
+			runePrvR[0] = rne
+			processUnparsedActiveCode(curatvxctr, atvprsr, runePrvR)
 		}
 	}
 }
