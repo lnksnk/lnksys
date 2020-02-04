@@ -907,10 +907,10 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 				}
 			}
 		}
-		atvxctr = nil
 		atvxctr.foundCdeTxt = foundCdeTxt
 		atvxctr.cdeTxt = cdeTxt
 		atvxctr.pvrCdeTxt = pvrCdeTxt
+		atvxctr = nil
 	}
 	return
 }
