@@ -16,6 +16,9 @@ type activeExecutor struct {
 	activeBuffer            [][]rune
 	activeBufferOffset      int64
 	lastActiveBufferOffset  int64
+	foundCdeTxt bool
+	cdeTxt rune
+	pvrCdeTxt rune
 	hasCode                 bool
 	foundCode               bool
 	passiveBufferOffset     int64
@@ -31,7 +34,7 @@ type activeExecutor struct {
 }
 
 func newActiveExecutor(atv *Active) (atvxctr *activeExecutor) {
-	atvxctr = &activeExecutor{atv: atv, foundCode: false, hasCode: false, passiveBufferOffset: 0, lastPassiveBufferOffset: 0, activeBufferOffset: 0, lastActiveBufferOffset: 0}
+	atvxctr = &activeExecutor{atv: atv, foundCode: false, hasCode: false, passiveBufferOffset: 0, lastPassiveBufferOffset: 0, activeBufferOffset: 0, lastActiveBufferOffset: 0,foundCdeTxt:false,cdeTxt:rune(0)}
 	return
 }
 
@@ -861,6 +864,16 @@ func flushActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser, f
 func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser, p []rune) (err error) {
 	if len(p) > 0 {
 		for _, arune := range p {
+			if foundCdeTxt {
+				if cdeTxt==arune {
+					foundCdeTxt=false
+				}
+			} else {
+				if arune==rune('\"') || arune==rune('\'') {
+					cdeTxt=arune
+					foundCdeTxt=true
+				}
+			}
 			if curatvxctr().hasCode {
 				atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 				atvprsr.runesToParsei++

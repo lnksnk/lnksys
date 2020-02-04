@@ -342,6 +342,7 @@ func (reqst *Request) ExecuteRequest() {
 				gzw = &gzipResponseWriter{ResponseWriter: reqst.w, Writer: gzip.NewWriter(reqst.w)}
 				reqst.w = gzw
 			}
+			reqst.w.Header().Set("Transfer-Encoding", "identity")
 			reqst.w.WriteHeader(statusCode)
 		}
 	}
