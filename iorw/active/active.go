@@ -484,8 +484,8 @@ func preppingActiveParsing(atvprsr *activeParser) (atvxctr *activeExecutor) {
 func wrappingupActiveParsing(atvprsr *activeParser) {
 	if atvprsr.parsingLevel > 0 {
 		atvprsr.parsingLevel--
-		
-		if atvxctr:=atvprsr.atvxctor(atvprsr.parsingLevel).foundCode {
+
+		if atvprsr.atvxctor(atvprsr.parsingLevel).foundCode {
 			atvprsr.atvxctor(atvprsr.parsingLevel).foundCode = false
 		}
 		for len(atvprsr.atvxctr) > atvprsr.parsingLevel {
@@ -514,7 +514,7 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 			if atvprsr.atv != nil {
 				if atvprsr.atv.vm == nil {
 					atvprsr.atv.vm = goja.New()
-				
+
 					atvprsr.atv.vm.Set("out", atvprsr.atv)
 					atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
 						cPrint(a...)
