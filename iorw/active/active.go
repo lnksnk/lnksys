@@ -551,9 +551,10 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 				if acerr == nil && nxtprm != nil {
 					errc := make(chan error, 1)
 					go func(err chan error) {
-						_, err<- = atvprsr.atv.vm.RunProgram(nxtprm)
+						_, er := atvprsr.atv.vm.RunProgram(nxtprm)
+						err <- er
 					}(errc)
-					if vmerr:=<-errc; vmerr!= nil {
+					if vmerr := <-errc; vmerr != nil {
 						fmt.Println(vmerr)
 						acerr = vmerr
 					}
