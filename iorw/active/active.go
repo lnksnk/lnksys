@@ -3,12 +3,13 @@ package active
 import (
 	"bufio"
 	"fmt"
-	goja "github.com/dop251/goja"
-	gojaparse "github.com/dop251/goja/parser"
-	iorw "github.com/efjoubert/lnksys/iorw"
 	"io"
 	"strings"
 	"sync"
+
+	goja "github.com/dop251/goja"
+	gojaparse "github.com/dop251/goja/parser"
+	iorw "github.com/efjoubert/lnksys/iorw"
 )
 
 type activeExecutor struct {
@@ -777,7 +778,7 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 		pvrCdeTxt := atvxctr.pvrCdeTxt
 		for _, arune := range p {
 			if foundCdeTxt {
-				if pvrCdeTxt != rune('\\') && cdeTxt == arune {
+				if pvrCdeTxt != rune('\\') && (cdeTxt == rune('"') || cdeTxt == rune('\'')) && cdeTxt == arune {
 					foundCdeTxt = false
 					cdeTxt = rune(0)
 				}
