@@ -21,7 +21,7 @@ type activeExecutor struct {
 	foundCode               bool
 	passiveBufferOffset     int64
 	lastPassiveBufferOffset int64
-	atv                     *Active
+	atvprsr                 *activeParser
 	prgrm                   chan *goja.Program
 	prgrmerr                chan error
 	prgrmbufin              *bufio.Writer
@@ -31,8 +31,8 @@ type activeExecutor struct {
 	pipeprgrmoutr           *io.PipeReader
 }
 
-func newActiveExecutor(atv *Active) (atvxctr *activeExecutor) {
-	atvxctr = &activeExecutor{atv: atv, foundCode: false, hasCode: false, passiveBufferOffset: 0, lastPassiveBufferOffset: 0, activeBufferOffset: 0, lastActiveBufferOffset: 0}
+func newActiveExecutor(atvprsr *activeParser) (atvxctr *activeExecutor) {
+	atvxctr = &activeExecutor{atvprsr: atvprsr, foundCode: false, hasCode: false, passiveBufferOffset: 0, lastPassiveBufferOffset: 0, activeBufferOffset: 0, lastActiveBufferOffset: 0}
 	return
 }
 
@@ -123,8 +123,8 @@ func (atvxctr *activeExecutor) close() {
 		}
 		atvxctr.activeBuffer = nil
 	}
-	if atvxctr.atv != nil {
-		atvxctr.atv = nil
+	if atvxctr.atvprsr != nil {
+		atvxctr.atvprsr = nil
 	}
 	if atvxctr.prgrmbufin != nil {
 		atvxctr.prgrmbufin = nil
@@ -210,9 +210,6 @@ type activeParser struct {
 	passiveRunei   int
 	disablePsvRune bool
 	//
-	foundCdeTxt bool
-	cdeTxt      rune
-	pvrCdeTxt   rune
 	activeRune  []rune
 	activeRunei int
 
@@ -224,8 +221,12 @@ type activeParser struct {
 	psvLabel         [][]rune
 	psvLabelI        []int
 	psvPrvR          []rune
-
+	//
+	foundCdeTxt bool
+	cdeTxt      rune
+	pvrCdeTxt   rune
 	atvxctr     []*activeExecutor
+	xctngxctrs  []*activeExecutor
 	atvrchan    chan rune
 	atvrprcrone chan bool
 }
@@ -235,7 +236,7 @@ func (atvprsr *activeParser) atvxctor(prsnglvl int) (atvxctr *activeExecutor) {
 		atvprsr.atvxctr = []*activeExecutor{}
 	}
 	if len(atvprsr.atvxctr) < prsnglvl+1 {
-		atvprsr.atvxctr = append(atvprsr.atvxctr, newActiveExecutor(atvprsr.atv))
+		atvprsr.atvxctr = append(atvprsr.atvxctr, newActiveExecutor(atvprsr))
 	}
 	atvxctr = atvprsr.atvxctr[prsnglvl]
 	return
@@ -502,6 +503,10 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 			//atvprsr.lck.Unlock()
 		}()
 		if atvxctr := preppingActiveParsing(atvprsr); atvxctr != nil && atvxctr.foundCode {
+			if atvprsr.xctngxctrs == nil {
+				atvprsr.xctngxctrs = []*activeExecutor{}
+			}
+			atvprsr.xctngxctrs = append(atvprsr.xctngxctrs, atvxctr)
 			if atvprsr.atv != nil {
 				if atvprsr.atv.vm == nil {
 					atvprsr.atv.vm = goja.New()
@@ -544,6 +549,21 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 						fmt.Println(vmerr)
 						fmt.Println(code)
 						acerr = vmerr
+					}
+				}
+				if len(atvprsr.xctngxctrs) > 0 {
+					if atvprsr.xctngxctrs[len(atvprsr.xctngxctrs)-1] == atvxctr {
+						if len(atvprsr.xctngxctrs) > 1 {
+							atvprsr.xctngxctrs = atvprsr.xctngxctrs[:len(atvprsr.xctngxctrs)-1]
+						} else {
+							atvprsr.xctngxctrs = nil
+						}
+						if len(atvprsr.xctngxctrs) > 0 {
+							prvaxctr := atvprsr.xctngxctrs[len(atvprsr.xctngxctrs)-1]
+							atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
+								prvaxctr.PassivePrint(atvprsr.atv, fromOffset, toOffset)
+							})
+						}
 					}
 				}
 			}
