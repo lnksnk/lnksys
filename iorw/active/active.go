@@ -526,6 +526,14 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 					atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
 						atvprsr.PassivePrint(fromOffset, toOffset)
 					})
+
+					if len(activeGlobalMap) > 0 {
+						for k, v := range activeGlobalMap {
+							if atvprsr.atv.vm.Get(k) != v {
+								atvprsr.atv.vm.Set(k, v)
+							}
+						}
+					}
 				}
 				if len(atvprsr.atv.activeMap) > 0 {
 					for k, v := range atvprsr.atv.activeMap {
@@ -534,13 +542,7 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 						}
 					}
 				}
-				if len(activeGlobalMap) > 0 {
-					for k, v := range activeGlobalMap {
-						if atvprsr.atv.vm.Get(k) != v {
-							atvprsr.atv.vm.Set(k, v)
-						}
-					}
-				}
+
 				var nxtprm *goja.Program = nil
 
 				nxtprm = <-atvxctr.prgrm
