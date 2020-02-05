@@ -549,11 +549,15 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 				acerr = <-atvxctr.prgrmerr
 
 				if acerr == nil && nxtprm != nil {
-					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
-					if vmerr != nil {
+					errc := make(chan error, 1)
+					go func(err chan error) {
+						_, err<- = atvprsr.atv.vm.RunProgram(nxtprm)
+					}(errc)
+					if vmerr:=<-errc; vmerr!= nil {
 						fmt.Println(vmerr)
 						acerr = vmerr
 					}
+					close(errc)
 				}
 				if len(atvprsr.xctngxctrs) > 0 {
 					if atvprsr.xctngxctrs[len(atvprsr.xctngxctrs)-1] == atvxctr {
