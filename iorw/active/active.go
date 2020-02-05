@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"runtime"
 	"strings"
 	"sync"
 
@@ -568,6 +569,7 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 							atvprsr.xctngxctrs = nil
 						}
 					}
+					runtime.Gosched()
 				}
 			}
 		}
