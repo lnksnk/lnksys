@@ -472,13 +472,20 @@ func preppingActiveParsing(atvprsr *activeParser) (atvxctr *activeExecutor) {
 	}
 	atvprsr.pvrCdeTxt = rune(0)
 	atvprsr.cdeTxt = rune(0)
+	if atvxctr.foundCode {
+		if atvprsr.xctngxctrs == nil {
+			atvprsr.xctngxctrs = []*activeExecutor{}
+		}
+		atvprsr.xctngxctrs = append(atvprsr.xctngxctrs, atvxctr)
+	}
 	return atvxctr
 }
 
 func wrappingupActiveParsing(atvprsr *activeParser) {
 	if atvprsr.parsingLevel > 0 {
 		atvprsr.parsingLevel--
-		if atvprsr.atvxctor(atvprsr.parsingLevel).foundCode {
+		
+		if atvxctr:=atvprsr.atvxctor(atvprsr.parsingLevel).foundCode {
 			atvprsr.atvxctor(atvprsr.parsingLevel).foundCode = false
 		}
 		for len(atvprsr.atvxctr) > atvprsr.parsingLevel {
@@ -503,25 +510,23 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 			//atvprsr.lck.Unlock()
 		}()
 		if atvxctr := preppingActiveParsing(atvprsr); atvxctr != nil && atvxctr.foundCode {
-			if atvprsr.xctngxctrs == nil {
-				atvprsr.xctngxctrs = []*activeExecutor{}
-			}
-			atvprsr.xctngxctrs = append(atvprsr.xctngxctrs, atvxctr)
+
 			if atvprsr.atv != nil {
 				if atvprsr.atv.vm == nil {
 					atvprsr.atv.vm = goja.New()
+				
+					atvprsr.atv.vm.Set("out", atvprsr.atv)
+					atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
+						cPrint(a...)
+					})
+					atvprsr.atv.vm.Set("CPrintln", func(a ...interface{}) {
+						cPrint(a...)
+						cPrint("\r\n")
+					})
+					atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
+						atvprsr.PassivePrint(fromOffset, toOffset)
+					})
 				}
-				atvprsr.atv.vm.Set("out", atvprsr.atv)
-				atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
-					cPrint(a...)
-				})
-				atvprsr.atv.vm.Set("CPrintln", func(a ...interface{}) {
-					cPrint(a...)
-					cPrint("\r\n")
-				})
-				atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
-					atvxctr.PassivePrint(atvprsr.atv, fromOffset, toOffset)
-				})
 				if len(atvprsr.atv.activeMap) > 0 {
 					for k, v := range atvprsr.atv.activeMap {
 						if atvprsr.atv.vm.Get(k) != v {
@@ -555,12 +560,6 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 						} else {
 							atvprsr.xctngxctrs = nil
 						}
-						if len(atvprsr.xctngxctrs) > 0 {
-							prvaxctr := atvprsr.xctngxctrs[len(atvprsr.xctngxctrs)-1]
-							atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
-								prvaxctr.PassivePrint(atvprsr.atv, fromOffset, toOffset)
-							})
-						}
 					}
 				}
 			}
@@ -569,9 +568,9 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 	return
 }
 
-func (atvprsr *activeParser) PassivePrint(psvbuflvl int, fromOffset int64, toOffset int64) {
-	if len(atvprsr.atvxctr) > psvbuflvl {
-		atvprsr.atvxctr[psvbuflvl].PassivePrint(atvprsr.atv, fromOffset, toOffset)
+func (atvprsr *activeParser) PassivePrint(fromOffset int64, toOffset int64) {
+	if len(atvprsr.xctngxctrs) > 0 {
+		atvprsr.xctngxctrs[len(atvprsr.xctngxctrs)-1].PassivePrint(atvprsr.atv, fromOffset, toOffset)
 	}
 }
 
