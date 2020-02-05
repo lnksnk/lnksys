@@ -17,9 +17,6 @@ type activeExecutor struct {
 	activeBuffer            [][]rune
 	activeBufferOffset      int64
 	lastActiveBufferOffset  int64
-	foundCdeTxt             bool
-	cdeTxt                  rune
-	pvrCdeTxt               rune
 	hasCode                 bool
 	foundCode               bool
 	passiveBufferOffset     int64
@@ -35,7 +32,7 @@ type activeExecutor struct {
 }
 
 func newActiveExecutor(atv *Active) (atvxctr *activeExecutor) {
-	atvxctr = &activeExecutor{atv: atv, foundCode: false, hasCode: false, passiveBufferOffset: 0, lastPassiveBufferOffset: 0, activeBufferOffset: 0, lastActiveBufferOffset: 0, foundCdeTxt: false, cdeTxt: rune(0)}
+	atvxctr = &activeExecutor{atv: atv, foundCode: false, hasCode: false, passiveBufferOffset: 0, lastPassiveBufferOffset: 0, activeBufferOffset: 0, lastActiveBufferOffset: 0}
 	return
 }
 
@@ -186,6 +183,9 @@ type activeParser struct {
 	passiveRunei   int
 	disablePsvRune bool
 	//
+	foundCdeTxt bool
+	cdeTxt      rune
+	pvrCdeTxt   rune
 	activeRune  []rune
 	activeRunei int
 
@@ -439,6 +439,11 @@ func preppingActiveParsing(atvprsr *activeParser) (atvxctr *activeExecutor) {
 	if len(atvprsr.psvPrvR) == 1 {
 		atvprsr.psvPrvR[0] = 0
 	}
+	if atvprsr.foundCdeTxt {
+		atvprsr.foundCdeTxt = false
+	}
+	atvprsr.pvrCdeTxt = rune(0)
+	atvprsr.cdeTxt = rune(0)
 	return atvxctr
 }
 
@@ -669,11 +674,11 @@ func processUnparsedPassiveContent(curatvxctr func() *activeExecutor, atvprsr *a
 func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]rune, runelbli []int, runePrvR []rune) {
 	var atvxctr *activeExecutor = nil
 	var curatvxctr = func() *activeExecutor {
-		return atvprsr.atvxctor(processlvl)
+		atvxctr = atvprsr.atvxctor(processlvl)
+		return atvxctr
 	}
 
-	atvxctr = curatvxctr()
-	if (!atvxctr.foundCdeTxt) && (runelbli[1] == 0 && runelbli[0] < len(runelbl[0])) {
+	if (!atvprsr.foundCdeTxt) && (runelbli[1] == 0 && runelbli[0] < len(runelbl[0])) {
 		if runelbli[0] > 0 && runelbl[0][runelbli[0]-1] == runePrvR[0] && runelbl[0][runelbli[0]] != rne {
 			processUnparsedPassiveContent(curatvxctr, atvprsr, runelbl[0][0:runelbli[0]])
 			runelbli[0] = 0
@@ -694,13 +699,13 @@ func processRune(processlvl int, rne rune, atvprsr *activeParser, runelbl [][]ru
 			runePrvR[0] = rne
 			processUnparsedPassiveContent(curatvxctr, atvprsr, runePrvR)
 		}
-	} else if (atvxctr.foundCdeTxt) || (runelbli[0] == len(runelbl[0]) && runelbli[1] < len(runelbl[1])) {
+	} else if (atvprsr.foundCdeTxt) || (runelbli[0] == len(runelbl[0]) && runelbli[1] < len(runelbl[1])) {
 		if runelbli[1] > 0 && runelbl[1][runelbli[1]-1] == runePrvR[0] && runelbl[1][runelbli[1]] != rne {
 			processUnparsedActiveCode(curatvxctr, atvprsr, runelbl[1][0:runelbli[1]])
 			runelbli[1] = 0
 			runePrvR[0] = rune(0)
 		}
-		if (!atvxctr.foundCdeTxt) && runelbl[1][runelbli[1]] == rne {
+		if (!atvprsr.foundCdeTxt) && runelbl[1][runelbli[1]] == rne {
 			runelbli[1]++
 			if runelbli[1] == len(runelbl[1]) {
 				if atvprsr.runesToParsei > 0 {
@@ -773,22 +778,20 @@ func flushActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser, f
 func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activeParser, p []rune) (err error) {
 	if len(p) > 0 {
 		atvxctr := curatvxctr()
-		foundCdeTxt := atvxctr.foundCdeTxt
-		cdeTxt := atvxctr.cdeTxt
-		pvrCdeTxt := atvxctr.pvrCdeTxt
+
 		for _, arune := range p {
-			if foundCdeTxt {
-				if pvrCdeTxt != rune('\\') && (cdeTxt == rune('"') || cdeTxt == rune('\'')) && cdeTxt == arune {
-					foundCdeTxt = false
-					cdeTxt = rune(0)
+			if atvprsr.foundCdeTxt {
+				if atvprsr.pvrCdeTxt != rune('\\') && (atvprsr.cdeTxt == rune('"') || atvprsr.cdeTxt == rune('\'')) && atvprsr.cdeTxt == arune {
+					atvprsr.foundCdeTxt = false
+					atvprsr.cdeTxt = rune(0)
 				}
 			} else {
-				if pvrCdeTxt != rune('\\') && arune == rune('"') || arune == rune('\'') {
-					cdeTxt = arune
-					foundCdeTxt = true
+				if atvprsr.pvrCdeTxt != rune('\\') && arune == rune('"') || arune == rune('\'') {
+					atvprsr.cdeTxt = arune
+					atvprsr.foundCdeTxt = true
 				}
 			}
-			pvrCdeTxt = arune
+			atvprsr.pvrCdeTxt = arune
 			if atvxctr.hasCode {
 				atvprsr.runesToParse[atvprsr.runesToParsei] = arune
 				atvprsr.runesToParsei++
@@ -817,9 +820,6 @@ func processUnparsedActiveCode(curatvxctr func() *activeExecutor, atvprsr *activ
 				}
 			}
 		}
-		atvxctr.foundCdeTxt = foundCdeTxt
-		atvxctr.cdeTxt = cdeTxt
-		atvxctr.pvrCdeTxt = pvrCdeTxt
 		atvxctr = nil
 	}
 	return
@@ -864,7 +864,9 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 		psvLabelI:        []int{0, 0},
 		psvPrvR:          []rune{rune(0)},
 		psvRunesToParsei: int(0),
-		psvRunesToParse:  make([]rune, maxBufSize)}}
+		psvRunesToParse:  make([]rune, maxBufSize),
+		foundCdeTxt:      false,
+		cdeTxt:           rune(0)}}
 
 	atv.atvprsr.atv = atv
 
