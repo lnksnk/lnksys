@@ -58,10 +58,12 @@ func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 					bfr := bufio.NewReader(atvxctr.pipeprgrminr)
 					bfw := bufio.NewWriter(atvxctr.pipeprgrmoutw)
 					func() {
-						defer bfw.Flush()
 						for {
 							r, s, e := bfr.ReadRune()
 							if e != nil {
+								if e == io.EOF {
+									bfw.Flush()
+								}
 								break
 							} else {
 								if s > 0 {
