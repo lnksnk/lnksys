@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"runtime"
 	"strings"
 	"sync"
 
@@ -550,16 +549,12 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 				acerr = <-atvxctr.prgrmerr
 
 				if acerr == nil && nxtprm != nil {
-					errc := make(chan error, 1)
-					go func(err chan error) {
-						_, er := atvprsr.atv.vm.RunProgram(nxtprm)
-						err <- er
-					}(errc)
-					if vmerr := <-errc; vmerr != nil {
+					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
+					if vmerr != nil {
 						fmt.Println(vmerr)
 						acerr = vmerr
+						atvprsr.atv.vm.Interrupt(acerr)
 					}
-					close(errc)
 				}
 				if len(atvprsr.xctngxctrs) > 0 {
 					if atvprsr.xctngxctrs[len(atvprsr.xctngxctrs)-1] == atvxctr {
@@ -569,7 +564,6 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 							atvprsr.xctngxctrs = nil
 						}
 					}
-					runtime.Gosched()
 				}
 			}
 		}
