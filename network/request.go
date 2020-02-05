@@ -120,6 +120,14 @@ func (reqst *Request) ReadToOffset() int64 {
 	return reqst.readToOffset
 }
 
+func (reqst *Request) RequestMethod() string {
+	return reqst.r.Method
+}
+
+func (reqst *Request) RequestProtocol() string {
+	return reqst.r.Proto
+}
+
 func (reqst *Request) RequestHeader() http.Header {
 	return reqst.r.Header
 }
