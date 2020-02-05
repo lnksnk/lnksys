@@ -3,12 +3,13 @@ package lnks
 import (
 	"strings"
 
+	"os"
+	runtime "runtime"
+	runtimedbg "runtime/debug"
+
 	"github.com/efjoubert/lnksys/env"
 	"github.com/efjoubert/lnksys/network"
 	"github.com/efjoubert/lnksys/service"
-	"os"
-	//runtime "runtime"
-	runtimedbg "runtime/debug"
 )
 
 //LnkService LnkService
@@ -77,6 +78,7 @@ func (lnksrvs *LnkService) stopLnkService(args ...string) {
 
 func RunService(args ...string) {
 	runtimedbg.SetGCPercent(33)
+	runtime.GOMAXPROCS(runtime.NumCPU() * 10)
 	if len(args) == 0 {
 		args = os.Args
 	}
