@@ -24,7 +24,6 @@ type activeExecutor struct {
 	atvprsr                 *activeParser
 	prgrm                   chan *goja.Program
 	prgrmerr                chan error
-	vm                      *goja.Runtime
 	prgrmbufin              *bufio.Writer
 	pipeprgrminw            *io.PipeWriter
 	pipeprgrminr            *io.PipeReader
@@ -149,9 +148,6 @@ func (atvxctr *activeExecutor) close() {
 	if atvxctr.prgrm != nil {
 		close(atvxctr.prgrm)
 		atvxctr.prgrm = nil
-	}
-	if atvxctr.vm != nil {
-		atvxctr.vm = nil
 	}
 }
 
@@ -516,33 +512,33 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 		if atvxctr := preppingActiveParsing(atvprsr); atvxctr != nil && atvxctr.foundCode {
 
 			if atvprsr.atv != nil {
-				if atvxctr.vm == nil {
-					atvxctr.vm = goja.New()
+				if atvprsr.atv.vm == nil {
+					atvprsr.atv.vm = goja.New()
 
-					atvxctr.vm.Set("out", atvprsr.atv)
-					atvxctr.vm.Set("CPrint", func(a ...interface{}) {
+					atvprsr.atv.vm.Set("out", atvprsr.atv)
+					atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
 						cPrint(a...)
 					})
-					atvxctr.vm.Set("CPrintln", func(a ...interface{}) {
+					atvprsr.atv.vm.Set("CPrintln", func(a ...interface{}) {
 						cPrint(a...)
 						cPrint("\r\n")
 					})
-					atvxctr.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
+					atvprsr.atv.vm.Set("PassivePrint", func(fromOffset int64, toOffset int64) {
 						atvprsr.PassivePrint(fromOffset, toOffset)
 					})
 
 					if len(activeGlobalMap) > 0 {
 						for k, v := range activeGlobalMap {
-							if atvxctr.vm.Get(k) != v {
-								atvxctr.vm.Set(k, v)
+							if atvprsr.atv.vm.Get(k) != v {
+								atvprsr.atv.vm.Set(k, v)
 							}
 						}
 					}
 				}
 				if len(atvprsr.atv.activeMap) > 0 {
 					for k, v := range atvprsr.atv.activeMap {
-						if atvxctr.vm.Get(k) != v {
-							atvxctr.vm.Set(k, v)
+						if atvprsr.atv.vm.Get(k) != v {
+							atvprsr.atv.vm.Set(k, v)
 						}
 					}
 				}
@@ -553,11 +549,11 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 				acerr = <-atvxctr.prgrmerr
 
 				if acerr == nil && nxtprm != nil {
-					var _, vmerr = atvxctr.vm.RunProgram(nxtprm)
+					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
 					if vmerr != nil {
 						fmt.Println(vmerr)
 						acerr = vmerr
-						atvxctr.vm.Interrupt(acerr)
+						atvprsr.atv.vm.Interrupt(acerr)
 					}
 				}
 				if len(atvprsr.xctngxctrs) > 0 {
