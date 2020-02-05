@@ -54,8 +54,8 @@ func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 				defer po.Close()
 				go func() {
 					defer atvxctr.pipeprgrmoutw.Close()
-					//var bytes = make([]byte, 8192)
-					bfr := bufio.NewReader(atvxctr.pipeprgrminr)
+					var bytes = make([]byte, 8192)
+					/*bfr := bufio.NewReader(atvxctr.pipeprgrminr)
 					bfw := bufio.NewWriter(atvxctr.pipeprgrmoutw)
 					code := ""
 					func() {
@@ -81,9 +81,9 @@ func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 								}
 							}
 						}
-					}()
-					//io.CopyBuffer(atvxctr.pipeprgrmoutw, atvxctr.pipeprgrminr, bytes)
-					//bytes = nil
+					}()*/
+					io.CopyBuffer(atvxctr.pipeprgrmoutw, atvxctr.pipeprgrminr, bytes)
+					bytes = nil
 				}()
 				var parsedprgm, parsedprgmerr = gojaparse.ParseFile(nil, "", atvxctr.pipeprgrmoutr, 0)
 
@@ -536,8 +536,6 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 						}
 					}
 				}
-				var code = ""
-
 				var nxtprm *goja.Program = nil
 
 				nxtprm = <-atvxctr.prgrm
@@ -547,7 +545,6 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 					var _, vmerr = atvprsr.atv.vm.RunProgram(nxtprm)
 					if vmerr != nil {
 						fmt.Println(vmerr)
-						fmt.Println(code)
 						acerr = vmerr
 					}
 				}
