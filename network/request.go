@@ -248,11 +248,25 @@ func (reqst *Request) AddResource(resource ...string) {
 	return
 }
 
-func nextResource(reqst *Request, nxtrspath string) (nxtrs *Resource) {
+func nxtResource(reqst *Request, nxtrspath string) (nxtrs *Resource) {
 	if nxtrspath != "" {
 		nxtrs = NewResource(reqst, nxtrspath)
 	}
 	return nxtrs
+}
+
+func (reqst *Request) GetResource(nxtrspath string) (rdr io.Reader) {
+	rdrpr, rprpw := io.Pipe()
+	go func() {
+		defer rdrpw.Close()
+		if nxtrs:=nxtResource(reqst,nxtrspath); nxtrs!=nil {
+			io.Copy(rprpw, nxtrs)
+			nxtrs.Close()
+			nxtrs=nil
+		}
+	}()
+	rdr = rdrpr
+	return
 }
 
 func (reqst *Request) RequestContent() *iorw.BufferedRW {
@@ -389,7 +403,7 @@ func (reqst *Request) ExecuteRequest() {
 			} else if strings.HasPrefix(nextrs, "/") {
 				reqst.lastResourcePathAdded = nextrs[:strings.LastIndex(nextrs, "/")+1]
 			}
-			if nxtrs := nextResource(reqst, nextrs); nxtrs != nil {
+			if nxtrs := nxtResource(reqst, nextrs); nxtrs != nil {
 				if curResource == nil || curResource != nxtrs {
 					curResource = nxtrs
 				}
