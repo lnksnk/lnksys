@@ -258,11 +258,11 @@ func nxtResource(reqst *Request, nxtrspath string) (nxtrs *Resource) {
 func (reqst *Request) GetResource(nxtrspath string) (rdr io.Reader) {
 	rdrpr, rprpw := io.Pipe()
 	go func() {
-		defer rdrpw.Close()
-		if nxtrs:=nxtResource(reqst,nxtrspath); nxtrs!=nil {
+		defer rprpw.Close()
+		if nxtrs := nxtResource(reqst, nxtrspath); nxtrs != nil {
 			io.Copy(rprpw, nxtrs)
 			nxtrs.Close()
-			nxtrs=nil
+			nxtrs = nil
 		}
 	}()
 	rdr = rdrpr
