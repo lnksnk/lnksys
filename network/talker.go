@@ -90,11 +90,15 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 								errChan <- err
 								return
 							}
-							_, err = io.Copy(part, strings.NewReader(prmstdval))
+							if _, err = io.Copy(part, strings.NewReader(prmstdval)); err == nil {
+								if method == "" {
+									method = "POST"
+								}
+							} else {
+								errChan <- err
+								return
+							}
 						}
-					}
-					if method == "" {
-						method = "POST"
 					}
 				} else if prms, prmsok := d.(map[string]string); prmsok {
 					for pk, pv := range prms {
@@ -103,9 +107,13 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 							errChan <- err
 							return
 						}
-						_, err = io.Copy(part, strings.NewReader(pv))
-						if method == "" {
-							method = "POST"
+						if _, err = io.Copy(part, strings.NewReader(pv)); err == nil {
+							if method == "" {
+								method = "POST"
+							}
+						} else {
+							errChan <- err
+							return
 						}
 					}
 				} else if prms, prmsok := d.(map[string][]string); prmsok {
@@ -116,9 +124,13 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 								errChan <- err
 								return
 							}
-							_, err = io.Copy(part, strings.NewReader(pvv))
-							if method == "" {
-								method = "POST"
+							if _, err = io.Copy(part, strings.NewReader(pvv)); err == nil {
+								if method == "" {
+									method = "POST"
+								}
+							} else {
+								errChan <- err
+								return
 							}
 						}
 					}
