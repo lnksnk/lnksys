@@ -348,7 +348,7 @@ func (reqst *Request) ExecuteRequest() {
 					}
 					if reqst.readFromOffset < reqst.readToOffset {
 						statusCode = http.StatusPartialContent
-						reqst.ResponseHeader().Add("Content-Range", fmt.Sprintf("bytes %d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rangeSize))
+						reqst.ResponseHeader().Add("Content-Range", acceptedranges+fmt.Sprintf(" %d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rangeSize))
 						if isMultiMedia {
 							reqst.ResponseHeader().Add("Content-Length", fmt.Sprintf("%d", reqst.readToOffset-reqst.readFromOffset))
 							curResource.Seek(reqst.readFromOffset, 0)
