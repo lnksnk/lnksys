@@ -132,7 +132,7 @@ func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspath string, 
 	return
 }
 
-func NewResource(reqst *Request, resourcepath string, a...interface{}) (rsrc *Resource) {
+func NewResource(reqst *Request, resourcepath string, a ...interface{}) (rsrc *Resource) {
 
 	var r io.Reader = nil
 
@@ -177,6 +177,25 @@ func NewResource(reqst *Request, resourcepath string, a...interface{}) (rsrc *Re
 				var tlkrhdrs = map[string][]string{}
 				var tlkrparams = map[string][]string{}
 				if reqst.isfirstResource {
+					if len(a) == 1 {
+						if mpd, mpdok := a[0].(map[string]string); mpdok {
+							for mk, mv := range mpd {
+								if _, mptlkok := tlkrparams[mk]; mptlkok {
+									tlkrparams[mk] = append(tlkrparams[mk], mv)
+								} else {
+									tlkrparams[mk] = []string{mv}
+								}
+							}
+						} else if mpd, mpdok := a[0].(map[string][]string); mpdok {
+							for mk, mv := range mpd {
+								if _, mptlkok := tlkrparams[mk]; mptlkok {
+									tlkrparams[mk] = append(tlkrparams[mk], mv...)
+								} else {
+									tlkrparams[mk] = mv
+								}
+							}
+						}
+					}
 					tlkr.FSend(rw, reqst.RequestContent(), tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrparams, reqst.params)
 				} else {
 					tlkr.FSend(rw, nil, tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrparams)
