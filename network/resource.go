@@ -176,26 +176,26 @@ func NewResource(reqst *Request, resourcepath string, a ...interface{}) (rsrc *R
 				}
 				var tlkrhdrs = map[string][]string{}
 				var tlkrparams = map[string][]string{}
-				if reqst.isfirstResource {
-					if len(a) == 1 {
-						if mpd, mpdok := a[0].(map[string]string); mpdok {
-							for mk, mv := range mpd {
-								if _, mptlkok := tlkrparams[mk]; mptlkok {
-									tlkrparams[mk] = append(tlkrparams[mk], mv)
-								} else {
-									tlkrparams[mk] = []string{mv}
-								}
+				if len(a) == 1 {
+					if mpd, mpdok := a[0].(map[string]string); mpdok {
+						for mk, mv := range mpd {
+							if _, mptlkok := tlkrparams[mk]; mptlkok {
+								tlkrparams[mk] = append(tlkrparams[mk], mv)
+							} else {
+								tlkrparams[mk] = []string{mv}
 							}
-						} else if mpd, mpdok := a[0].(map[string][]string); mpdok {
-							for mk, mv := range mpd {
-								if _, mptlkok := tlkrparams[mk]; mptlkok {
-									tlkrparams[mk] = append(tlkrparams[mk], mv...)
-								} else {
-									tlkrparams[mk] = mv
-								}
+						}
+					} else if mpd, mpdok := a[0].(map[string][]string); mpdok {
+						for mk, mv := range mpd {
+							if _, mptlkok := tlkrparams[mk]; mptlkok {
+								tlkrparams[mk] = append(tlkrparams[mk], mv...)
+							} else {
+								tlkrparams[mk] = mv
 							}
 						}
 					}
+				}
+				if reqst.isfirstResource {
 					tlkr.FSend(rw, reqst.RequestContent(), tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrparams, reqst.params)
 				} else {
 					tlkr.FSend(rw, nil, tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrparams)
