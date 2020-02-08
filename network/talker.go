@@ -96,6 +96,32 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 					if method == "" {
 						method = "POST"
 					}
+				} else if prms, prmsok := d.(map[string]string); prmsok {
+					for pk, pv := range prms {
+						part, err := mpartwriter.CreateFormField(pk)
+						if err != nil {
+							errChan <- err
+							return
+						}
+						_, err = io.Copy(part, strings.NewReader(pv))
+						if method == "" {
+							method = "POST"
+						}
+					}
+				} else if prms, prmsok := d.(map[string][]string); prmsok {
+					for pk, pv := range prms {
+						for _, pvv := range pv {
+							part, err := mpartwriter.CreateFormField(pk)
+							if err != nil {
+								errChan <- err
+								return
+							}
+							_, err = io.Copy(part, strings.NewReader(pvv))
+							if method == "" {
+								method = "POST"
+							}
+						}
+					}
 				}
 				if err == nil {
 					err = pipeWriter.Close()
