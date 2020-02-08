@@ -248,9 +248,9 @@ func (reqst *Request) AddResource(resource ...string) {
 	return
 }
 
-func nxtResource(reqst *Request, nxtrspath string) (nxtrs *Resource) {
+func nxtResource(reqst *Request, nxtrspath string,a ...interface{}) (nxtrs *Resource) {
 	if nxtrspath != "" {
-		nxtrs = NewResource(reqst, nxtrspath)
+		nxtrs = NewResource(reqst, nxtrspath,a...)
 	}
 	return nxtrs
 }

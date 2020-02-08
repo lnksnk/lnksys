@@ -132,7 +132,7 @@ func (reqst *Request) nextResourceRoots(resourcepath string) (nxtrspath string, 
 	return
 }
 
-func NewResource(reqst *Request, resourcepath string) (rsrc *Resource) {
+func NewResource(reqst *Request, resourcepath string, a...interface{}) (rsrc *Resource) {
 
 	var r io.Reader = nil
 
