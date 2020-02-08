@@ -248,9 +248,9 @@ func (reqst *Request) AddResource(resource ...string) {
 	return
 }
 
-func nxtResource(reqst *Request, nxtrspath string,a ...interface{}) (nxtrs *Resource) {
+func nxtResource(reqst *Request, nxtrspath string, a ...interface{}) (nxtrs *Resource) {
 	if nxtrspath != "" {
-		nxtrs = NewResource(reqst, nxtrspath,a...)
+		nxtrs = NewResource(reqst, nxtrspath, a...)
 	}
 	return nxtrs
 }
@@ -327,37 +327,40 @@ func (reqst *Request) ExecuteRequest() {
 				reqst.ResponseHeader().Set("Content-Type", mimedetails[0]+contentencoding)
 			}
 
-			if isMultiMedia {
-				acceptedranges := "bytes"
-				if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
-					if strings.Index(rangeval, "=") > 0 {
-						acceptedranges = strings.TrimSpace(rangeval[:strings.Index(rangeval, "=")])
-						rangeval = strings.TrimSpace(rangeval[strings.Index(rangeval, "=")+1:])
-						rangeSize := int64(0)
-						if strings.Index(rangeval, "-") > 0 {
-							if calcOffset, calcOffSetErr := strconv.ParseInt(rangeval[:strings.Index(rangeval, "-")], 10, 64); calcOffSetErr == nil {
-								rangeval = strings.TrimSpace(rangeval[strings.Index(rangeval, "-")+1:])
-								rangeSize = curResource.Size()
-								if rangeval == "" {
-									reqst.readFromOffset = calcOffset
-									reqst.readToOffset = rangeSize
-								} else if nextcalcOffset, nextcalcOffSetErr := strconv.ParseInt(rangeval, 10, 64); nextcalcOffSetErr == nil {
-									reqst.readFromOffset = calcOffset
-									reqst.readToOffset = nextcalcOffset
-								}
+			acceptedranges := "bytes"
+			if rangeval := reqst.RequestHeader().Get("Range"); rangeval != "" {
+				if strings.Index(rangeval, "=") > 0 {
+					acceptedranges = strings.TrimSpace(rangeval[:strings.Index(rangeval, "=")])
+					rangeval = strings.TrimSpace(rangeval[strings.Index(rangeval, "=")+1:])
+					rangeSize := int64(0)
+					if strings.Index(rangeval, "-") > 0 {
+						if calcOffset, calcOffSetErr := strconv.ParseInt(rangeval[:strings.Index(rangeval, "-")], 10, 64); calcOffSetErr == nil {
+							rangeval = strings.TrimSpace(rangeval[strings.Index(rangeval, "-")+1:])
+							rangeSize = curResource.Size()
+							if rangeval == "" {
+								reqst.readFromOffset = calcOffset
+								reqst.readToOffset = rangeSize
+							} else if nextcalcOffset, nextcalcOffSetErr := strconv.ParseInt(rangeval, 10, 64); nextcalcOffSetErr == nil {
+								reqst.readFromOffset = calcOffset
+								reqst.readToOffset = nextcalcOffset
 							}
 						}
-						if reqst.readFromOffset < reqst.readToOffset {
-							reqst.ResponseHeader().Add("Content-Range", fmt.Sprintf("bytes %d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rangeSize))
+					}
+					if reqst.readFromOffset < reqst.readToOffset {
+						statusCode = http.StatusPartialContent
+						reqst.ResponseHeader().Add("Content-Range", fmt.Sprintf("bytes %d-%d/%d", reqst.readFromOffset, reqst.readToOffset-1, rangeSize))
+						if isMultiMedia {
 							reqst.ResponseHeader().Add("Content-Length", fmt.Sprintf("%d", reqst.readToOffset-reqst.readFromOffset))
-							statusCode = http.StatusPartialContent
 							curResource.Seek(reqst.readFromOffset, 0)
 						}
 					}
 				}
-				reqst.ResponseHeader().Set("Content-Encoding", "identity")
+			}
+
+			if isMultiMedia {
 				acceptedencoding = "identity"
 				reqst.ResponseHeader().Set("Accept-Ranges", acceptedranges)
+				reqst.ResponseHeader().Set("Content-Encoding", "identity")
 			}
 			if strings.Index(acceptedencoding, "gzip") >= 0 {
 				reqst.ResponseHeader().Set("Content-Encoding", "gzip")
