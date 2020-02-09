@@ -75,7 +75,7 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 	if len(params) > 0 {
 		//bufFormData := iorw.NewBufferedRW(81920)
 		pipeReader, pipeWriter := io.Pipe()
-		mpartwriter := multipart.NewWriter(bufFormData)
+		mpartwriter := multipart.NewWriter(pipeWriter)
 		method = "POST"
 		//errChan := make(chan error, 1)
 		go func() {
