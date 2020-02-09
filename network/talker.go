@@ -75,7 +75,7 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 
 	if len(params) > 0 {
 		pipeReader, pipeWriter := io.Pipe()
-		body = pipeReader
+		body = new(bytes.Buffer)
 		mpartwriter := multipart.NewWriter(pipeWriter)
 		method = "POST"
 		errChan := make(chan error, 1)
@@ -143,7 +143,11 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 		}()
 		if err := <-errChan; err == nil {
 			headers["Content-Type"] = append(headers["Content-Type"], mpartwriter.FormDataContentType())
-			body = ioutil.NopCloser(pipeReader)
+			go func() {
+				defer pipeReader.Close()
+				io.Copy(body, pipeReader)
+			}()
+			//body = ioutil.NopCloser(pipeReader)
 		}
 	}
 
