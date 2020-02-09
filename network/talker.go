@@ -73,13 +73,13 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 	headers["Content-Type"] = append(headers["Content-Type"], mimetype)
 
 	if len(params) > 0 {
-		bufFormData := iorw.NewBufferedRW(81920)
-		//pipeReader, pipeWriter := io.Pipe()
+		//bufFormData := iorw.NewBufferedRW(81920)
+		pipeReader, pipeWriter := io.Pipe()
 		mpartwriter := multipart.NewWriter(bufFormData)
 		method = "POST"
 		//errChan := make(chan error, 1)
-		//go func() {
-		//	defer pipeWriter.Close()
+		go func() {
+			defer pipeWriter.Close()
 		for _, d := range params {
 			if prms, prmsok := d.(*parameters.Parameters); prmsok {
 				for _, prmstd := range prms.StandardKeys() {
@@ -121,10 +121,10 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 			}
 		}
 		//errChan <- err
-		//}()
+		}()
 		method = "POST"
-		headers["Content-Type"] = append(headers["Content-Type"], mpartwriter.FormDataContentType())
-		body = bufFormData
+		headers["Content-Type"] = []string{mpartwriter.FormDataContentType())}
+		body = pipeReader
 	}
 
 	var req, reqerr = http.NewRequest(method, url, body)
