@@ -80,50 +80,50 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 		//errChan := make(chan error, 1)
 		go func() {
 			defer pipeWriter.Close()
-		for _, d := range params {
-			if prms, prmsok := d.(*parameters.Parameters); prmsok {
-				for _, prmstd := range prms.StandardKeys() {
-					for _, prmstdval := range prms.Parameter(prmstd) {
-						if part, err := mpartwriter.CreateFormField(prmstd); err != nil {
-							break
-						} else if _, err = io.Copy(part, strings.NewReader(prmstdval)); err != nil {
+			for _, d := range params {
+				if prms, prmsok := d.(*parameters.Parameters); prmsok {
+					for _, prmstd := range prms.StandardKeys() {
+						for _, prmstdval := range prms.Parameter(prmstd) {
+							if part, err := mpartwriter.CreateFormField(prmstd); err != nil {
+								break
+							} else if _, err = io.Copy(part, strings.NewReader(prmstdval)); err != nil {
+								break
+							}
+						}
+						if err != nil {
 							break
 						}
 					}
-					if err != nil {
-						break
-					}
-				}
-			} else if prms, prmsok := d.(map[string]string); prmsok {
-				for pk, pv := range prms {
-					if part, err := mpartwriter.CreateFormField(pk); err != nil {
-						break
-					} else if _, err = io.Copy(part, strings.NewReader(pv)); err != nil {
-						break
-					}
-				}
-			} else if prms, prmsok := d.(map[string][]string); prmsok {
-				for pk, pv := range prms {
-					for _, pvv := range pv {
+				} else if prms, prmsok := d.(map[string]string); prmsok {
+					for pk, pv := range prms {
 						if part, err := mpartwriter.CreateFormField(pk); err != nil {
 							break
-						} else if _, err = io.Copy(part, strings.NewReader(pvv)); err != nil {
+						} else if _, err = io.Copy(part, strings.NewReader(pv)); err != nil {
 							break
 						}
 					}
-					if err != nil {
-						break
+				} else if prms, prmsok := d.(map[string][]string); prmsok {
+					for pk, pv := range prms {
+						for _, pvv := range pv {
+							if part, err := mpartwriter.CreateFormField(pk); err != nil {
+								break
+							} else if _, err = io.Copy(part, strings.NewReader(pvv)); err != nil {
+								break
+							}
+						}
+						if err != nil {
+							break
+						}
 					}
 				}
+				if err != nil {
+					break
+				}
 			}
-			if err != nil {
-				break
-			}
-		}
-		//errChan <- err
+			//errChan <- err
 		}()
 		method = "POST"
-		headers["Content-Type"] = []string{mpartwriter.FormDataContentType())}
+		headers["Content-Type"] = []string{mpartwriter.FormDataContentType()}
 		body = pipeReader
 	}
 
