@@ -116,7 +116,7 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 			//errChan <- err
 		}()
 		method = "POST"
-		headers["Content-Type"] = mpartwriter.FormDataContentType())
+		headers["Content-Type"] = mpartwriter.FormDataContentType()
 		body = pipeReader
 	}
 
