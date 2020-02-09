@@ -73,51 +73,52 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 	headers["Content-Type"] = append(headers["Content-Type"], mimetype)
 
 	if len(params) > 0 {
-		pipeReader, pipeWriter := io.Pipe()
-		mpartwriter := multipart.NewWriter(pipeWriter)
+		bufFormData := iorw.NewBufferedRW(81920)
+		//pipeReader, pipeWriter := io.Pipe()
+		mpartwriter := multipart.NewWriter(bufFormData)
 		method = "POST"
 		//errChan := make(chan error, 1)
-		go func() {
-			defer pipeWriter.Close()
-			for _, d := range params {
-				if prms, prmsok := d.(*parameters.Parameters); prmsok {
-					for _, prmstd := range prms.StandardKeys() {
-						for _, prmstdval := range prms.Parameter(prmstd) {
-							if part, err := mpartwriter.CreateFormField(prmstd); err != nil {
-								return
-							} else if _, err = io.Copy(part, strings.NewReader(prmstdval)); err != nil {
-								return
-							}
+		//go func() {
+		//	defer pipeWriter.Close()
+		for _, d := range params {
+			if prms, prmsok := d.(*parameters.Parameters); prmsok {
+				for _, prmstd := range prms.StandardKeys() {
+					for _, prmstdval := range prms.Parameter(prmstd) {
+						if part, err := mpartwriter.CreateFormField(prmstd); err != nil {
+							return
+						} else if _, err = io.Copy(part, strings.NewReader(prmstdval)); err != nil {
+							return
 						}
 					}
-				} else if prms, prmsok := d.(map[string]string); prmsok {
-					for pk, pv := range prms {
+				}
+			} else if prms, prmsok := d.(map[string]string); prmsok {
+				for pk, pv := range prms {
+					if part, err := mpartwriter.CreateFormField(pk); err != nil {
+						return
+					} else if _, err = io.Copy(part, strings.NewReader(pv)); err != nil {
+						return
+					}
+				}
+			} else if prms, prmsok := d.(map[string][]string); prmsok {
+				for pk, pv := range prms {
+					for _, pvv := range pv {
 						if part, err := mpartwriter.CreateFormField(pk); err != nil {
 							return
-						} else if _, err = io.Copy(part, strings.NewReader(pv)); err != nil {
+						} else if _, err = io.Copy(part, strings.NewReader(pvv)); err != nil {
 							return
 						}
 					}
-				} else if prms, prmsok := d.(map[string][]string); prmsok {
-					for pk, pv := range prms {
-						for _, pvv := range pv {
-							if part, err := mpartwriter.CreateFormField(pk); err != nil {
-								return
-							} else if _, err = io.Copy(part, strings.NewReader(pvv)); err != nil {
-								return
-							}
-						}
-					}
-				}
-				if err != nil {
-					break
 				}
 			}
-			//errChan <- err
-		}()
+			if err != nil {
+				break
+			}
+		}
+		//errChan <- err
+		//}()
 		method = "POST"
 		headers["Content-Type"] = append(headers["Content-Type"], mpartwriter.FormDataContentType())
-		body = pipeReader
+		body = bufFormData
 	}
 
 	var req, reqerr = http.NewRequest(method, url, body)
