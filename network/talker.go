@@ -70,7 +70,7 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 	}
 	var mimedetails = mime.FindMimeTypeByExt(urlPath, ".txt", "text/plain")
 	var mimetype = mimedetails[0]
-	headers["Content-Type"] = append(headers["Content-Type"], mimetype)
+	headers["Content-Type"] = mimetype
 
 	if len(params) > 0 {
 		pipeReader, pipeWriter := io.Pipe()
@@ -116,7 +116,7 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 			//errChan <- err
 		}()
 		method = "POST"
-		headers["Content-Type"] = append(headers["Content-Type"], mpartwriter.FormDataContentType())
+		headers["Content-Type"] = mpartwriter.FormDataContentType())
 		body = pipeReader
 	}
 
