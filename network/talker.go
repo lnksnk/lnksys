@@ -136,7 +136,7 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 					io.Copy(tlkr, resp.Body)
 					tlkr.trw.Print(resp.Body)
 				} else {
-					iorw.FPrint(w, resp.Body)
+					iorw.PipedFPrint(w, resp.Body)
 				}
 			}
 		}
