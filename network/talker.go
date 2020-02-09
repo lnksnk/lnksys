@@ -94,7 +94,7 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 					for pk, pv := range prms {
 						if part, err := mpartwriter.CreateFormField(pk); err != nil {
 							return
-						} else _, err = io.Copy(part, strings.NewReader(pv)); err != nil {
+						} else if _, err = io.Copy(part, strings.NewReader(pv)); err != nil {
 							return
 						}
 					}
@@ -115,7 +115,7 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 			}
 			//errChan <- err
 		}()
-		methmethod="POST"
+		methmethod = "POST"
 		headers["Content-Type"] = append(headers["Content-Type"], mpartwriter.FormDataContentType())
 		body = pipeReader
 	}
