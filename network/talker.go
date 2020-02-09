@@ -85,28 +85,34 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 				for _, prmstd := range prms.StandardKeys() {
 					for _, prmstdval := range prms.Parameter(prmstd) {
 						if part, err := mpartwriter.CreateFormField(prmstd); err != nil {
-							return
+							break
 						} else if _, err = io.Copy(part, strings.NewReader(prmstdval)); err != nil {
-							return
+							break
 						}
+					}
+					if err != nil {
+						break
 					}
 				}
 			} else if prms, prmsok := d.(map[string]string); prmsok {
 				for pk, pv := range prms {
 					if part, err := mpartwriter.CreateFormField(pk); err != nil {
-						return
+						break
 					} else if _, err = io.Copy(part, strings.NewReader(pv)); err != nil {
-						return
+						break
 					}
 				}
 			} else if prms, prmsok := d.(map[string][]string); prmsok {
 				for pk, pv := range prms {
 					for _, pvv := range pv {
 						if part, err := mpartwriter.CreateFormField(pk); err != nil {
-							return
+							break
 						} else if _, err = io.Copy(part, strings.NewReader(pvv)); err != nil {
-							return
+							break
 						}
+					}
+					if err != nil {
+						break
 					}
 				}
 			}
