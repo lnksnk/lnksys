@@ -76,58 +76,34 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 		pipeReader, pipeWriter := io.Pipe()
 		mpartwriter := multipart.NewWriter(pipeWriter)
 		method = "POST"
-		errChan := make(chan error, 1)
+		//errChan := make(chan error, 1)
 		go func() {
 			defer pipeWriter.Close()
 			for _, d := range params {
 				if prms, prmsok := d.(*parameters.Parameters); prmsok {
 					for _, prmstd := range prms.StandardKeys() {
 						for _, prmstdval := range prms.Parameter(prmstd) {
-							part, err := mpartwriter.CreateFormField(prmstd)
-							if err != nil {
-								errChan <- err
+							if part, err := mpartwriter.CreateFormField(prmstd); err != nil {
 								return
-							}
-							if _, err = io.Copy(part, strings.NewReader(prmstdval)); err == nil {
-								if method == "" {
-									method = "POST"
-								}
-							} else {
-								errChan <- err
+							} else if _, err = io.Copy(part, strings.NewReader(prmstdval)); err != nil {
 								return
 							}
 						}
 					}
 				} else if prms, prmsok := d.(map[string]string); prmsok {
 					for pk, pv := range prms {
-						part, err := mpartwriter.CreateFormField(pk)
-						if err != nil {
-							errChan <- err
+						if part, err := mpartwriter.CreateFormField(pk); err != nil {
 							return
-						}
-						if _, err = io.Copy(part, strings.NewReader(pv)); err == nil {
-							if method == "" {
-								method = "POST"
-							}
-						} else {
-							errChan <- err
+						} else _, err = io.Copy(part, strings.NewReader(pv)); err != nil {
 							return
 						}
 					}
 				} else if prms, prmsok := d.(map[string][]string); prmsok {
 					for pk, pv := range prms {
 						for _, pvv := range pv {
-							part, err := mpartwriter.CreateFormField(pk)
-							if err != nil {
-								errChan <- err
+							if part, err := mpartwriter.CreateFormField(pk); err != nil {
 								return
-							}
-							if _, err = io.Copy(part, strings.NewReader(pvv)); err == nil {
-								if method == "" {
-									method = "POST"
-								}
-							} else {
-								errChan <- err
+							} else if _, err = io.Copy(part, strings.NewReader(pvv)); err != nil {
 								return
 							}
 						}
@@ -137,12 +113,11 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 					break
 				}
 			}
-			errChan <- err
+			//errChan <- err
 		}()
-		if err := <-errChan; err == nil {
-			headers["Content-Type"] = append(headers["Content-Type"], mpartwriter.FormDataContentType())
-			body = pipeReader
-		}
+		methmethod="POST"
+		headers["Content-Type"] = append(headers["Content-Type"], mpartwriter.FormDataContentType())
+		body = pipeReader
 	}
 
 	var req, reqerr = http.NewRequest(method, url, body)
