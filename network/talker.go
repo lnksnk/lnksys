@@ -2,7 +2,6 @@ package network
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"mime/multipart"
 	"net"
@@ -76,17 +75,12 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 
 	if len(params) > 0 {
 		pipeReader, pipeWriter := io.Pipe()
-		bufPipeR := bufio.NewReader(pipeReader)
-		bufrw := iorw.NewBufferedRW(81920, nil)
-		bufPipeW := bufio.NewWriter(bufrw)
+		bufPipeW := bufio.NewWriter(pipeWriter)
 		mpartwriter := multipart.NewWriter(bufPipeW)
 		method = "POST"
 		headers["Content-Type"] = []string{mpartwriter.FormDataContentType()}
 		go func() {
 			defer func() {
-				mpartcode := bufrw.String()
-				io.Copy(pipeWriter, strings.NewReader(mpartcode))
-				fmt.Println(mpartcode)
 				pipeWriter.Close()
 			}()
 			for _, d := range params {
@@ -134,7 +128,7 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 			}
 			//errChan <- err
 		}()
-		body = bufPipeR
+		body = pipeReader
 	}
 
 	var req, reqerr = http.NewRequest(method, url, body)
