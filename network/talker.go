@@ -129,6 +129,9 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 					break
 				}
 			}
+			if err == nil {
+				err = bufPipeW.Flush()
+			}
 			//errChan <- err
 		}()
 		body = bufPipeR
