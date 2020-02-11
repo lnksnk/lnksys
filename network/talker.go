@@ -2,6 +2,7 @@ package network
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net"
@@ -127,9 +128,6 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 				if err != nil {
 					break
 				}
-			}
-			if err == nil {
-				mpartwriter.Flush()
 			}
 			//errChan <- err
 		}()
