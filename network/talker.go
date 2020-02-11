@@ -76,12 +76,18 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 	if len(params) > 0 {
 		pipeReader, pipeWriter := io.Pipe()
 		bufPipeR := bufio.NewReader(pipeReader)
-		bufPipeW := bufio.NewWriter(pipeWriter)
+		bufrw := iorw.NewBufferedRW(81920, nil)
+		bufPipeW := bufio.NewWriter(bufrw)
 		mpartwriter := multipart.NewWriter(bufPipeW)
 		method = "POST"
 		headers["Content-Type"] = []string{mpartwriter.FormDataContentType()}
 		go func() {
-			defer pipeWriter.Close()
+			defer func() {
+				mpartcode := bufrw.String()
+				io.Copy(pipeWriter, strings.NewReader(mpartcode))
+				fmt.Println(mpartcode)
+				pipeWriter.Close()
+			}()
 			for _, d := range params {
 				if prms, prmsok := d.(*parameters.Parameters); prmsok {
 					for _, prmstd := range prms.StandardKeys() {
