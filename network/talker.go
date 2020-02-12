@@ -124,7 +124,9 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 				}
 			}
 			if err == nil {
-				err = bufPipeW.Flush()
+				if err = mpartwriter.Close(); err == nil {
+					err = bufPipeW.Flush()
+				}
 			}
 			//errChan <- err
 		}()
