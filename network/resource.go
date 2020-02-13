@@ -185,6 +185,16 @@ func NewResource(reqst *Request, resourcepath string, a ...interface{}) (rsrc *R
 								tlkrparams[mk] = []string{mv}
 							}
 						}
+					} else if mpd, mpdok := a[0].(map[string]interface{}); mpdok {
+						for mk, mv := range mpd {
+							if sv, svok := mv.(string); svok {
+								if _, mptlkok := tlkrparams[mk]; mptlkok {
+									tlkrparams[mk] = append(tlkrparams[mk], sv)
+								} else {
+									tlkrparams[mk] = []string{sv}
+								}
+							}
+						}
 					} else if mpd, mpdok := a[0].(map[string][]string); mpdok {
 						for mk, mv := range mpd {
 							if _, mptlkok := tlkrparams[mk]; mptlkok {
