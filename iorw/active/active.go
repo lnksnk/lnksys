@@ -514,8 +514,8 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 			if atvprsr.atv != nil {
 				if atvprsr.atv.vm == nil {
 					atvprsr.atv.vm = goja.New()
-					if atv.callinclude != nil {
-						atvprsr.atv.vm.Set("include", atv.callinclude)
+					if atvprsr.atv.callinclude != nil {
+						atvprsr.atv.vm.Set("include", atvprsr.atv.callinclude)
 					}
 					atvprsr.atv.vm.Set("out", atvprsr.atv)
 					atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
