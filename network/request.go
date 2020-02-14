@@ -372,7 +372,14 @@ func (reqst *Request) ExecuteRequest() {
 		}
 	}
 	if reqst.Active == nil {
-		reqst.Active = active.NewActive(int64(maxbufsize), reqst, map[string]interface{}{"DBMS": db.DBMSManager, "Parameters": func() *parameters.Parameters {
+		reqst.Active = active.NewActive(int64(maxbufsize), reqst, func(a ...interface{}) (ar interface{}) {
+			if len(a) > 0 {
+				if s, sok := a[0].(string); sok && s != "" {
+					reqst.ACommit(reqst.GetResource(s, a[1:]...))
+				}
+			}
+			return ar
+		}, map[string]interface{}{"DBMS": db.DBMSManager, "Parameters": func() *parameters.Parameters {
 			return reqst.Parameters()
 		}, "DBQuery": func(alias string, query string, args ...interface{}) (dbquery *db.DBQuery) {
 			dbquery = reqst.DbQuery(alias, query, args)

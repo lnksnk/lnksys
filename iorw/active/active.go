@@ -504,7 +504,7 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 	if acerr == nil {
 		defer func() {
 			if err := recover(); err != nil {
-				acerr = fmt.Errorf("Panic: %+v\n", err)
+				acerr = fmt.Errorf("panic: %+v\n ", err)
 			}
 			wrappingupActiveParsing(atvprsr)
 			//atvprsr.lck.Unlock()
@@ -514,7 +514,9 @@ func (atvprsr *activeParser) ACommit(a ...interface{}) (acerr error) {
 			if atvprsr.atv != nil {
 				if atvprsr.atv.vm == nil {
 					atvprsr.atv.vm = goja.New()
-
+					if atv.callinclude != nil {
+						atvprsr.atv.vm.Set("include", atv.callinclude)
+					}
 					atvprsr.atv.vm.Set("out", atvprsr.atv)
 					atvprsr.atv.vm.Set("CPrint", func(a ...interface{}) {
 						cPrint(a...)
@@ -584,10 +586,11 @@ func (atvprsr *activeParser) Print(a ...interface{}) {
 }
 
 type Active struct {
-	printer   iorw.Printing
-	atvprsr   *activeParser
-	vm        *goja.Runtime
-	activeMap map[string]interface{}
+	printer     iorw.Printing
+	atvprsr     *activeParser
+	vm          *goja.Runtime
+	activeMap   map[string]interface{}
+	callinclude func(a ...interface{}) interface{}
 }
 
 func (atv *Active) APrint(a ...interface{}) (err error) {
@@ -917,6 +920,11 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	atv.atvprsr.atv = atv
 
 	for n, d := range a {
+		if callincl, callinclok := d.(func(...interface{}) interface{}); callinclok {
+			if atv.callinclude == nil {
+				atv.callinclude = callincl
+			}
+		}
 		if _, prntrok := d.(iorw.Printing); prntrok {
 			setAtvA(atv, d)
 			a = append(a[0:n], a[n+1:]...)
