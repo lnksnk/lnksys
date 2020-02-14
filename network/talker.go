@@ -79,12 +79,11 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 		mpartwriter := multipart.NewWriter(bufPipeW)
 		method = "POST"
 
-		cnttyperef := make(chan string, 1)
-		go func(cnttype chan string) {
+		cnttpe := make(chan string, 1)
+		go func(cnttperef chan string) {
 			defer func() {
 				pipeWriter.Close()
 			}()
-			cnttype <- mpartwriter.FormDataContentType()
 			for _, d := range params {
 				if prms, prmsok := d.(*parameters.Parameters); prmsok {
 					for _, prmstd := range prms.StandardKeys() {
@@ -128,15 +127,19 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 			if err == nil {
 				if err = mpartwriter.Close(); err == nil {
 					err = bufPipeW.Flush()
+					cnttperef <- mpartwriter.FormDataContentType()
+				} else {
+					cnttperef <- ""
 				}
 			} else {
-				cnttype <- ""
+				cnttperef <- ""
 			}
 			//errChan <- err
-		}(cnttyperef)
-		if cnttypefound:<-cnttyperef; cnttypefound!="" {
-			headers["Content-Type"] = []string{cnttypefound}
+		}(cnttpe)
+		if cnttp := <-cnttpe; cnttp != "" {
+			headers["Content-Type"] = []string{cnttp}
 		}
+		close(cnttpe)
 		body = pipeReader
 	}
 
