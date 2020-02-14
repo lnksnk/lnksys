@@ -255,11 +255,11 @@ func nxtResource(reqst *Request, nxtrspath string, a ...interface{}) (nxtrs *Res
 	return nxtrs
 }
 
-func (reqst *Request) GetResource(nxtrspath string) (rdr io.Reader) {
+func (reqst *Request) GetResource(nxtrspath string, a ...interface{}) (rdr io.Reader) {
 	rdrpr, rprpw := io.Pipe()
 	go func() {
 		defer rprpw.Close()
-		if nxtrs := nxtResource(reqst, nxtrspath); nxtrs != nil {
+		if nxtrs := nxtResource(reqst, nxtrspath, a...); nxtrs != nil {
 			io.Copy(rprpw, nxtrs)
 			nxtrs.Close()
 			nxtrs = nil
