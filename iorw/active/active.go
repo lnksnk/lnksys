@@ -920,15 +920,20 @@ func NewActive(maxBufSize int64, a ...interface{}) (atv *Active) {
 	atv.atvprsr.atv = atv
 
 	for n, d := range a {
-		if callincl, callinclok := d.(func(...interface{}) interface{}); callinclok {
-			if atv.callinclude == nil {
-				atv.callinclude = callincl
-			}
-		}
 		if _, prntrok := d.(iorw.Printing); prntrok {
 			setAtvA(atv, d)
 			a = append(a[0:n], a[n+1:]...)
 			break
+		}
+	}
+
+	for n, d := range a {
+		if callincl, callinclok := d.(func(...interface{}) interface{}); callinclok {
+			if atv.callinclude == nil {
+				atv.callinclude = callincl
+				a = append(a[0:n], a[n+1:]...)
+				break
+			}
 		}
 	}
 
