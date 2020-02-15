@@ -2,6 +2,7 @@ package network
 
 import (
 	"bufio"
+	"encoding/json"
 	"io"
 	"mime/multipart"
 	"net"
@@ -76,60 +77,131 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 	if len(params) > 0 {
 		pipeReader, pipeWriter := io.Pipe()
 		bufPipeW := bufio.NewWriter(pipeWriter)
-		mpartwriter := multipart.NewWriter(bufPipeW)
-		method = "POST"
-		headers["Content-Type"] = []string{mpartwriter.FormDataContentType()}
-		go func() {
-			defer func() {
-				pipeWriter.Close()
-			}()
-			for _, d := range params {
-				if prms, prmsok := d.(*parameters.Parameters); prmsok {
-					for _, prmstd := range prms.StandardKeys() {
-						for _, prmstdval := range prms.Parameter(prmstd) {
-							if part, err := mpartwriter.CreateFormField(prmstd); err != nil {
-								break
-							} else if _, err = io.Copy(part, strings.NewReader(prmstdval)); err != nil {
-								break
-							}
-						}
-						if err != nil {
-							break
-						}
-					}
-				} else if prms, prmsok := d.(map[string]string); prmsok {
-					for pk, pv := range prms {
-						if part, err := mpartwriter.CreateFormField(pk); err != nil {
-							break
-						} else if _, err = io.Copy(part, strings.NewReader(pv)); err != nil {
-							break
-						}
-					}
-				} else if prms, prmsok := d.(map[string][]string); prmsok {
-					for pk, pv := range prms {
-						for _, pvv := range pv {
-							if part, err := mpartwriter.CreateFormField(pk); err != nil {
-								break
-							} else if _, err = io.Copy(part, strings.NewReader(pvv)); err != nil {
-								break
-							}
-						}
-						if err != nil {
-							break
-						}
-					}
+		ispmap := false
+		var pmap map[string]interface{}
+		for _, pchk := range params {
+			if pmpi, pmpiok := pchk.(map[string]interface{}); pmpiok {
+				if ispmap = len(pmpi) > 0; ispmap {
+					pmap = pmpi
 				}
-				if err != nil {
-					break
-				}
+				break
 			}
-			if err == nil {
-				if err = mpartwriter.Close(); err == nil {
+		}
+
+		method = "POST"
+		if ispmap {
+			enc := json.NewEncoder(bufPipeW)
+			headers["Content-Type"] = []string{"application/json"}
+			go func() {
+				defer func() {
+					pipeWriter.Close()
+				}()
+				rqstprms := map[string][]string{}
+				for _, d := range params {
+					if prms, prmsok := d.(*parameters.Parameters); prmsok {
+						for _, prmstd := range prms.StandardKeys() {
+							if prmstdval := prms.Parameter(prmstd); len(prmstdval) > 0 {
+								if rqstv, rqstkok := rqstprms[prmstd]; rqstkok {
+									rqstprms[prmstd] = append(rqstv, prmstdval...)
+								} else {
+									rqstprms[prmstd] = prmstdval[:]
+								}
+							}
+						}
+					} else if prms, prmsok := d.(map[string]string); prmsok {
+						for pk, pv := range prms {
+							if rqstv, rqstkok := rqstprms[pk]; rqstkok {
+								rqstprms[pk] = append(rqstv, pv)
+							} else {
+								rqstprms[pk] = []string{pv}
+							}
+						}
+					} else if prms, prmsok := d.(map[string][]string); prmsok {
+						for pk, pv := range prms {
+							if len(pv) > 0 {
+								if rqstv, rqstkok := rqstprms[pk]; rqstkok {
+									rqstprms[pk] = append(rqstv, pv...)
+								} else {
+									rqstprms[pk] = pv[:]
+								}
+							}
+						}
+					}
+				}
+				if rqstprmsfound, rqstprmsok := pmap["reqst-params"]; rqstprmsok {
+					if rqstprmsmp, rqstpmsmpok := rqstprmsfound.(map[string]interface{}); rqstpmsmpok {
+						for pk, pv := range rqstprms {
+							var pvi interface{} = pv
+							rqstprmsmp[pk] = pvi
+						}
+					}
+				} else {
+					pmap["reqst-params"] = rqstprms
+				}
+				for {
+					if err = enc.Encode(&pmap); err != nil {
+						break
+					}
+				}
+				if err == nil {
 					err = bufPipeW.Flush()
 				}
-			}
-			//errChan <- err
-		}()
+			}()
+		} else {
+			mpartwriter := multipart.NewWriter(bufPipeW)
+			headers["Content-Type"] = []string{mpartwriter.FormDataContentType()}
+			go func() {
+				defer func() {
+					pipeWriter.Close()
+				}()
+				for _, d := range params {
+					if prms, prmsok := d.(*parameters.Parameters); prmsok {
+						for _, prmstd := range prms.StandardKeys() {
+							for _, prmstdval := range prms.Parameter(prmstd) {
+								if part, err := mpartwriter.CreateFormField(prmstd); err != nil {
+									break
+								} else if _, err = io.Copy(part, strings.NewReader(prmstdval)); err != nil {
+									break
+								}
+							}
+							if err != nil {
+								break
+							}
+						}
+					} else if prms, prmsok := d.(map[string]string); prmsok {
+						for pk, pv := range prms {
+							if part, err := mpartwriter.CreateFormField(pk); err != nil {
+								break
+							} else if _, err = io.Copy(part, strings.NewReader(pv)); err != nil {
+								break
+							}
+						}
+					} else if prms, prmsok := d.(map[string][]string); prmsok {
+						for pk, pv := range prms {
+							for _, pvv := range pv {
+								if part, err := mpartwriter.CreateFormField(pk); err != nil {
+									break
+								} else if _, err = io.Copy(part, strings.NewReader(pvv)); err != nil {
+									break
+								}
+							}
+							if err != nil {
+								break
+							}
+						}
+					}
+					if err != nil {
+						break
+					}
+				}
+				if err == nil {
+					if err = mpartwriter.Close(); err == nil {
+						err = bufPipeW.Flush()
+					}
+				}
+				//errChan <- err
+			}()
+		}
 		body = pipeReader
 	}
 
