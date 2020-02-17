@@ -54,7 +54,7 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 		return
 	} else if embedjs = jquery.JQueryFindJS(embedfindjs); embedjs != nil {
 		return
-	} else if embedjs = jqueryui.JQueryUIFindJS(embedfindjs); embedjs != nil {
+	} else if embedjs = jqueryui.JQueryUIFindJSCSS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = datatables.DataTablesFindJSCSS(embedfindjs); embedjs != nil {
 		return
