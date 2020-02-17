@@ -3,7 +3,6 @@ package network
 import (
 	"archive/zip"
 	"bufio"
-	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -182,6 +181,7 @@ func NewResource(reqst *Request, resourcepath string, a ...interface{}) (rsrc *R
 				}
 				var tlkrhdrs = map[string][]string{}
 				var tlkrparams = map[string][]string{}
+				var tlkrmap map[string]interface{}
 				if len(a) == 1 {
 					if mpd, mpdok := a[0].(map[string]string); mpdok {
 						for mk, mv := range mpd {
@@ -192,7 +192,7 @@ func NewResource(reqst *Request, resourcepath string, a ...interface{}) (rsrc *R
 							}
 						}
 					} else if mpd, mpdok := a[0].(map[string]interface{}); mpdok {
-						for mk, mv := range mpd {
+						/*for mk, mv := range mpd {
 							if mv == nil {
 								if _, mptlkok := tlkrparams[mk]; mptlkok {
 									tlkrparams[mk] = append(tlkrparams[mk], "")
@@ -206,6 +206,9 @@ func NewResource(reqst *Request, resourcepath string, a ...interface{}) (rsrc *R
 									tlkrparams[mk] = []string{fmt.Sprint(mv)}
 								}
 							}
+						}*/
+						if tlkrmap != nil {
+							tlkrmap = mpd
 						}
 					} else if mpd, mpdok := a[0].(map[string][]string); mpdok {
 						for mk, mv := range mpd {
@@ -218,9 +221,17 @@ func NewResource(reqst *Request, resourcepath string, a ...interface{}) (rsrc *R
 					}
 				}
 				if reqst.isfirstResource {
-					tlkr.FSend(rw, reqst.RequestContent(), tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrparams, reqst.params)
+					if tlkrmap != nil {
+						tlkr.FSend(rw, reqst.RequestContent(), tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrmap, tlkrparams, reqst.params)
+					} else {
+						tlkr.FSend(rw, reqst.RequestContent(), tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrparams, reqst.params)
+					}
 				} else {
-					tlkr.FSend(rw, nil, tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrparams)
+					if tlkrmap != nil {
+						tlkr.FSend(rw, nil, tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrmap, tlkrparams)
+					} else {
+						tlkr.FSend(rw, nil, tlkrhdrs, rootFound+pathDelim+rspath+qryparams, tlkrparams)
+					}
 				}
 				tlkr.Close()
 				rf = rw
