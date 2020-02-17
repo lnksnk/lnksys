@@ -138,12 +138,8 @@ func (tlkr *Talker) FSend(w io.Writer, body io.Reader, headers map[string][]stri
 				} else {
 					pmap["reqst-params"] = rqstprms
 				}
-				for {
-					if err = enc.Encode(&pmap); err != nil {
-						break
-					}
-				}
-				if err == nil {
+
+				if err = enc.Encode(&pmap); err == nil {
 					err = bufPipeW.Flush()
 				}
 			}()
