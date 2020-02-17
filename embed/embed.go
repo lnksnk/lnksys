@@ -7,7 +7,6 @@ import (
 
 	ace "github.com/efjoubert/lnksys/embed/ace"
 	anime "github.com/efjoubert/lnksys/embed/anime"
-	reveal "github.com/efjoubert/lnksys/embed/reveal"
 	babel "github.com/efjoubert/lnksys/embed/babel"
 	babylon "github.com/efjoubert/lnksys/embed/babylon"
 	blockui "github.com/efjoubert/lnksys/embed/blockui"
@@ -15,20 +14,22 @@ import (
 	chart "github.com/efjoubert/lnksys/embed/chart"
 	falcor "github.com/efjoubert/lnksys/embed/falcor"
 	fontawesome "github.com/efjoubert/lnksys/embed/fontawesome"
+	goldenlayout "github.com/efjoubert/lnksys/embed/goldenlayout"
 	jquery "github.com/efjoubert/lnksys/embed/jquery"
 	jspanel "github.com/efjoubert/lnksys/embed/jspanel"
 	jss "github.com/efjoubert/lnksys/embed/jss"
 	materialdb "github.com/efjoubert/lnksys/embed/materialdb"
+	pdf "github.com/efjoubert/lnksys/embed/pdf"
+	phaser "github.com/efjoubert/lnksys/embed/phaser"
+	pixi "github.com/efjoubert/lnksys/embed/pixi"
 	react "github.com/efjoubert/lnksys/embed/react"
 	require "github.com/efjoubert/lnksys/embed/require"
+	reveal "github.com/efjoubert/lnksys/embed/reveal"
 	rxjs "github.com/efjoubert/lnksys/embed/rxjs"
 	three "github.com/efjoubert/lnksys/embed/three"
 	typescript "github.com/efjoubert/lnksys/embed/typescript"
 	video "github.com/efjoubert/lnksys/embed/video"
 	webaction "github.com/efjoubert/lnksys/embed/webaction"
-	pixi "github.com/efjoubert/lnksys/embed/pixi"
-	pdf "github.com/efjoubert/lnksys/embed/pdf"
-	phaser "github.com/efjoubert/lnksys/embed/phaser"
 	iorw "github.com/efjoubert/lnksys/iorw"
 )
 
@@ -94,6 +95,8 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	} else if embedjs = pdf.PdfFindJS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = phaser.PhaserFindJS(embedfindjs); embedjs != nil {
+		return
+	} else if embedjs = goldenlayout.GoldenLayoutFindJSCSS(embedfindjs); embedjs != nil {
 		return
 	}
 	return
