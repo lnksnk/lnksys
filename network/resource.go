@@ -207,7 +207,7 @@ func NewResource(reqst *Request, resourcepath string, a ...interface{}) (rsrc *R
 								}
 							}
 						}*/
-						if tlkrmap != nil {
+						if tlkrmap == nil {
 							tlkrmap = mpd
 						}
 					} else if mpd, mpdok := a[0].(map[string][]string); mpdok {
