@@ -25,7 +25,7 @@ func GoldenLayoutLightCSS() io.Reader {
 	return strings.NewReader(goldenlayoutlightcss)
 }
 
-func GoldenLayoutJSCSS(goldenlayoutfindjscss string) io.Reader {
+func GoldenLayoutFINDJSCSS(goldenlayoutfindjscss string) io.Reader {
 	if strings.LastIndex(goldenlayoutfindjscss, "/") >= 0 {
 		goldenlayoutfindjscss = goldenlayoutfindjscss[strings.LastIndex(goldenlayoutfindjscss, "/")+1:]
 	}
