@@ -258,6 +258,7 @@ func (reqst *Request) AddResource(resource ...interface{}) {
 						rsrcss = append(append(rsrcss[:resi], res), rsrcss[resi:]...)
 					}
 				} else {
+					delete(rsrssref, res)
 					if len(reqst.resourcepathargs) == 0 {
 						reqst.resourcepathargs = append(reqst.resourcepathargs, rssrefad)
 					} else {
