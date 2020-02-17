@@ -58,6 +58,7 @@ type Request struct {
 	rqstlck               *sync.Mutex
 	readFromOffset        int64
 	readToOffset          int64
+	curRsrsc              *Resource
 	rspnshdrs             map[string]string
 	bufRW                 *iorw.BufferedRW
 	rw                    *iorw.RW
@@ -279,7 +280,9 @@ func (reqst *Request) AddResource(resource ...interface{}) {
 
 func nxtResource(reqst *Request, nxtrspath string, a ...interface{}) (nxtrs *Resource) {
 	if nxtrspath != "" {
-		nxtrs = NewResource(reqst, nxtrspath, a...)
+		if nxtrs = NewResource(reqst, nxtrspath, a...); nxtrs != nil {
+			reqst.curRsrsc = nxtrs
+		}
 	}
 	return nxtrs
 }
@@ -409,6 +412,9 @@ func (reqst *Request) ExecuteRequest() {
 			}
 			return ar
 		}, map[string]interface{}{"resource": func() *Resource {
+			if reqst.curRsrsc != nil {
+				return reqst.curRsrsc
+			}
 			return curResource
 		}, "DBMS": db.DBMSManager,
 			"Parameters": func() *parameters.Parameters {
@@ -435,6 +441,9 @@ func (reqst *Request) ExecuteRequest() {
 	var isFirtsRS = true
 	for {
 		if len(reqst.resourcepaths) > 0 {
+			if reqst.curRsrsc != nil {
+				reqst.curRsrsc = nil
+			}
 			var nextrs = reqst.resourcepaths[0]
 			var nextrsarg = reqst.resourcepathargs[0]
 
