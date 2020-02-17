@@ -213,26 +213,49 @@ func (reqst *Request) DbQuery(alias string, query string, args ...interface{}) (
 	return
 }
 
-func (reqst *Request) AddResource(resource ...string) {
-	if len(resource) > 0 {
+func (reqst *Request) AddResource(resource ...interface{}) {
+	var rsrcss = []string{}
+	var rsrssref = map[string][]interface{}{}
+	var lastrss = ""
+
+	for _, rsc := range resource {
+		if rss, rssok := rsc.(string); rssok && rss != "" {
+			lastrssi = len(rsrcss)
+			rsrcss = append(rsrcss, rss)
+			lastrss = rss
+		} else {
+			if lastrss != "" {
+				if rssrefa, rssrefaok := rsrssref[lastrss]; rssrefaok {
+					rsrssref[lastrss] = append(rssrefa, rsc)
+				} else {
+					rsrssref[lastrss] = []interface{}{rsc}
+				}
+			}
+		}
+	}
+	if len(rsrcss) > 0 {
 		var lastrsri = len(reqst.resourcepaths)
 		var resi = 0
-		for len(resource) > 0 {
-			var res = resource[0]
+		for len(rsrcss) > 0 {
+			var res = rsrcss[0]
 			resi = 0
-			resource = resource[1:]
+			rsrcss = rsrcss[1:]
 			if res != "" {
 				if strings.Index(res, "|") > 0 {
+					rssrefad := rsrssref[res][:]
+					delete(rsrssref, res)
 					for strings.Index(res, "|") > 0 {
 						var rs = res[:strings.Index(res, "|")]
 						res = res[strings.Index(res, "|")+1:]
 						if rs != "" {
-							resource = append(append(resource[:resi], rs), resource[resi:]...)
+							rsrcss = append(append(rsrcss[:resi], rs), rsrcss[resi:]...)
+							rsrssref[rs] = rssrefad[:]
 							resi++
 						}
 					}
+					rssrefad = nil
 					if res != "" {
-						resource = append(append(resource[:resi], res), resource[resi:]...)
+						rsrcss = append(append(rsrcss[:resi], res), rsrcss[resi:]...)
 					}
 				} else {
 					if len(reqst.resourcepaths) == 0 {
