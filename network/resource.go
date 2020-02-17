@@ -15,6 +15,7 @@ import (
 type Resource struct {
 	reqst           *Request
 	rsinfo          *ResourceInfo
+	rspath          string
 	r               io.Reader
 	size            int64
 	readBuffer      []byte
@@ -44,6 +45,10 @@ func (rsrr rsrRune) ReadRune() (rune, int, error) {
 
 func newRsrRune(r rune, size int, err error) *rsrRune {
 	return &rsrRune{rsrrerr: err, rsrsize: size, rsrr: r}
+}
+
+func (rsrc *Resource) Path() string {
+	return rsrc.rspath
 }
 
 func (rsrc *Resource) ReadRune() (r rune, size int, err error) {
@@ -329,6 +334,7 @@ func NewResource(reqst *Request, resourcepath string, a ...interface{}) (rsrc *R
 	if r != nil || finfo != nil {
 		rsrc = &Resource{
 			r:             r,
+			rspath:        resourcepath,
 			reqst:         reqst,
 			activeInverse: activeInverse,
 			activeEnd:     false,

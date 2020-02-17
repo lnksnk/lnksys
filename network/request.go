@@ -407,24 +407,27 @@ func (reqst *Request) ExecuteRequest() {
 				}
 			}
 			return ar
-		}, map[string]interface{}{"DBMS": db.DBMSManager, "Parameters": func() *parameters.Parameters {
-			return reqst.Parameters()
-		}, "DBQuery": func(alias string, query string, args ...interface{}) (dbquery *db.DBQuery) {
-			dbquery = reqst.DbQuery(alias, query, args)
-			return
-		}, "request": reqst, "SHUTDOWNENV": func() {
-			if reqst.shuttingdownEnv != nil {
-				reqst.canShutdownEnv = true
-			}
-		}, "SHUTDOWNHOST": func() {
-			if reqst.shuttingdownHost != nil {
-				reqst.canShutdownHost = true
-			}
-		}, "SHUTDOWNLISTENER": func() {
-			if reqst.shuttingdownListener != nil {
-				reqst.canShutdownListener = true
-			}
-		}})
+		}, map[string]interface{}{"resource": func() *Resource {
+			return curResource
+		}, "DBMS": db.DBMSManager,
+			"Parameters": func() *parameters.Parameters {
+				return reqst.Parameters()
+			}, "DBQuery": func(alias string, query string, args ...interface{}) (dbquery *db.DBQuery) {
+				dbquery = reqst.DbQuery(alias, query, args)
+				return
+			}, "request": reqst, "SHUTDOWNENV": func() {
+				if reqst.shuttingdownEnv != nil {
+					reqst.canShutdownEnv = true
+				}
+			}, "SHUTDOWNHOST": func() {
+				if reqst.shuttingdownHost != nil {
+					reqst.canShutdownHost = true
+				}
+			}, "SHUTDOWNLISTENER": func() {
+				if reqst.shuttingdownListener != nil {
+					reqst.canShutdownListener = true
+				}
+			}})
 	} else {
 		reqst.Active.Reset()
 	}
