@@ -45,5 +45,5 @@ func JQueryUIFindJSCSS(findjqueryuijscss string) io.Reader {
 	} else if findjqueryuijscss=="jqueryui.css" {
 		return JQueryUICSS()
 	}
-	return nil
+	return JqueryUIFindImages(findjqueryuijscss)
 }
