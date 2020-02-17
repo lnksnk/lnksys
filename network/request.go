@@ -77,6 +77,7 @@ type Request struct {
 	lastResourcePathAdded string
 	isfirstResource       bool
 	resourcepaths         []string
+	resourcepathargs      [][]interface{}
 	rootpaths             []string
 	preCurrentBytes       []byte
 	preCurrentBytesl      int
@@ -220,7 +221,6 @@ func (reqst *Request) AddResource(resource ...interface{}) {
 
 	for _, rsc := range resource {
 		if rss, rssok := rsc.(string); rssok && rss != "" {
-			lastrssi = len(rsrcss)
 			rsrcss = append(rsrcss, rss)
 			lastrss = rss
 		} else {
@@ -238,11 +238,11 @@ func (reqst *Request) AddResource(resource ...interface{}) {
 		var resi = 0
 		for len(rsrcss) > 0 {
 			var res = rsrcss[0]
+			var rssrefad = rsrssref[res][:]
 			resi = 0
 			rsrcss = rsrcss[1:]
 			if res != "" {
 				if strings.Index(res, "|") > 0 {
-					rssrefad := rsrssref[res][:]
 					delete(rsrssref, res)
 					for strings.Index(res, "|") > 0 {
 						var rs = res[:strings.Index(res, "|")]
@@ -258,6 +258,11 @@ func (reqst *Request) AddResource(resource ...interface{}) {
 						rsrcss = append(append(rsrcss[:resi], res), rsrcss[resi:]...)
 					}
 				} else {
+					if len(reqst.resourcepathargs) == 0 {
+						reqst.resourcepathargs = append(reqst.resourcepathargs, rssrefad)
+					} else {
+						reqst.resourcepathargs = append(append(reqst.resourcepathargs[:lastrsri], rssrefad), reqst.resourcepathargs[lastrsri:]...)
+					}
 					if len(reqst.resourcepaths) == 0 {
 						reqst.resourcepaths = append(reqst.resourcepaths, res)
 					} else {
@@ -427,7 +432,10 @@ func (reqst *Request) ExecuteRequest() {
 	for {
 		if len(reqst.resourcepaths) > 0 {
 			var nextrs = reqst.resourcepaths[0]
+			var nextrsarg = reqst.resourcepathargs[0]
+
 			reqst.resourcepaths = reqst.resourcepaths[1:]
+			reqst.resourcepathargs = reqst.resourcepathargs[1:]
 			if !strings.HasPrefix(nextrs, "/") {
 				if reqst.lastResourcePathAdded == "" {
 					reqst.lastResourcePathAdded = "/"
@@ -436,7 +444,7 @@ func (reqst *Request) ExecuteRequest() {
 			} else if strings.HasPrefix(nextrs, "/") {
 				reqst.lastResourcePathAdded = nextrs[:strings.LastIndex(nextrs, "/")+1]
 			}
-			if nxtrs := nxtResource(reqst, nextrs); nxtrs != nil {
+			if nxtrs := nxtResource(reqst, nextrs, nextrsarg...); nxtrs != nil {
 				if curResource == nil || curResource != nxtrs {
 					curResource = nxtrs
 				}
@@ -501,6 +509,7 @@ func (reqst *Request) ExecuteRequest() {
 					}
 				}
 			}
+			nextrsarg = nil
 		} else {
 			break
 		}
@@ -978,6 +987,19 @@ func (reqst *Request) Close() (err error) {
 			reqst.resources = reqst.resources[1:]
 		}
 		reqst.resources = nil
+	}
+	if reqst.resourcepaths != nil {
+		for len(reqst.resourcepaths) > 0 {
+			reqst.resourcepaths = reqst.resourcepaths[1:]
+		}
+		reqst.resourcepaths = nil
+	}
+	if reqst.resourcepathargs != nil {
+		for len(reqst.resourcepathargs) > 0 {
+			reqst.resourcepathargs[0] = nil
+			reqst.resourcepathargs = reqst.resourcepathargs[1:]
+		}
+		reqst.resourcepathargs = nil
 	}
 	if reqst.rqstContent != nil {
 		reqst.rqstContent.Close()
