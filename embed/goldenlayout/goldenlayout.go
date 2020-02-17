@@ -33,7 +33,7 @@ func GoldenLayoutFindJSCSS(goldenlayoutfindjscss string) io.Reader {
 		return GoldenLayoutJS()
 	} else if goldenlayoutfindjscss == "goldenlayout-dark-theme.css" {
 		return GoldenLayoutDarkCSS()
-	} else if goldenlayoutfindjscss == "goldenlayout-dark-light.css" {
+	} else if goldenlayoutfindjscss == "goldenlayout-light-theme.css" {
 		return GoldenLayoutLightCSS()
 	}
 	return nil
