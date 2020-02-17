@@ -30,7 +30,7 @@ func JqueryUIFindImages(jqueryuifindimages string) io.Reader {
 	} else if strings.HasSuffix(jqueryuifindimages, "ui-icons_555555_256x240.png") {
 		return base64.NewDecoder(base64.StdEncoding, strings.NewReader(ui_icons_555555_256x240png))
 	} else if strings.HasSuffix(jqueryuifindimages, "ui-icons_777620_256x240.png") {
-		return base64.NewDecoder(base64.StdEncoding, strings.NewReader(ui_icons_777620_256x2400png))
+		return base64.NewDecoder(base64.StdEncoding, strings.NewReader(ui_icons_777620_256x240png))
 	} else if strings.HasSuffix(jqueryuifindimages, "ui-icons_777777_256x240.png") {
 		return base64.NewDecoder(base64.StdEncoding, strings.NewReader(ui_icons_777777_256x240png))
 	} else if strings.HasSuffix(jqueryuifindimages, "ui-icons_cc0000_256x240.png") {
