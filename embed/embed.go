@@ -16,6 +16,7 @@ import (
 	fontawesome "github.com/efjoubert/lnksys/embed/fontawesome"
 	goldenlayout "github.com/efjoubert/lnksys/embed/goldenlayout"
 	jquery "github.com/efjoubert/lnksys/embed/jquery"
+	datatables "github.com/efjoubert/lnksys/embed/jquery/datatables"
 	jspanel "github.com/efjoubert/lnksys/embed/jspanel"
 	jss "github.com/efjoubert/lnksys/embed/jss"
 	materialdb "github.com/efjoubert/lnksys/embed/materialdb"
@@ -51,6 +52,8 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	} else if embedjs = react.SchedulerFindJS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = jquery.JQueryFindJS(embedfindjs); embedjs != nil {
+		return
+	} else if embedjs = datatables.DataTablesFindJSCSS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = require.RequireFindJS(embedfindjs); embedjs != nil {
 		return
