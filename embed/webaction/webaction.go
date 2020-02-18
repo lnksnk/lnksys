@@ -175,8 +175,8 @@ function postNode(){
 								var fname=input.attr("name")
 								var fval=input.val();
 								if (hasJson) {
-									if (json_ref["reqst-params"]==undefined){
-										json_ref["reqst-params"]={}
+									if (formData["reqst-params"]==undefined){
+										formData["reqst-params"]={}
 									}
 								}
 								if(input.attr("type")!=undefined && input.attr("type")!="button"&&input.attr("type")!="submit"&&input.attr("type")!="image"){
@@ -184,20 +184,20 @@ function postNode(){
 										if (!hasJson) {	formData.append(input.attr("name"),input[0].files[0]); }
 									} else {
 										if (hasJson) {
-											if (json_ref["reqst-params"][fname]==undefined){
-												json_ref["reqst-params"][fname]=[];
+											if (formData["reqst-params"][fname]==undefined){
+												formData["reqst-params"][fname]=[];
 											} 
-											json_ref["reqst-params"][fname].push(fval);
+											formData["reqst-params"][fname].push(fval);
 										} else {
 											formData.append(fname,fval);
 										}
 									}
 								} else {
 									if (hasJson) {
-										if (json_ref["reqst-params"][fname]==undefined){
-											json_ref["reqst-params"][fname]=[];
+										if (formData["reqst-params"][fname]==undefined){
+											formData["reqst-params"][fname]=[];
 										} 
-										json_ref["reqst-params"][fname].push(fval);
+										formData["reqst-params"][fname].push(fval);
 									} else {
 										formData.append(fname,fval);
 									}
