@@ -17,13 +17,18 @@ const webactionjs string = `function webactionRequestViaOptions(callbackurl,form
 
 var lasturlref="";
 
-function postElem(elem) {
+function postElem() {
+	var elem=[].slice.call(arguments);
 	if(elem==undefined) return;
 	if (Array.isArray(elem)){
-		for (var elm in elem) {
-			postElem(elem[elm]);
+		if (elem.length==1) {
+			elem=elem[0];
+		} else {
+			for (var elm in elem) {
+				postElem(elem[elm]);
+			}
+			return;
 		}
-		return;
 	}
 	var options={}
 	$(elem).each(function() {
