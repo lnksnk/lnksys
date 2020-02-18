@@ -43,7 +43,7 @@ function postElem(elem) {
 }
 
 function postNode(){
-	var options=Array.prototype.slice.call(arguments)
+	var options=[].slice.call(arguments);
 	if(options==undefined) return;
 	if (Array.isArray(options)){
 		if (options.length==1) {
