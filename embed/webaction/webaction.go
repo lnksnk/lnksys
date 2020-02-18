@@ -42,13 +42,18 @@ function postElem(elem) {
 	postNode(options);
 }
 
-function postNode(options){
+function postNode(){
+	var options=Array.prototype.slice.call(arguments)
 	if(options==undefined) return;
 	if (Array.isArray(options)){
-		for (var opt in options) {
-			postNode(options[opt]);
+		if (options.length==1) {
+			options=options[0]
+		} else {
+			for (var opt in options) {
+				postNode(options[opt]);
+			}
+			return;
 		}
-		return;
 	} 
 	if(options.url_ref==undefined||options.url_ref==""){
 		return;
