@@ -21,7 +21,7 @@ function postElem(elem) {
 	if(elem==undefined) return;
 	if (Array.isArray(elem)){
 		for (var elm in elem) {
-			alert(elm);
+			postElem(elem[elm]);
 		}
 		return;
 	}
@@ -46,7 +46,7 @@ function postNode(options){
 	if(options==undefined) return;
 	if (Array.isArray(options)){
 		for (var opt in options) {
-			postNode(opt);
+			postNode(options[opt]);
 		}
 		return;
 	} 
