@@ -21,6 +21,7 @@ function postElem() {
 	var elem=[].slice.call(arguments);
 	if(elem==undefined) return;
 	if (Array.isArray(elem)){
+		if (elem.length==0) return;
 		if (elem.length==1) {
 			elem=elem[0];
 		} else {
@@ -51,6 +52,7 @@ function postNode(){
 	var options=[].slice.call(arguments);
 	if(options==undefined) return;
 	if (Array.isArray(options)){
+		if (options.length==0) return;
 		if (options.length==1) {
 			options=options[0]
 		} else {
