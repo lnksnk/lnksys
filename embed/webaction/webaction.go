@@ -25,7 +25,7 @@ function postByElem(elem) {
 				if (this.name=="url_ref" || this.name=="form_ref" || this.name=="enable_progress_elem" || this.name=="progress_elem" || this.name=="target" || this.name=="command"){
 					options[this.name] = this.value;
 				} else if (this.name=="json_ref"){
-					if this.value!=undefined && this.value!="" {
+					if (this.value!=undefined && this.value!="") {
 						options[this.name] = JSON.parse(this.value);
 					}
 				}
