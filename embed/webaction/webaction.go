@@ -116,7 +116,7 @@ function postForm(options){
 	if(options.target!=undefined){
 		target=options.target+"";
 	}
-    var formData = hasJSon?json_ref:new FormData();
+    var formData = hasJson?json_ref:new FormData();
 	if (!hasJson) {
 		var urlparams=getAllUrlParams(urlref);
 		if (urlref.indexOf("?")>-1){
