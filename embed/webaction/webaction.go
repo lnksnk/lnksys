@@ -21,7 +21,7 @@ function postElem(elem) {
 	if(elem==undefined) return;
 	if (Array.isArray(elem)){
 		for (var elm in elem) {
-			postElem(elm);
+			alert(elm);
 		}
 		return;
 	}
