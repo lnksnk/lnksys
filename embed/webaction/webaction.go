@@ -238,7 +238,7 @@ function postNode(){
             xhr.withCredentials = false;
             return xhr;
         },
-        contentType:hasJson?"appluaction/json":false,
+        contentType:hasJson?"application/json":false,
         processData: false,
         type: 'POST',
         data:hasJson?JSON.stringify(formData):formData,
