@@ -17,7 +17,14 @@ const webactionjs string = `function webactionRequestViaOptions(callbackurl,form
 
 var lasturlref="";
 
-function postByElem(elem) {
+function postElem(elem) {
+	if(elem==undefined) return;
+	if (Array.isArray(elem)){
+		for (var elm in elem) {
+			postElem(elm);
+		}
+		return;
+	}
 	var options={}
 	$(elem).each(function() {
 		$.each(this.attributes, function() {
@@ -32,11 +39,17 @@ function postByElem(elem) {
 			}
 		});
 	});
-	postForm(options);
+	postNode(options);
 }
 
-function postForm(options){
+function postNode(options){
 	if(options==undefined) return;
+	if (Array.isArray(option)){
+		for (var opt in option) {
+			postNode(opt);
+		}
+		return;
+	} 
 	if(options.url_ref==undefined||options.url_ref==""){
 		return;
 	}
