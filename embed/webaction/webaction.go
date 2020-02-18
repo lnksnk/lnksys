@@ -156,7 +156,7 @@ function postForm(options){
 								}
 								if(input.attr("type")!=undefined && input.attr("type")!="button"&&input.attr("type")!="submit"&&input.attr("type")!="image"){
 									if(input.attr("type")=="file"){
-										if (!hasJSon) {	formData.append(input.attr("name"),input[0].files[0]); }
+										if (!hasJson) {	formData.append(input.attr("name"),input[0].files[0]); }
 									} else {
 										if (hasJson) {
 											if (json_ref["reqst-params"][fname]==undefined){
