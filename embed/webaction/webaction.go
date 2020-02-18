@@ -44,8 +44,8 @@ function postElem(elem) {
 
 function postNode(options){
 	if(options==undefined) return;
-	if (Array.isArray(option)){
-		for (var opt in option) {
+	if (Array.isArray(options)){
+		for (var opt in options) {
 			postNode(opt);
 		}
 		return;
