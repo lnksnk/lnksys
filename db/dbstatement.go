@@ -3,9 +3,10 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	parameters "github.com/efjoubert/lnksys/parameters"
 	"strings"
 	"sync"
+
+	parameters "github.com/efjoubert/lnksys/parameters"
 )
 
 //DbStatement container representing the underlying DbConnection and allocated sql.Tx transaction
@@ -54,6 +55,15 @@ func (stmnt *DbStatement) Execute(query string, args ...interface{}) (lastInsert
 			for _, skey := range pargs.StandardKeys() {
 				validNames = append(validNames, skey)
 				mappedVals[skey] = strings.Join(pargs.Parameter(skey), "")
+			}
+		} else if pmargs, ispmargs := args[0].(map[string]interface{}); ispmargs {
+			for pmk, pmv := range pmargs {
+				if mpv, mpvok := pmv.(map[string]interface{}); mpvok && mpv != nil {
+
+				} else {
+					validNames = append(validNames, pmk)
+					mappedVals[pmk] = fmt.Sprint(pmv)
+				}
 			}
 		}
 	}
@@ -149,6 +159,15 @@ func (stmnt *DbStatement) Query(query string, args ...interface{}) (rset *DbResu
 			for _, skey := range pargs.StandardKeys() {
 				validNames = append(validNames, skey)
 				mappedVals[skey] = strings.Join(pargs.Parameter(skey), "")
+			}
+		} else if pmargs, ispmargs := args[0].(map[string]interface{}); ispmargs {
+			for pmk, pmv := range pmargs {
+				if mpv, mpvok := pmv.(map[string]interface{}); mpvok && mpv != nil {
+
+				} else {
+					validNames = append(validNames, pmk)
+					mappedVals[pmk] = fmt.Sprint(pmv)
+				}
 			}
 		}
 	}
