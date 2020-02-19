@@ -55,7 +55,9 @@ function postNode(){
 		if (options.length==0) return;
 		if (options.length==1) {
 			if (Array.isArray(options[0])){
-				postNode(options[0]);
+				for (var opt in options[0]) {
+					postNode(options[0][opt]);
+				}
 				return;
 			} if (options[0] typeof === 'function'){
 				options[0]();
