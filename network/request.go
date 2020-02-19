@@ -563,6 +563,7 @@ func (reqst *Request) Seek(offset int64, whence int) (n int64, err error) {
 func (reqst *Request) Println(a ...interface{}) {
 	reqst.wgrpnt.Add(1)
 	go func(wgrf *sync.WaitGroup) {
+		defer wgrf.Done()
 		iorw.FPrint(reqst, a...)
 		iorw.FPrint(reqst, "\r\n")
 	}(reqst.wgrpnt)
@@ -572,6 +573,7 @@ func (reqst *Request) Println(a ...interface{}) {
 func (reqst *Request) Print(a ...interface{}) {
 	reqst.wgrpnt.Add(1)
 	go func(wgrf *sync.WaitGroup) {
+		defer wgrf.Done()
 		iorw.FPrint(reqst, a...)
 	}(reqst.wgrpnt)
 	reqst.wgrpnt.Wait()
