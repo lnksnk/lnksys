@@ -132,21 +132,20 @@ func (rset *DbResultSet) Data() []interface{} {
 
 func castSQLTypeValue(valToCast interface{}, colType *ColumnType) (castedVal interface{}) {
 	if valToCast != nil {
-			if d, dok := valToCast.([]uint8); dok {
-				castedVal = string(d)
-			} else if sd, dok := valToCast.(string); dok {
-				castedVal = sd
-			} else if dtime, dok := valToCast.(time.Time); dok {
-				castedVal = dtime.Format("2006-01-02T15:04:05")
-			} else if djsn, djsnok := valToCast.([]byte); djsnok {
-				if dv, dverr := json.Marshal(djsn); dverr == nil {
-					castedVal = dv
-				} else {
-					castedVal=djsn
-				}
+		if d, dok := valToCast.([]uint8); dok {
+			castedVal = string(d)
+		} else if sd, dok := valToCast.(string); dok {
+			castedVal = sd
+		} else if dtime, dok := valToCast.(time.Time); dok {
+			castedVal = dtime.Format("2006-01-02T15:04:05")
+		} else if djsn, djsnok := valToCast.([]byte); djsnok {
+			if dv, dverr := json.Marshal(djsn); dverr == nil {
+				castedVal = dv
 			} else {
-				castedVal = valToCast
-			} 
+				castedVal = djsn
+			}
+		} else {
+			castedVal = valToCast
 		}
 	} else {
 		castedVal = valToCast
