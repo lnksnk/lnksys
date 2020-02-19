@@ -146,18 +146,18 @@ func (rw *RW) Close() (err error) {
 	return
 }
 
-func PipedFPrint(w io.Writer, a ...interface{}) (err error){
-	if len(a)>0 {
-		func(){
-			pr,pw:=io.Pipe()
-			pwrd:=make(chan bool,1)
+func PipedFPrint(w io.Writer, a ...interface{}) (err error) {
+	if len(a) > 0 {
+		func() {
+			pr, pw := io.Pipe()
+			pwrd := make(chan bool, 1)
 			defer close(pwrd)
-			go func(){
-				defer func(){
-					pwrd<-true
+			go func() {
+				defer func() {
+					pwrd <- true
 					pr.Close()
 				}()
-				io.Copy(w,pr)
+				io.Copy(w, pr)
 			}()
 			for _, d := range a {
 				if r, rok := d.(io.Reader); rok {
@@ -193,7 +193,7 @@ func PipedFPrint(w io.Writer, a ...interface{}) (err error){
 }
 
 func FPrint(w io.Writer, a ...interface{}) (err error) {
-	if len(a)>0 {
+	if len(a) > 0 {
 		for _, d := range a {
 			if r, rok := d.(io.Reader); rok {
 				io.Copy(w, r)
@@ -244,18 +244,19 @@ type BufferedRW struct {
 	offset        int64
 	bufRWActn     bufRWAction
 	bufRWActnDone chan bool
+	wgr           *sync.WaitGroup
 }
 
 func NewBufferedRW(maxBufferSize int64, rw ...interface{}) (bufRW *BufferedRW) {
-	var altRW ReaderWriter=nil
-	if len(rw)==1 && rw[0]!=nil {
-		if rwi,rwiok:=rw[0].(ReaderWriter); rwiok {
-			altRW=rwi
+	var altRW ReaderWriter = nil
+	if len(rw) == 1 && rw[0] != nil {
+		if rwi, rwiok := rw[0].(ReaderWriter); rwiok {
+			altRW = rwi
 		} else {
-			altRW=NewRW(rw[0])
+			altRW = NewRW(rw[0])
 		}
 	}
-	bufRW = &BufferedRW{altRW: altRW, maxBufferSize: maxBufferSize, bufRWActn: bufRWNoAction, bufRWActnDone: make(chan bool, 1), isCursor: false, lastCurpos: 0, cbufi: 0, cbytesi: 0}
+	bufRW = &BufferedRW{wgr: &sync.WaitGroup{}, altRW: altRW, maxBufferSize: maxBufferSize, bufRWActn: bufRWNoAction, bufRWActnDone: make(chan bool, 1), isCursor: false, lastCurpos: 0, cbufi: 0, cbytesi: 0}
 	if altRW != nil {
 		if altRWBuf, altRWBufOk := altRW.(*BufferedRW); altRWBufOk && !altRWBuf.isCursor {
 			bufRW.altBufRW = altRWBuf
@@ -311,9 +312,9 @@ func copyN(dst io.Writer, bufDst *BufferedRW, bufSrc *BufferedRW, src io.Reader,
 		} else {
 			written, err = bufSrc.copyN(bufDst, buffSize)
 		}
-	} else if bufDst != nil && src!= nil {
+	} else if bufDst != nil && src != nil {
 		written, err = io.CopyN(bufDst, src, buffSize)
-	} else if dst!=nil && src!=nil {
+	} else if dst != nil && src != nil {
 		written, err = io.CopyN(dst, src, buffSize)
 	}
 	return
@@ -387,27 +388,27 @@ func (bufRW *BufferedRW) String() (s string) {
 			s += string(bufRW.wbytes[0:bufRW.wbytesi])
 		}
 	} else {
-		var runesbuf = make([]rune,8192)
+		var runesbuf = make([]rune, 8192)
 		var runesbufi = 0
 		for {
-			r, size, err:= bufRW.ReadRune(); 
-			if size>0 {
-				runesbuf[runesbufi]=r
+			r, size, err := bufRW.ReadRune()
+			if size > 0 {
+				runesbuf[runesbufi] = r
 				runesbufi++
-				if runesbufi==len(runesbuf) {
-					s+=string(runesbuf[:runesbufi])
-					runesbufi=0
+				if runesbufi == len(runesbuf) {
+					s += string(runesbuf[:runesbufi])
+					runesbufi = 0
 				}
 			}
-			if err!=nil {
+			if err != nil {
 				break
 			}
 		}
-		if runesbufi>0 {
-			s+=string(runesbuf[:runesbufi])
-			runesbufi=0
+		if runesbufi > 0 {
+			s += string(runesbuf[:runesbufi])
+			runesbufi = 0
 		}
-		runesbuf=nil
+		runesbuf = nil
 	}
 	return
 }
@@ -425,10 +426,15 @@ func (bufRW *BufferedRW) Read(p []byte) (n int, err error) {
 			}
 
 			if bufRW.bufferSize == 0 {
-				if bufRW.altRW != nil && bufRW.maxBufferSize > 0 {
+				bufRW.wgr.Add(1)
+				go func(wgrf *sync.WaitGroup) {
+					defer wgrf.Done()
+					if bufRW.altRW != nil && bufRW.maxBufferSize > 0 {
 
-					queueNextBufRWAction(bufRWCopyRead, bufRW)
-				}
+						queueNextBufRWAction(bufRWCopyRead, bufRW)
+					}
+				}(bufRW.wgr)
+				bufRW.wgr.Wait()
 				if bufRW.wbytesi > 0 {
 					if bufRW.buffer == nil {
 						bufRW.buffer = [][]byte{}
@@ -543,6 +549,9 @@ func (bufRW *BufferedRW) Close() (err error) {
 	}
 	if bufRW.runeRdr != nil {
 		bufRW.runeRdr = nil
+	}
+	if bufRW.wgr != nil {
+		bufRW.wgr = nil
 	}
 	return
 }
