@@ -301,9 +301,16 @@ function postNode(){
 						});
 					}
 					if(parsedScript!=""){
-						eval(parsedScript);
+						try {
+							eval(parsedScript)
+							resolve();
+						} catch(e) {
+							reject(e);
+						}
+					} else {
+						resolve();
 					}
-					resolve();
+					
 					/*if (options.options!=undefined) {
 						postNode(options.options);
 					}*/
@@ -343,11 +350,20 @@ function postNode(){
 	});
 
 	ajaxpromise.then(function(){
+		if (options.resolved!=undefined) {
+			if (options.resolved typeof ==='function'){
+				options.resolved(options);
+			}
+		}
 		if (options.options!=undefined) {
 			postNode(options.options);
 		}
 	},function(err){
-
+		if (options.rejected!=undefined) {
+			if (options.rejected typeof ==='function'){
+				options.rejected(options,err);
+			}
+		}
 	});
 }
 
