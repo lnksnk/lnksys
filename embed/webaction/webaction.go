@@ -297,11 +297,7 @@ function postNode(){
 					eval(parsedScript);
 				}
 				if (options.options!=undefined) {
-					if (typeof options.options === 'function') {
-						options.options();
-					} else {
-						postNode(options.options);
-					}
+					postNode(options.options);
 				}
 			} else {
 				var contentdisposition=(""+xhr.getResponseHeader("Content-Disposition")).trim();
