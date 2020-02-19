@@ -61,9 +61,11 @@ function postNode(){
 				return;
 			} if (typeof options[0] === 'function'){
 				var optreturn=options[0]();
-				if (optreturn!=undefined){
+				if (optreturn===undefined){
+					return;
+				} else {
 					postNode(optreturn);
-				} 
+				}
 				return;
 			}
 			else {
