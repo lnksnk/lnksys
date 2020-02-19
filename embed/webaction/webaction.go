@@ -54,7 +54,16 @@ function postNode(){
 	if (Array.isArray(options)){
 		if (options.length==0) return;
 		if (options.length==1) {
-			options=options[0]
+			if (Array.isArray(options[0])){
+				postNode(options[0]);
+				return;
+			} if (options[0] typeof === 'function'){
+				options[0]();
+				return;
+			}
+			else {
+				options=options[0]
+			}
 		} else {
 			for (var opt in options) {
 				postNode(options[opt]);
