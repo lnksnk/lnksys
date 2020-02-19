@@ -12,6 +12,7 @@ import (
 	blockui "github.com/efjoubert/lnksys/embed/blockui"
 	bootstrap "github.com/efjoubert/lnksys/embed/bootstrap"
 	chart "github.com/efjoubert/lnksys/embed/chart"
+	class "github.com/efjoubert/lnksys/embed/class"
 	falcor "github.com/efjoubert/lnksys/embed/falcor"
 	fontawesome "github.com/efjoubert/lnksys/embed/fontawesome"
 	goldenlayout "github.com/efjoubert/lnksys/embed/goldenlayout"
@@ -48,7 +49,9 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	if strings.LastIndex(embedfindjs, "/") >= 0 {
 		embedfindjs = embedfindjs[strings.LastIndex(embedfindjs, "/")+1:]
 	}
-	if embedjs = react.ReactFindJS(embedfindjs); embedjs != nil {
+	if embedjs = class.ClassFindJS(embedfindjs); embedjs != nil {
+		return
+	} else if embedjs = react.ReactFindJS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = react.SchedulerFindJS(embedfindjs); embedjs != nil {
 		return
