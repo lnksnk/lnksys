@@ -46,6 +46,7 @@ func cachedRsrs() map[string]*iorw.BufferedRW {
 }
 
 func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
+	embedfindjs = strings.Replace(embedfindjs, "\\", "/", -1)
 	if strings.LastIndex(embedfindjs, "/") >= 0 {
 		embedfindjs = embedfindjs[strings.LastIndex(embedfindjs, "/")+1:]
 	}
