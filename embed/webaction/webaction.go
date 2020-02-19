@@ -351,7 +351,7 @@ function postNode(){
 
 	ajaxpromise.then(function(){
 		if (options.resolved!=undefined) {
-			if (options.resolved typeof ==='function'){
+			if (typeof options.resolved ==='function'){
 				options.resolved(options);
 			}
 		}
@@ -360,7 +360,7 @@ function postNode(){
 		}
 	},function(err){
 		if (options.rejected!=undefined) {
-			if (options.rejected typeof ==='function'){
+			if (typeof options.rejected ==='function'){
 				options.rejected(options,err);
 			}
 		}
