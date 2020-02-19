@@ -59,7 +59,7 @@ function postNode(){
 					postNode(options[0][opt]);
 				}
 				return;
-			} if (options[0] typeof === 'function'){
+			} if (typeof options[0] === 'function'){
 				options[0]();
 				return;
 			}
