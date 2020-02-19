@@ -60,7 +60,10 @@ function postNode(){
 				}
 				return;
 			} if (typeof options[0] === 'function'){
-				options[0]();
+				var optreturn=options[0]();
+				if (optreturn!=undefined){
+					postNode(optreturn);
+				} 
 				return;
 			}
 			else {
