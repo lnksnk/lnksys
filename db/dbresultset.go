@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"reflect"
 	"strings"
 	"time"
@@ -117,7 +118,7 @@ func (rset *DbResultSet) MetaData() *DbResultSetMetaData {
 //Data return Displayable data in the form of a slice, 'array', of interface{} values
 func (rset *DbResultSet) Data() []interface{} {
 	go func(somethingDone chan bool) {
-		defer func(){
+		defer func() {
 			somethingDone <- true
 		}()
 		for n := range rset.data {
@@ -131,14 +132,22 @@ func (rset *DbResultSet) Data() []interface{} {
 
 func castSQLTypeValue(valToCast interface{}, colType *ColumnType) (castedVal interface{}) {
 	if valToCast != nil {
-		if d, dok := valToCast.([]uint8); dok {
-			castedVal = string(d)
-		} else if sd, dok := valToCast.(string); dok {
-			castedVal = sd
-		} else if dtime, dok := valToCast.(time.Time); dok {
-			castedVal = dtime.Format("2006-01-02T15:04:05")
+		if colType.Name() == "JSONB" {
+			if d, dok := valToCast.([]byte); dok {
+				if dv, dverr := json.Marshal(d); dverr == nil {
+					castedVal = dv
+				}
+			}
 		} else {
-			castedVal = valToCast
+			if d, dok := valToCast.([]uint8); dok {
+				castedVal = string(d)
+			} else if sd, dok := valToCast.(string); dok {
+				castedVal = sd
+			} else if dtime, dok := valToCast.(time.Time); dok {
+				castedVal = dtime.Format("2006-01-02T15:04:05")
+			} else {
+				castedVal = valToCast
+			}
 		}
 	} else {
 		castedVal = valToCast
@@ -155,9 +164,9 @@ func (rset *DbResultSet) Next() (next bool, err error) {
 			rset.dataref = make([]interface{}, len(rset.rsmetadata.cols))
 			rset.dispdata = make([]interface{}, len(rset.rsmetadata.cols))
 		}
-		go func(somethingDone chan bool) { 
-			defer func(){
-				somethingDone<-true
+		go func(somethingDone chan bool) {
+			defer func() {
+				somethingDone <- true
 			}()
 			for n := range rset.data {
 				rset.dataref[n] = &rset.data[n]
