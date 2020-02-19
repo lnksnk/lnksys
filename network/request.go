@@ -59,6 +59,7 @@ type Request struct {
 	readFromOffset        int64
 	readToOffset          int64
 	curRsrsc              *Resource
+	wgrpnt                *sync.WaitGroup
 	rspnshdrs             map[string]string
 	bufRW                 *iorw.BufferedRW
 	rw                    *iorw.RW
@@ -560,12 +561,20 @@ func (reqst *Request) Seek(offset int64, whence int) (n int64, err error) {
 }
 
 func (reqst *Request) Println(a ...interface{}) {
-	reqst.Print(a...)
-	reqst.Print("\r\n")
+	reqst.wgrpnt.Add(1)
+	go func(wgrf *sync.WaitGroup) {
+		iorw.FPrint(reqst, a...)
+		iorw.FPrint(reqst, "\r\n")
+	}(reqst.wgrpnt)
+	reqst.wgrpnt.Wait()
 }
 
 func (reqst *Request) Print(a ...interface{}) {
-	iorw.FPrint(reqst, a...)
+	reqst.wgrpnt.Add(1)
+	go func(wgrf *sync.WaitGroup) {
+		iorw.FPrint(reqst, a...)
+	}(reqst.wgrpnt)
+	reqst.wgrpnt.Wait()
 }
 
 func (reqst *Request) ReadRune() (r rune, size int, err error) {
@@ -856,6 +865,7 @@ func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shut
 		resourcesOffset:      -1,
 		isfirstResource:      true,
 		rqstlck:              &sync.Mutex{},
+		wgrpnt:               &sync.WaitGroup{},
 		listener:             listener,
 		w:                    w,
 		r:                    r,
@@ -1032,6 +1042,9 @@ func (reqst *Request) Close() (err error) {
 	if reqst.wpipeE != nil {
 		close(reqst.wpipeE)
 		reqst.wpipeE = nil
+	}
+	if reqst.wgrpnt != nil {
+		reqst.wgrpnt = nil
 	}
 	return
 }

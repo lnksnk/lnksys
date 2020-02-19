@@ -246,6 +246,7 @@ type BufferedRW struct {
 	bufRWActn     bufRWAction
 	bufRWActnDone chan bool
 	wgr           *sync.WaitGroup
+	wgprnt        *sync.WaitGroup
 }
 
 func NewBufferedRW(maxBufferSize int64, rw ...interface{}) (bufRW *BufferedRW) {
@@ -257,7 +258,7 @@ func NewBufferedRW(maxBufferSize int64, rw ...interface{}) (bufRW *BufferedRW) {
 			altRW = NewRW(rw[0])
 		}
 	}
-	bufRW = &BufferedRW{wgr: &sync.WaitGroup{}, altRW: altRW, maxBufferSize: maxBufferSize, bufRWActn: bufRWNoAction, bufRWActnDone: make(chan bool, 1), isCursor: false, lastCurpos: 0, cbufi: 0, cbytesi: 0}
+	bufRW = &BufferedRW{wgprnt: &sync.WaitGroup{}, wgr: &sync.WaitGroup{}, altRW: altRW, maxBufferSize: maxBufferSize, bufRWActn: bufRWNoAction, bufRWActnDone: make(chan bool, 1), isCursor: false, lastCurpos: 0, cbufi: 0, cbytesi: 0}
 	if altRW != nil {
 		if altRWBuf, altRWBufOk := altRW.(*BufferedRW); altRWBufOk && !altRWBuf.isCursor {
 			bufRW.altBufRW = altRWBuf
@@ -486,12 +487,22 @@ func (bufRW *BufferedRW) Read(p []byte) (n int, err error) {
 }
 
 func (bufRW *BufferedRW) Println(a ...interface{}) {
-	PipedFPrint(bufRW, a...)
-	FPrint(bufRW, "\r\n")
+	bufRW.wgprnt.Add(1)
+	go func(wgrf *sync.WaitGroup) {
+		defer wgrf.Done()
+		FPrint(bufRW, a...)
+		FPrint(bufRW, "\r\n")
+	}(bufRW.wgprnt)
+	bufRW.wgprnt.Wait()
 }
 
 func (bufRW *BufferedRW) Print(a ...interface{}) {
-	PipedFPrint(bufRW, a...)
+	bufRW.wgprnt.Add(1)
+	go func(wgrf *sync.WaitGroup) {
+		defer wgrf.Done()
+		FPrint(bufRW, a...)
+	}(bufRW.wgprnt)
+	bufRW.wgprnt.Wait()
 }
 
 func (bufRW *BufferedRW) Write(p []byte) (n int, err error) {
@@ -553,6 +564,9 @@ func (bufRW *BufferedRW) Close() (err error) {
 	}
 	if bufRW.wgr != nil {
 		bufRW.wgr = nil
+	}
+	if bufRW.wgprnt != nil {
+		bufRW.wgprnt = nil
 	}
 	return
 }
