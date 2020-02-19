@@ -240,104 +240,115 @@ function postNode(){
 			formData.append("command",command);
 		}
 	}
-	
-    $.ajax({
-        xhr: function () {
-            var xhr = $.ajaxSettings.xhr();
-            xhr.upload.onprogress = function (e) {
-                if(enableProgressElem) {
-            	    if(progressElem!=undefined&&progressElem!=""){
-            		    $(progressElem).html(Math.floor(e.loaded / e.total * 100) + '%');
-            	    }
-                }
-            };
-            xhr.withCredentials = false;
-            return xhr;
-        },
-        contentType:hasJson?"application/json":false,
-        processData: false,
-        type: 'POST',
-        data:hasJson?JSON.stringify(formData):formData,
-        url: urlref,
-        success: function (response,textStatus,xhr) {
-			if(xhr.getResponseHeader("Content-Disposition")==null){
-                if(enableProgressElem){
-				    if(progressElem!=undefined){
-							    if (progressElem=="#showprogress") {
-										    $.unblockUI();
-							    } else {
-								    $(progressElem).hide();
-							    }
-				    }
-                }
-				var parsed=parseActiveString("script||","||script",response);
-				var parsedScript=parsed[1].join("");
-				response=parsed[0].trim();
-				var targets=[];
-				var targetSections=[];
-				if(response!=""){
-					if(response.indexOf("replace-content||")>-1){
-						parsed=parseActiveString("replace-content||","||replace-content",response);
-						response=parsed[0];
-						parsed[1].forEach(function(possibleTargetContent,i){
-							if(possibleTargetContent.indexOf("||")>-1){
-								targets[targets.length]=[possibleTargetContent.substring(0,possibleTargetContent.indexOf("||")),possibleTargetContent.substring(possibleTargetContent.indexOf("||")+"||".length,possibleTargetContent.length)];
-							}        				
-						});
+	var ajaxpromise=new Promise(function(resolve, reject) {
+		$.ajax({
+			xhr: function () {
+				var xhr = $.ajaxSettings.xhr();
+				xhr.upload.onprogress = function (e) {
+					if(enableProgressElem) {
+						if(progressElem!=undefined&&progressElem!=""){
+							$(progressElem).html(Math.floor(e.loaded / e.total * 100) + '%');
+						}
 					}
-					targets.unshift([target,response]);
-				}
-				if(targets.length>0){
-					targets.forEach(function(targetSec){
-						if ($(targetSec[0]).length>0) {
-									if (targetSec[0].startsWith("#")) {
-										$(targetSec[0]).html(targetSec[1]);
+				};
+				xhr.withCredentials = false;
+				return xhr;
+			},
+			contentType:hasJson?"application/json":false,
+			processData: false,
+			type: 'POST',
+			data:hasJson?JSON.stringify(formData):formData,
+			url: urlref,
+			success: function (response,textStatus,xhr) {
+				if(xhr.getResponseHeader("Content-Disposition")==null){
+					if(enableProgressElem){
+						if(progressElem!=undefined){
+									if (progressElem=="#showprogress") {
+												$.unblockUI();
 									} else {
-										$(targetSec[0]).each(function(i){
-											$(this).html(targetSec[1])
-										});
+										$(progressElem).hide();
 									}
 						}
-					});
+					}
+					var parsed=parseActiveString("script||","||script",response);
+					var parsedScript=parsed[1].join("");
+					response=parsed[0].trim();
+					var targets=[];
+					var targetSections=[];
+					if(response!=""){
+						if(response.indexOf("replace-content||")>-1){
+							parsed=parseActiveString("replace-content||","||replace-content",response);
+							response=parsed[0];
+							parsed[1].forEach(function(possibleTargetContent,i){
+								if(possibleTargetContent.indexOf("||")>-1){
+									targets[targets.length]=[possibleTargetContent.substring(0,possibleTargetContent.indexOf("||")),possibleTargetContent.substring(possibleTargetContent.indexOf("||")+"||".length,possibleTargetContent.length)];
+								}        				
+							});
+						}
+						targets.unshift([target,response]);
+					}
+					if(targets.length>0){
+						targets.forEach(function(targetSec){
+							if ($(targetSec[0]).length>0) {
+										if (targetSec[0].startsWith("#")) {
+											$(targetSec[0]).html(targetSec[1]);
+										} else {
+											$(targetSec[0]).each(function(i){
+												$(this).html(targetSec[1])
+											});
+										}
+							}
+						});
+					}
+					if(parsedScript!=""){
+						eval(parsedScript);
+					}
+					resolve();
+					/*if (options.options!=undefined) {
+						postNode(options.options);
+					}*/
+				} else {
+					var contentdisposition=(""+xhr.getResponseHeader("Content-Disposition")).trim();
+					if (contentdisposition.indexOf("attachment;")>-1) {
+						contentdisposition=contentdisposition.substr(contentdisposition.indexOf("attachment;")+"attachment;".length).trim();
+					}
+					var contenttype=(""+xhr.getResponseHeader("Content-Type")).trim();
+					if (contenttype.indexOf(";")>-1) {
+						contenttype=contenttype.substr(0,contenttype.indexOf(";")).trim();
+					}
+					if (contentdisposition.indexOf("filename=")>-1) {
+						contentdisposition=contentdisposition.substr(contentdisposition.indexOf("filename=")+"filename=".length).trim();
+						contentdisposition=contentdisposition.replace(/"/i,"")
+						contentdisposition=contentdisposition.replace(/"/i,"")
+					}
+					safeData(responseText,contentdisposition,contenttype);
 				}
-				if(parsedScript!=""){
-					eval(parsedScript);
+			},
+			error: function(jqXHR, textStatus, textThrow) {
+				if(enableProgressElem) {
+					if(progressElem!=undefined){
+						if (progressElem=="#showprogress") {
+									$.unblockUI();
+						} else {
+							$(progressElem).hide();
+						}
+					}
 				}
-				if (options.options!=undefined) {
-					postNode(options.options);
+				if(errorElem!=undefined&&errorElem!=""){
+					$(errorElem).html("Error loading request: "+textStatus);
 				}
-			} else {
-				var contentdisposition=(""+xhr.getResponseHeader("Content-Disposition")).trim();
-				if (contentdisposition.indexOf("attachment;")>-1) {
-					contentdisposition=contentdisposition.substr(contentdisposition.indexOf("attachment;")+"attachment;".length).trim();
-				}
-				var contenttype=(""+xhr.getResponseHeader("Content-Type")).trim();
-				if (contenttype.indexOf(";")>-1) {
-					contenttype=contenttype.substr(0,contenttype.indexOf(";")).trim();
-				}
-				if (contentdisposition.indexOf("filename=")>-1) {
-					contentdisposition=contentdisposition.substr(contentdisposition.indexOf("filename=")+"filename=".length).trim();
-					contentdisposition=contentdisposition.replace(/"/i,"")
-					contentdisposition=contentdisposition.replace(/"/i,"")
-				}
-				safeData(responseText,contentdisposition,contenttype);
+				reject(Error("Error loading request: "+textStatus));
 			}
-        },
-        error: function(jqXHR, textStatus, textThrow) {
-        	if(enableProgressElem) {
-                if(progressElem!=undefined){
-				    if (progressElem=="#showprogress") {
-							    $.unblockUI();
-				    } else {
-					    $(progressElem).hide();
-				    }
-        	    }
-            }
-        	if(errorElem!=undefined&&errorElem!=""){
-        		$(errorElem).html("Error loading request: "+textStatus);
-        	}
-        }
-    });
+		});
+	});
+
+	ajaxpromise.then(function(){
+		if (options.options!=undefined) {
+			postNode(options.options);
+		}
+	},function(err){
+
+	});
 }
 
 function safeData(data, fileName,contentType) {
