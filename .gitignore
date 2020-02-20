@@ -4,3 +4,4 @@ __debug_bin
 *.code-workspace
 .vscode/settings.json
 __debug_bin.conf.js
+go.sum*.tmp
