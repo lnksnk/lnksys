@@ -55,33 +55,7 @@ func (atvxctr *activeExecutor) captureActiveRunes(atvrnes []rune) {
 				go func() {
 					defer atvxctr.pipeprgrmoutw.Close()
 					var bytes = make([]byte, 8192)
-					/*bfr := bufio.NewReader(atvxctr.pipeprgrminr)
-					bfw := bufio.NewWriter(atvxctr.pipeprgrmoutw)
-					code := ""
-					func() {
-						defer func() {
-							if code != "" {
-								fmt.Println(code)
-							}
-						}()
-						for {
-							r, s, e := bfr.ReadRune()
-							if e != nil {
-								if e == io.EOF {
-									bfw.Flush()
-								}
-								break
-							} else {
-								if s > 0 {
-									code += string(r)
-									s, e = bfw.WriteRune(r)
-									if e != nil {
-										break
-									}
-								}
-							}
-						}
-					}()*/
+
 					io.CopyBuffer(atvxctr.pipeprgrmoutw, atvxctr.pipeprgrminr, bytes)
 					bytes = nil
 				}()
