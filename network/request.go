@@ -407,8 +407,19 @@ func (reqst *Request) ExecuteRequest() {
 	if reqst.Active == nil {
 		reqst.Active = active.NewActive(int64(maxbufsize), reqst, func(a ...interface{}) (ar interface{}) {
 			if len(a) > 0 {
+				var inline = false
+				if len(a) > 1 {
+					if b, bok := a[0].(bool); bok {
+						inline = b
+						a = a[1:]
+					}
+				}
 				if s, sok := a[0].(string); sok && s != "" {
-					reqst.ACommit(reqst.GetResource(s, a[1:]...))
+					if inline {
+						reqst.ACommit("<@", reqst.GetResource(s, a[1:]...), "@>")
+					} else {
+						reqst.ACommit(reqst.GetResource(s, a[1:]...))
+					}
 				}
 			}
 			return ar
