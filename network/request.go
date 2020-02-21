@@ -408,7 +408,7 @@ func (reqst *Request) ExecuteRequest() {
 		reqst.Active = active.NewActive(int64(maxbufsize), reqst, func(a ...interface{}) (ar interface{}) {
 			if len(a) > 0 {
 				if s, sok := a[0].(string); sok && s != "" {
-					reqst.ACommit("<@", reqst.GetResource(s, a[1:]...), "@>")
+					reqst.ACommit(reqst.GetResource(s, a[1:]...))
 				}
 			}
 			return ar
