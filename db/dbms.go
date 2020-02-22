@@ -124,36 +124,40 @@ func (dbqry *DBQuery) Map(expsettings ...map[string]interface{}) (dbrecmp map[st
 			}
 		}
 	}
-	var columns map[string]interface{}
+
 	var cols = []string{}
 	var data = []interface{}{}
 	var fldcount = 0
+	if includefields {
+		var columns map[string]interface{}
+		if dbqrymeta := dbqry.MetaData(); dbqrymeta != nil {
+			cols = append(cols, dbqrymeta.Columns()...)
+			if inlcudefielddefs {
+				for coln, cname := range cols {
 
-	if dbqrymeta := dbqry.MetaData(); dbqrymeta != nil {
-		cols = append(cols, dbqrymeta.Columns()...)
-		for coln, cname := range cols {
-
-			if columns == nil {
-				columns = map[string]interface{}{}
+					if columns == nil {
+						columns = map[string]interface{}{}
+					}
+					var colmap = map[string]interface{}{}
+					var coltype = dbqrymeta.ColumnTypes()[coln]
+					coltype.DatabaseType()
+					colmap["db-type"] = coltype.DatabaseType()
+					colmap["has-length"] = coltype.HasLength()
+					colmap["length"] = coltype.Length()
+					colmap["has-nullable"] = coltype.HasNullable()
+					colmap["nullable"] = coltype.Nullable()
+					colmap["has-precisionscale"] = coltype.HasPrecisionScale()
+					colmap["numeric"] = coltype.Numeric()
+					colmap["precision"] = coltype.Precision()
+					colmap["scale"] = coltype.Scale()
+					colmap["ordinal"] = coln
+					columns[cname] = colmap
+				}
+			} else {
+				columns["field-names"] = cols
 			}
-			var colmap = map[string]interface{}{}
-			var coltype = dbqrymeta.ColumnTypes()[coln]
-			coltype.DatabaseType()
-			colmap["db-type"] = coltype.DatabaseType()
-			colmap["has-length"] = coltype.HasLength()
-			colmap["length"] = coltype.Length()
-			colmap["has-nullable"] = coltype.HasNullable()
-			colmap["nullable"] = coltype.Nullable()
-			colmap["has-precisionscale"] = coltype.HasPrecisionScale()
-			colmap["numeric"] = coltype.Numeric()
-			colmap["precision"] = coltype.Precision()
-			colmap["scale"] = coltype.Scale()
-			colmap["ordinal"] = coln
-			columns[cname] = colmap
-		}
-		fldcount = len(columns)
-		columns["field-count"] = fldcount
-		if columns != nil {
+			fldcount = len(columns)
+			columns["field-count"] = fldcount
 			dbrecmp["fields"] = columns
 		}
 	}
