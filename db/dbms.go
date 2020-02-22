@@ -163,8 +163,10 @@ func (dbqry *DBQuery) Map(expsettings ...map[string]interface{}) (dbrecmp map[st
 	}
 	totalrecs := int64(0)
 	for dbqry.Next() {
-		dta := make([]interface{}, fldcount)
-		copy(dta, dbqry.Data())
+		qrdta := dbqry.Data()
+		dta := make([]interface{}, len(qrdta))
+		copy(dta, qrdta)
+		qrdta = nil
 		if includedatafields {
 			fldndta := map[string]interface{}{}
 			for fn, fnm := range cols {
