@@ -129,7 +129,7 @@ func (dbqry *DBQuery) Map(expsettings ...map[string]interface{}) (dbrecmp map[st
 	var data = []interface{}{}
 	var fldcount = 0
 	if includefields {
-		var columns map[string]interface{}
+		var columns = map[string]interface{}{}
 		if dbqrymeta := dbqry.MetaData(); dbqrymeta != nil {
 			cols = append(cols, dbqrymeta.Columns()...)
 			if inlcudefielddefs {
