@@ -5,12 +5,15 @@ go 1.13
 require (
 	github.com/denisenkom/go-mssqldb v0.0.0-20200206145737-bbfc9a55622e
 	github.com/dlclark/regexp2 v1.2.0 // indirect
-	github.com/dop251/goja v0.0.0-20200219165308-d1232e640a87
+	github.com/dop251/goja v0.0.0-20200221192958-32d9f07ba84c
 	github.com/go-sourcemap/sourcemap v2.1.2+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/kardianos/service v1.0.0
 	github.com/lib/pq v1.3.0
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/net v0.0.0-20200219183655-46282727080f
+	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d // indirect
+	golang.org/x/net v0.0.0-20200222125558-5a598a2470a0
+	golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c // indirect
+	golang.org/x/text v0.3.2 // indirect
 )
