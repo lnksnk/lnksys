@@ -1,10 +1,12 @@
 package db
 
 import (
-	iorw "github.com/efjoubert/lnksys/iorw"
-	active "github.com/efjoubert/lnksys/iorw/active"
 	"io"
 	"sync"
+
+	iorw "github.com/efjoubert/lnksys/iorw"
+	active "github.com/efjoubert/lnksys/iorw/active"
+
 	/**/
 	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/go-sql-driver/mysql"
@@ -97,6 +99,50 @@ type DBQuery struct {
 	Err          error
 }
 
+func (dbqry *DBQuery) Map() (dbrecmp map[string]interface{}) {
+	if dbrecmp == nil {
+		dbrecmp = map[string]interface{}{}
+	}
+	var columns map[string]interface{}
+	var data = [][]interface{}{}
+	var fldcount = 0
+	if dbqrymeta := dbqry.MetaData(); dbqrymeta != nil {
+		for coln, cname := range dbqrymeta.Columns() {
+			if columns == nil {
+				columns = map[string]interface{}{}
+			}
+			var colmap = map[string]interface{}{}
+			var coltype = dbqrymeta.ColumnTypes()[coln]
+			coltype.DatabaseType()
+			colmap["db-type-name"] = coltype.Name()
+			colmap["db-type"] = coltype.DatabaseType()
+			colmap["has-length"] = coltype.HasLength()
+			colmap["length"] = coltype.Length()
+			colmap["has-nullable"] = coltype.HasNullable()
+			colmap["nullable"] = coltype.Nullable()
+			colmap["has-precisionscale"] = coltype.HasPrecisionScale()
+			colmap["numeric"] = coltype.Numeric()
+			colmap["precision"] = coltype.Precision()
+			colmap["scale"] = coltype.Scale()
+			colmap["ordinal"] = coln
+			columns[cname] = colmap
+		}
+		fldcount = len(columns)
+		columns["field-count"] = fldcount
+		if columns != nil {
+			dbrecmp["columns"] = columns
+		}
+	}
+	data = [][]interface{}{}
+	for dbqry.Next() {
+		dta := make([]interface{}, fldcount)
+		copy(dta, dbqry.Data())
+		data = append(data, dta)
+	}
+	dbrecmp["data"] = data
+	return
+}
+
 //ReadColumnsFunc definition
 type ReadColumnsFunc = func(dbqry *DBQuery, columns []string, columntypes []*ColumnType)
 
@@ -115,7 +161,7 @@ func (qrystage QueryStage) String() (s string) {
 	if qrystage > 0 && qrystage <= QueryStage(len(qryStages)) {
 		s = qryStages[qrystage-1]
 	} else {
-		s = "UNKOWN"
+		s = "UNKNOWN"
 	}
 	return
 }
