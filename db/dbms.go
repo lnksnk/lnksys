@@ -99,22 +99,46 @@ type DBQuery struct {
 	Err          error
 }
 
-func (dbqry *DBQuery) Map() (dbrecmp map[string]interface{}) {
+func (dbqry *DBQuery) Map(expsettings ...map[string]interface{}) (dbrecmp map[string]interface{}) {
 	if dbrecmp == nil {
 		dbrecmp = map[string]interface{}{}
 	}
+	//var expstngs = map[string]string{}
+	var includefields = false
+	var inlcudefielddefs = false
+	var includedatafields = false
+	if len(expsettings) == 1 && len(expsettings[0]) > 0 {
+		for exk, expv := range expsettings[0] {
+			if exk == "include-fields" {
+				if inclflds, incldfldsok := expv.(bool); incldfldsok {
+					includefields = inclflds
+				}
+			} else if exk == "include-fields-defs" {
+				if inclflddefs, incldflddefsok := expv.(bool); incldflddefsok {
+					inlcudefielddefs = inclflddefs
+				}
+			} else if exk == "include-data-fields" {
+				if incldtaflds, incldtafldsok := expv.(bool); incldtafldsok {
+					includedatafields = incldtaflds
+				}
+			}
+		}
+	}
 	var columns map[string]interface{}
-	var data = [][]interface{}{}
+	var cols = []string{}
+	var data = []interface{}{}
 	var fldcount = 0
+
 	if dbqrymeta := dbqry.MetaData(); dbqrymeta != nil {
-		for coln, cname := range dbqrymeta.Columns() {
+		cols = append(cols, dbqrymeta.Columns()...)
+		for coln, cname := range cols {
+
 			if columns == nil {
 				columns = map[string]interface{}{}
 			}
 			var colmap = map[string]interface{}{}
 			var coltype = dbqrymeta.ColumnTypes()[coln]
 			coltype.DatabaseType()
-			colmap["db-type-name"] = coltype.Name()
 			colmap["db-type"] = coltype.DatabaseType()
 			colmap["has-length"] = coltype.HasLength()
 			colmap["length"] = coltype.Length()
@@ -130,16 +154,28 @@ func (dbqry *DBQuery) Map() (dbrecmp map[string]interface{}) {
 		fldcount = len(columns)
 		columns["field-count"] = fldcount
 		if columns != nil {
-			dbrecmp["columns"] = columns
+			dbrecmp["fields"] = columns
 		}
 	}
-	data = [][]interface{}{}
+	totalrecs := int64(0)
 	for dbqry.Next() {
 		dta := make([]interface{}, fldcount)
 		copy(dta, dbqry.Data())
-		data = append(data, dta)
+		if includedatafields {
+			fldndta := map[string]interface{}{}
+			for fn, fnm := range cols {
+				fldndta[fnm] = dta[fn]
+			}
+			data = append(data, fldndta)
+		} else {
+			data = append(data, dta)
+		}
+		totalrecs++
+		dta = nil
 	}
 	dbrecmp["data"] = data
+	data = nil
+	dbrecmp["record-count"] = totalrecs
 	return
 }
 
