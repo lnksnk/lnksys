@@ -153,14 +153,25 @@ func (reqst *Request) ResponseHeaders() (hdrs []string) {
 	return
 }
 
-func (reqst *Request) ServeHTTP() {
+func (reqst *Request) ResetRequest() (err error) {
+	err = reqst.cleanup(true)
+	return
+}
+
+func (reqst *Request) ServeHTTP() (err error) {
 	defer func() {
-		if err := recover(); err != nil {
-			rqsterr := fmt.Errorf("Panic: %+v\n", err)
-			fmt.Println(rqsterr)
+		if rerr := recover(); rerr != nil {
+			if rqsterr := fmt.Errorf("Panic: %+v\n", rerr); rqsterr != nil {
+				err = rqsterr
+			}
+			//fmt.Println(rqsterr)
 		}
 		reqst.rqstlck.Unlock()
-		reqst.Close()
+		if err == nil {
+			reqst.ResetRequest()
+		} else {
+			reqst.Close()
+		}
 	}()
 	reqst.rqstlck.Lock()
 	var wi interface{} = reqst.w
@@ -181,6 +192,7 @@ func (reqst *Request) ServeHTTP() {
 		}(reqst.w.(http.CloseNotifier).CloseNotify(), reqst.r.Context())
 	}
 	reqst.ExecuteRequest()
+	return err
 }
 
 func (reqst *Request) Interupted() bool {
@@ -872,37 +884,60 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 	return
 }
 
-func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
-	reqst = &Request{
-		readFromOffset:       -1,
-		resourcesOffset:      -1,
-		isfirstResource:      true,
-		rqstlck:              &sync.Mutex{},
-		wgrpnt:               &sync.WaitGroup{},
-		listener:             listener,
-		w:                    w,
-		r:                    r,
-		done:                 make(chan bool, 1),
-		resourcesSize:        0,
-		params:               parameters.NewParameters(),
-		interuptRequest:      false,
-		shuttingdownHost:     shuttingDownHost,
-		canShutdownHost:      shuttingDownHost != nil,
-		shuttingdownListener: shuttingDownListener,
-		forceRead:            false,
-		busyForcing:          false,
-		rootpaths:            []string{}}
+func (reqst *Request) InitRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (err error) {
+	reqst.shuttingdownHost = shuttingDownHost
+	reqst.canShutdownHost = shuttingDownHost != nil
+	reqst.shuttingdownListener = shuttingDownListener
+
 	if len(roots) > 0 {
-		for rt, _ := range roots {
-			reqst.rootpaths = append(reqst.rootpaths, rt)
+		if reqst.rootpaths == nil {
+			reqst.rootpaths = []string{}
+		}
+		for rtk, _ := range roots {
+			reqst.rootpaths = append(reqst.rootpaths, rtk)
 		}
 	}
+
 	if canShutdownEnv {
 		reqst.shuttingdownEnv = func() {
 			ShutdownEnv()
 		}
 	}
 	return
+}
+
+func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
+	reqst = &Request{
+		readFromOffset:  -1,
+		resourcesOffset: -1,
+		isfirstResource: true,
+		rqstlck:         &sync.Mutex{},
+		wgrpnt:          &sync.WaitGroup{},
+		listener:        listener,
+		w:               w,
+		r:               r,
+		done:            make(chan bool, 1),
+		resourcesSize:   0,
+		params:          parameters.NewParameters(),
+		interuptRequest: false,
+		forceRead:       false,
+		busyForcing:     false,
+		rootpaths:       []string{}}
+
+	if rqsterr := reqst.InitRequest(listener, w, r, shuttingDownListener, shuttingDownHost, canShutdownEnv); rqsterr != nil {
+		reqst.cleanup(false)
+		reqst = nil
+		return
+	}
+	return
+}
+
+func (reqst *Request) SetRoots() {
+	if len(roots) > 0 {
+		for rt, _ := range roots {
+			reqst.rootpaths = append(reqst.rootpaths, rt)
+		}
+	}
 }
 
 func (reqst *Request) PopulateParameters() {
@@ -960,10 +995,20 @@ func init() {
 	})
 }
 
-func (reqst *Request) Close() (err error) {
+func (reqst *Request) cleanup(reset bool) (err error) {
+	reqst.readFromOffset = -1
+	reqst.resourcesOffset = -1
+	reqst.isfirstResource = true
+	reqst.resourcesSize = 0
+	reqst.interuptRequest = false
+	reqst.canShutdownHost = false
+	reqst.forceRead = false
+	reqst.busyForcing = false
 	if reqst.done != nil {
-		close(reqst.done)
-		reqst.done = nil
+		if !reset {
+			close(reqst.done)
+			reqst.done = nil
+		}
 	}
 	if reqst.listener != nil {
 		reqst.listener = nil
@@ -986,8 +1031,13 @@ func (reqst *Request) Close() (err error) {
 		reqst.bufRW = nil
 	}
 	if reqst.Active != nil {
-		reqst.Active.Close()
-		reqst.Active = nil
+		if reset {
+			reqst.Active.Close()
+			reqst.Active = nil
+		} else {
+			reqst.Active.Close()
+			reqst.Active = nil
+		}
 	}
 	if len(reqst.runeBuffer) > 0 {
 		reqst.runeBuffer = nil
@@ -1059,6 +1109,11 @@ func (reqst *Request) Close() (err error) {
 	if reqst.wgrpnt != nil {
 		reqst.wgrpnt = nil
 	}
+	return
+}
+
+func (reqst *Request) Close() (err error) {
+	reqst.cleanup(false)
 	return
 }
 
