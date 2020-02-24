@@ -107,19 +107,29 @@ func (lstnrsvr *lstnrserver) Shutdown() (err error) {
 /*Listener - Listener
  */
 type Listener struct {
+	*Channel
 	servers map[string]*lstnrserver
 	srvlck  *sync.Mutex
 }
 
 func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	HttpRequestHandler(func() (rqst *Request) {
-		rqst = NewRequest(lstnr, w, r, func() {
+	/*HttpRequestHandler(func() (rqst *Request) {
+		rqst = lstnr.NextRequest(lstnr, w, r, func() {
 			lstnr.Shutdown()
 		}, func() {
 			lstnr.ShutdownHost(r.Host)
 		}, true)
 		return
-	}()).ServeHTTP(w, r)
+	}()).ServeHTTP(w, r)*/
+	if rqst := lstnr.NextRequest(lstnr, w, r, func() {
+		lstnr.Shutdown()
+	}, func() {
+		lstnr.ShutdownHost(r.Host)
+	}, true); rqst != nil {
+		func() {
+			rqst.ServeHTTP()
+		}()
+	}
 }
 
 func (lstnr *Listener) Shutdown() {
@@ -171,7 +181,7 @@ func InvokeListener(host string) {
 
 func init() {
 	if lstnr == nil {
-		lstnr = &Listener{srvlck: &sync.Mutex{}}
+		lstnr = &Listener{Channel: NewChannel(), srvlck: &sync.Mutex{}}
 	}
 	active.MapGlobals("InvokeListener", InvokeListener)
 }

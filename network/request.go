@@ -153,7 +153,7 @@ func (reqst *Request) ResponseHeaders() (hdrs []string) {
 	return
 }
 
-func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (reqst *Request) ServeHTTP() {
 	defer func() {
 		if err := recover(); err != nil {
 			rqsterr := fmt.Errorf("Panic: %+v\n", err)
@@ -163,7 +163,7 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		reqst.Close()
 	}()
 	reqst.rqstlck.Lock()
-	var wi interface{} = w
+	var wi interface{} = reqst.w
 	if _, wiok := wi.(*Response); !wiok {
 		go func(wnotify <-chan bool, rcntx context.Context) {
 			var checking = true
@@ -178,7 +178,7 @@ func (reqst *Request) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			return
-		}(w.(http.CloseNotifier).CloseNotify(), r.Context())
+		}(reqst.w.(http.CloseNotifier).CloseNotify(), reqst.r.Context())
 	}
 	reqst.ExecuteRequest()
 }
@@ -187,10 +187,10 @@ func (reqst *Request) Interupted() bool {
 	return reqst.interuptRequest
 }
 
-func HttpRequestHandler(reqst *Request) (hndlr http.Handler) {
+/*func HttpRequestHandler(reqst *Request) (hndlr http.Handler) {
 	hndlr = reqst
 	return
-}
+}*/
 
 func (reqst *Request) IsActiveContent(ext string) (active bool) {
 	ext = filepath.Ext(ext)
@@ -1122,7 +1122,8 @@ func DefaultServeHttp(w io.Writer, method string, url string, body io.Reader) {
 		if rhttp != nil {
 			var whttp = NewResponse(w, rhttp)
 			var reqst = NewRequest(nil, whttp, rhttp, nil, nil, false)
-			HttpRequestHandler(reqst).ServeHTTP(whttp, rhttp)
+			//HttpRequestHandler(reqst).ServeHTTP(whttp, rhttp)
+			reqst.ServeHTTP()
 		}
 	}
 }
@@ -1135,7 +1136,8 @@ func BrokerServeHttp(w io.Writer, body io.Reader, exename string, exealias strin
 		if rhttp != nil {
 			var whttp = NewResponse(w, rhttp)
 			var reqst = NewRequest(nil, whttp, rhttp, nil, nil, false)
-			HttpRequestHandler(reqst).ServeHTTP(whttp, rhttp)
+			reqst.ServeHTTP()
+			//HttpRequestHandler(reqst).ServeHTTP(whttp, rhttp)
 		}
 	}
 }
