@@ -64,7 +64,7 @@ type Request struct {
 	bufRW                 *iorw.BufferedRW
 	rw                    *iorw.RW
 	rqstContent           *iorw.BufferedRW
-	listener              Listening
+	chnl                  *Channel
 	talker                Talking
 	w                     http.ResponseWriter
 	wpipeR                *io.PipeReader
@@ -164,32 +164,28 @@ func (reqst *Request) ServeHTTP() (err error) {
 			if rqsterr := fmt.Errorf("Panic: %+v\n", rerr); rqsterr != nil {
 				err = rqsterr
 			}
-			//fmt.Println(rqsterr)
 		}
-		reqst.rqstlck.Unlock()
-		if err == nil {
-			reqst.ResetRequest()
-		} else {
-			reqst.Close()
-		}
+		reqst.cleanup(false)
 	}()
-	reqst.rqstlck.Lock()
 	var wi interface{} = reqst.w
 	if _, wiok := wi.(*Response); !wiok {
-		go func(wnotify <-chan bool, rcntx context.Context) {
-			var checking = true
-			for checking {
-				select {
-				case <-wnotify:
-					reqst.interuptRequest = true
-					checking = false
-				case <-rcntx.Done():
-					reqst.interuptRequest = true
-					checking = false
+		if wclsntfy, wclsntfyok := reqst.w.(http.CloseNotifier); wclsntfyok {
+			go func(wnotify <-chan bool, rcntx context.Context) {
+				var checking = true
+				for checking {
+					select {
+					case <-wnotify:
+						reqst.interuptRequest = true
+						checking = false
+					case <-rcntx.Done():
+						reqst.interuptRequest = true
+						checking = false
+					}
 				}
-			}
-			return
-		}(reqst.w.(http.CloseNotifier).CloseNotify(), reqst.r.Context())
+
+				return
+			}(wclsntfy.CloseNotify(), reqst.r.Context())
+		}
 	}
 	reqst.ExecuteRequest()
 	return err
@@ -884,7 +880,7 @@ func (reqst *Request) Write(p []byte) (n int, err error) {
 	return
 }
 
-func (reqst *Request) InitRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (err error) {
+func (reqst *Request) InitRequest(w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (err error) {
 	reqst.shuttingdownHost = shuttingDownHost
 	reqst.canShutdownHost = shuttingDownHost != nil
 	reqst.shuttingdownListener = shuttingDownListener
@@ -906,14 +902,14 @@ func (reqst *Request) InitRequest(listener Listening, w http.ResponseWriter, r *
 	return
 }
 
-func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
+func NewRequest(chnl *Channel, w http.ResponseWriter, r *http.Request, shuttingDownListener func(), shuttingDownHost func(), canShutdownEnv bool) (reqst *Request) {
 	reqst = &Request{
 		readFromOffset:  -1,
 		resourcesOffset: -1,
 		isfirstResource: true,
+		chnl:            chnl,
 		rqstlck:         &sync.Mutex{},
 		wgrpnt:          &sync.WaitGroup{},
-		listener:        listener,
 		w:               w,
 		r:               r,
 		done:            make(chan bool, 1),
@@ -924,7 +920,7 @@ func NewRequest(listener Listening, w http.ResponseWriter, r *http.Request, shut
 		busyForcing:     false,
 		rootpaths:       []string{}}
 
-	if rqsterr := reqst.InitRequest(listener, w, r, shuttingDownListener, shuttingDownHost, canShutdownEnv); rqsterr != nil {
+	if rqsterr := reqst.InitRequest(w, r, shuttingDownListener, shuttingDownHost, canShutdownEnv); rqsterr != nil {
 		reqst.cleanup(false)
 		reqst = nil
 		return
@@ -1010,8 +1006,10 @@ func (reqst *Request) cleanup(reset bool) (err error) {
 			reqst.done = nil
 		}
 	}
-	if reqst.listener != nil {
-		reqst.listener = nil
+	if reqst.chnl != nil {
+		if !reset {
+			reqst.chnl = nil
+		}
 	}
 	if reqst.w != nil {
 		reqst.w = nil
@@ -1108,6 +1106,11 @@ func (reqst *Request) cleanup(reset bool) (err error) {
 	}
 	if reqst.wgrpnt != nil {
 		reqst.wgrpnt = nil
+	}
+	if reqst.rqstlck != nil {
+		if !reset {
+			reqst.rqstlck = nil
+		}
 	}
 	return
 }

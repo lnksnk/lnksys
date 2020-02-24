@@ -121,16 +121,13 @@ func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}, true)
 		return
 	}()).ServeHTTP(w, r)*/
-	if rqst := lstnr.NextRequest(lstnr, w, r, func() {
+	rqst := lstnr.NextRequest(w, r, func() {
 		lstnr.Shutdown()
 	}, func() {
 		lstnr.ShutdownHost(r.Host)
-	}, true); rqst != nil {
-		func() {
-			if err := rqst.ServeHTTP(); err == nil {
-				lstnr.EnqueueRequest(rqst)
-			}
-		}()
+	}, true)
+	if rqst != nil {
+		rqst.ServeHTTP()
 	}
 }
 
