@@ -139,6 +139,7 @@ func (stmnt *DbStatement) Execute(query string, args ...interface{}) (lastInsert
 		if rolerr := stmnt.tx.Rollback(); rolerr != nil {
 			err = rolerr
 		}
+		//TEST
 	}
 	return lastInsertID, rowsAffected, err
 }
