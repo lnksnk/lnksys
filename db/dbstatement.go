@@ -140,7 +140,7 @@ func (stmnt *DbStatement) Execute(query string, args ...interface{}) (lastInsert
 			err = rolerr
 		}
 	}
-	return lastInsertID, rowsAfdfected, err
+	return lastInsertID, rowsAffected, err
 }
 
 //Query and return a DbResultSet
