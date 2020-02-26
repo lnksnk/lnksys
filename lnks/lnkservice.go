@@ -1,8 +1,6 @@
 package lnks
 
 import (
-	"strings"
-
 	"os"
 	//runtime "runtime"
 	runtimedbg "runtime/debug"
@@ -43,7 +41,7 @@ func NewLnkService(name string, displayName string, description string, brokerfu
 }
 
 func (lnksrvs *LnkService) startLnkService(args ...string) {
-	network.MapRoots("/", strings.Replace(lnksrvs.ServiceExeFolder(), "\\", "/", -1), "resources/", "./resources", "apps/", "./apps")
+	network.MapRoots("/" /*strings.Replace(lnksrvs.ServiceExeFolder(), "\\", "/", -1)*/, "./", "resources/", "./resources", "apps/", "./apps")
 	network.DefaultServeHttp(nil, "GET", "/@"+lnksrvs.ServiceName()+".conf@.js", nil)
 }
 
