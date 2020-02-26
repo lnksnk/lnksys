@@ -29,6 +29,7 @@ import (
 	require "github.com/efjoubert/lnksys/embed/require"
 	reveal "github.com/efjoubert/lnksys/embed/reveal"
 	rxjs "github.com/efjoubert/lnksys/embed/rxjs"
+	sip "github.com/efjoubert/lnksys/embed/sip"
 	three "github.com/efjoubert/lnksys/embed/three"
 	typescript "github.com/efjoubert/lnksys/embed/typescript"
 	video "github.com/efjoubert/lnksys/embed/video"
@@ -107,6 +108,8 @@ func EmbedFindJS(embedfindjs string) (embedjs io.Reader) {
 	} else if embedjs = phaser.PhaserFindJS(embedfindjs); embedjs != nil {
 		return
 	} else if embedjs = goldenlayout.GoldenLayoutFindJSCSS(embedfindjs); embedjs != nil {
+		return
+	} else if embedjs = sip.SipFindJS(embedfindjs); embedjs != nil {
 		return
 	}
 	return

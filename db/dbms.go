@@ -103,7 +103,6 @@ func (dbqry *DBQuery) Map(expsettings ...map[string]interface{}) (dbrecmp map[st
 	if dbrecmp == nil {
 		dbrecmp = map[string]interface{}{}
 	}
-	//var expstngs = map[string]string{}
 	var includefields = false
 	var inlcudefielddefs = false
 	var includedatafields = false

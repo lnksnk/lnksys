@@ -121,13 +121,16 @@ func (lstnr *Listener) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}, true)
 		return
 	}()).ServeHTTP(w, r)*/
-	rqst := lstnr.NextRequest(w, r, func() {
+	if rqst := lstnr.NextRequest(w, r, func() {
 		lstnr.Shutdown()
 	}, func() {
 		lstnr.ShutdownHost(r.Host)
-	}, true)
-	if rqst != nil {
-		rqst.ServeHTTP()
+	}, true); rqst != nil {
+		if rqsterr := rqst.ServeHTTP(); rqsterr == nil {
+			//lstnr.Channel.EnqueueRequest(rqst)
+			rqst.cleanup(false)
+		}
+		rqst = nil
 	}
 }
 

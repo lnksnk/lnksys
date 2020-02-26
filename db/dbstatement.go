@@ -136,9 +136,11 @@ func (stmnt *DbStatement) Execute(query string, args ...interface{}) (lastInsert
 		}
 	}
 	if err != nil {
-		err = stmnt.tx.Rollback()
+		if rolerr := stmnt.tx.Rollback(); rolerr != nil {
+			err = rolerr
+		}
 	}
-	return lastInsertID, rowsAffected, err
+	return lastInsertID, rowsAfdfected, err
 }
 
 //Query and return a DbResultSet
@@ -245,7 +247,9 @@ func (stmnt *DbStatement) Query(query string, args ...interface{}) (rset *DbResu
 			err = colserr
 		}
 	} else {
-		stmnt.tx.Rollback()
+		if rolerr := stmnt.tx.Rollback(); rolerr != nil {
+			rserr = rolerr
+		}
 		err = rserr
 	}
 	return rset, err

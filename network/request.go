@@ -165,8 +165,10 @@ func (reqst *Request) ServeHTTP() (err error) {
 				err = rqsterr
 			}
 		}
-		reqst.cleanup(false)
+		//reqst.rqstlck.Unlock()
+		reqst.cleanup(err != nil)
 	}()
+	//reqst.rqstlck.Lock()
 	var wi interface{} = reqst.w
 	if _, wiok := wi.(*Response); !wiok {
 		if wclsntfy, wclsntfyok := reqst.w.(http.CloseNotifier); wclsntfyok {
