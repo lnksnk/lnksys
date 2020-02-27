@@ -169,7 +169,7 @@ func (stmnt *DbStatement) Query(query string, args ...interface{}) (rset *DbResu
 
 				} else {
 					validNames = append(validNames, pmk)
-					mappedVals[pmk] = fmt.Sprint(pmv)
+					mappedVals[pmk] = pmv
 				}
 			}
 		}
@@ -178,12 +178,24 @@ func (stmnt *DbStatement) Query(query string, args ...interface{}) (rset *DbResu
 	var txtArgs = []interface{}{}
 	var qry = ""
 
-	var parseParam = func() {
+	var parseParam = func(prmval interface{}) {
 		if stmnt.cn.schema == "sqlserver" {
+			txtArgs = append(txtArgs, prmval)
 			qry += ("@p" + fmt.Sprintf("%d", len(txtArgs)))
 		} else if stmnt.cn.schema == "postgres" {
-			qry += ("$" + fmt.Sprintf("%d", len(txtArgs)))
+			//qry += ("$S" + fmt.Sprintf("%d", len(txtArgs)))
+			/*argv := prmval
+			if argvs, argvsok := argv.(string); argvsok {
+				qry += "CONVERT_FROM(DECODE('" + base64.URLEncoding.EncodeToString([]byte(argvs)) + "', 'BASE64'), 'UTF-8')"
+			} else {
+				qry += fmt.Sprint(argv)
+			}*/
+			txtArgs = append(txtArgs, prmval)
+			prmname := "$" + fmt.Sprintf("%d", len(txtArgs))
+
+			qry += (prmname)
 		} else {
+			txtArgs = append(txtArgs, prmval)
 			qry += "?"
 		}
 	}
@@ -201,8 +213,8 @@ func (stmnt *DbStatement) Query(query string, args ...interface{}) (rset *DbResu
 					}
 					if mpdval, mapdvalok := mappedVals[prmtest]; mapdvalok {
 						prmval = mpdval
-						txtArgs = append(txtArgs, prmval)
-						parseParam()
+
+						parseParam(prmval)
 
 						foundPrm = true
 					} else {
@@ -211,8 +223,7 @@ func (stmnt *DbStatement) Query(query string, args ...interface{}) (rset *DbResu
 								if prms.ContainsParameter(prmtest) {
 									prmval = strings.Join(prms.Parameter(prmtest), "")
 									mappedVals[prmtest] = prmval
-									txtArgs = append(txtArgs, prmval)
-									parseParam()
+									parseParam(prmval)
 									foundPrm = true
 									break
 								}
@@ -232,26 +243,31 @@ func (stmnt *DbStatement) Query(query string, args ...interface{}) (rset *DbResu
 			}
 		}
 	}
-	if rs, rserr := stmnt.tx.Query(qry, txtArgs...); rserr == nil {
-		if cols, colserr := rs.Columns(); colserr == nil {
-			for n, col := range cols {
-				if col == "" {
-					cols[n] = "COLUMN" + fmt.Sprint(n+1)
+	fmt.Println(qry)
+	if stmt, stmterr := stmnt.tx.Prepare(qry); stmterr == nil {
+		if rs, rserr := stmt.Query(txtArgs...); rserr == nil {
+			if cols, colserr := rs.Columns(); colserr == nil {
+				for n, col := range cols {
+					if col == "" {
+						cols[n] = "COLUMN" + fmt.Sprint(n+1)
+					}
 				}
-			}
-			if coltypes, coltypeserr := rs.ColumnTypes(); coltypeserr == nil {
-				rset = &DbResultSet{rset: rs, stmnt: stmnt, rsmetadata: &DbResultSetMetaData{cols: cols[:], colTypes: columnTypes(coltypes[:])}, dosomething: make(chan bool, 1)}
+				if coltypes, coltypeserr := rs.ColumnTypes(); coltypeserr == nil {
+					rset = &DbResultSet{rset: rs, stmnt: stmnt, rsmetadata: &DbResultSetMetaData{cols: cols[:], colTypes: columnTypes(coltypes[:])}, dosomething: make(chan bool, 1)}
+				} else {
+					err = coltypeserr
+				}
 			} else {
-				err = coltypeserr
+				err = colserr
 			}
 		} else {
-			err = colserr
+			if rolerr := stmnt.tx.Rollback(); rolerr != nil {
+				rserr = rolerr
+			}
+			err = rserr
 		}
 	} else {
-		if rolerr := stmnt.tx.Rollback(); rolerr != nil {
-			rserr = rolerr
-		}
-		err = rserr
+		err = stmterr
 	}
 	return rset, err
 }
